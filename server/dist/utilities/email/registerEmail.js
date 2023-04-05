@@ -12,19 +12,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const mail_1 = __importDefault(require("@sendgrid/mail"));
-const sgApiKey = process.env.SENDGRID_API_KEY;
-mail_1.default.setApiKey(sgApiKey);
-const sendEmail = () => __awaiter(void 0, void 0, void 0, function* () {
-    const msg = {
-        to: "ekunduraci@edu.cdv.pl",
-        from: "Remote Shopping <kunduraci2@gmail.com>",
-        subject: "User Register Confirmation",
-        html: "<h1>Hello,</h1>\n<p>Please click this link to confirm your account: <a href='#'>click here</a></p>",
-    };
+const sendEmail_1 = __importDefault(require("./sendEmail"));
+const registerEmail = ({ userEmail, userName, verificationToken, }) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const clientAddress = process.env.CLIENT_ADDRESS;
+        const clientLink = `${clientAddress}/verify-email?verificationToken=${verificationToken}&email=${userEmail}`;
+        const html = `<h1>HELLO ${userName}</h1>\n<p>Please click this link to verify your account: <a href=${clientLink}>click here</a></p>`;
+        const subject = "User Verification";
+        return (0, sendEmail_1.default)({
+            to: userEmail,
+            subject,
+            html,
+        });
     }
     catch (error) {
         console.log(error);
     }
 });
+exports.default = registerEmail;

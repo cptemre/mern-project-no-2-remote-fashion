@@ -24,4 +24,4 @@ interface UserSchemaInterface {
   verified: Date;
 }
 
-export { UserSchemaInterface };
+export default UserSchemaInterface;

@@ -21,6 +21,8 @@ const http_status_codes_1 = require("http-status-codes");
 const crypto_1 = __importDefault(require("crypto"));
 // ERRORS
 const errors_1 = require("../errors");
+// SEND EMAIL
+const email_1 = require("../utilities/email");
 // * CREATE A NEW USER
 const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // BODY REQUESTS
@@ -46,7 +48,7 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const verificationToken = crypto_1.default.randomBytes(40).toString("hex");
     // CREATE USER IF REQUIRED CREDENTIALS EXIST
     if (name && surname && email && password && userType) {
-        yield User_1.default.create({
+        const user = yield User_1.default.create({
             name,
             surname,
             email,
@@ -58,7 +60,14 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             avatar,
             verificationToken,
         });
-        res.status(http_status_codes_1.StatusCodes.CREATED).json({ msg: "user created" });
+        yield (0, email_1.registerEmail)({
+            userEmail: user.email,
+            userName: user.name,
+            verificationToken: user.verificationToken,
+        });
+        res
+            .status(http_status_codes_1.StatusCodes.CREATED)
+            .json({ msg: "user created", verificationToken });
     }
     else
         throw new errors_1.UnauthorizedError("missing credentials");

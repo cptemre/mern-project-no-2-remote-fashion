@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 import bcrypt from "bcryptjs";
-import { UserSchemaInterface } from "../utilities/interfaces/UserSchemaInterface";
+import { UserSchemaInterface } from "../utilities/interfaces/";
 const validator = require("validator");
 
 // * SCHEMA

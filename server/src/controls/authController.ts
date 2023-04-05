@@ -8,8 +8,13 @@ import { StatusCodes } from "http-status-codes";
 import crypto from "crypto";
 // ERRORS
 import { ConflictError, UnauthorizedError } from "../errors";
+// SEND EMAIL
+import { registerEmail } from "../utilities/email";
 // INTERFACES
-import { UserSchemaInterface } from "../utilities/interfaces/UserSchemaInterface";
+import {
+  UserSchemaInterface,
+  RegisterVerificationInterface,
+} from "../utilities/interfaces";
 // * CREATE A NEW USER
 const registerUser = async (req: Request, res: Response) => {
   // BODY REQUESTS
@@ -49,7 +54,7 @@ const registerUser = async (req: Request, res: Response) => {
 
   // CREATE USER IF REQUIRED CREDENTIALS EXIST
   if (name && surname && email && password && userType) {
-    await User.create({
+    const user = await User.create({
       name,
       surname,
       email,
@@ -61,7 +66,15 @@ const registerUser = async (req: Request, res: Response) => {
       avatar,
       verificationToken,
     });
-    res.status(StatusCodes.CREATED).json({ msg: "user created" });
+
+    await registerEmail(<RegisterVerificationInterface>{
+      userEmail: user.email,
+      userName: user.name,
+      verificationToken: user.verificationToken,
+    });
+    res
+      .status(StatusCodes.CREATED)
+      .json({ msg: "user created", verificationToken });
   } else throw new UnauthorizedError("missing credentials");
 };
 
