@@ -44,11 +44,10 @@ const UserSchema = new mongoose_1.Schema({
         type: String,
         required: [true, "user password is required"],
         minlength: [7, "user password must be at least 7 characters"],
-        maxlength: [55, "user password can not be more than 55 characters"],
+        maxlength: [100, "user password can not be more than 55 characters"],
     },
     userType: {
         type: String,
-        required: [true, "user type is required"],
         enum: {
             values: ["admin", "user"],
             message: "user type is not accepted",
@@ -66,10 +65,7 @@ const UserSchema = new mongoose_1.Schema({
         maxlength: [19, "card number can not be more than 19 characters"],
     },
     avatar: String,
-    verificationToken: {
-        type: String,
-        required: true,
-    },
+    verificationToken: String,
     isVerified: {
         type: Boolean,
         default: false,
