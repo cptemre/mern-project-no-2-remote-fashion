@@ -71,6 +71,8 @@ const UserSchema = new mongoose_1.Schema({
         default: false,
     },
     verified: Date,
+    passwordToken: String,
+    passwordTokenExpDate: Date,
 }, { timestamps: true });
 // * HASH PASSWORD BEFORE SAVING THE USER
 UserSchema.pre("save", function () {

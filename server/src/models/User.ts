@@ -60,6 +60,8 @@ const UserSchema = new Schema<UserSchemaInterface>(
       default: false,
     },
     verified: Date,
+    passwordToken: String,
+    passwordTokenExpDate: Date,
   },
   { timestamps: true }
 );

@@ -22,6 +22,8 @@ interface UserSchemaInterface {
   verificationToken: string;
   isVerified: boolean;
   verified: Date;
+  passwordToken: string;
+  passwordTokenExpDate: Date;
 }
 
 export default UserSchemaInterface;
