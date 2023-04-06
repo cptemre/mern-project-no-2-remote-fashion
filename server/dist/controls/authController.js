@@ -133,3 +133,15 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "login success" });
 });
 exports.login = login;
+const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // await Token.findOneAndDelete({user:req.user.userId})
+    res.cookie("access_token", "", {
+        httpOnly: true,
+        expires: new Date(Date.now()),
+    });
+    res.cookie("refresh_token", "", {
+        httpOnly: true,
+        expires: new Date(Date.now()),
+    });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "logout success" });
+});
