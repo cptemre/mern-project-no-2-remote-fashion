@@ -5,6 +5,7 @@ sgMail.setApiKey(sgApiKey);
 // MAIL INTERFACE
 import { MailInterface } from "../interfaces/index";
 
+// ! FOR NOW DON'T SEND ANY EMAIL
 const sendEmail = async ({ to, subject, html }: MailInterface) => {
   const msg = {
     to,
