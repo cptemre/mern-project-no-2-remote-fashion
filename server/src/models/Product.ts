@@ -33,8 +33,8 @@ const ProductSchema = new Schema<ProductSchemaInterface>({
   gender: {
     type: String,
     enum: {
-      values: ["M", "F"],
-      message: "gender value must be 'M' or 'F'",
+      values: ["M", "F", "B"],
+      message: "gender value must be 'M', 'F' or 'B'",
     },
   },
   category: {
@@ -56,6 +56,10 @@ const ProductSchema = new Schema<ProductSchemaInterface>({
     default: 0,
   },
   averageRating: {
+    type: Number,
+    default: 0,
+  },
+  stock: {
     type: Number,
     default: 0,
   },

@@ -32,8 +32,8 @@ const ProductSchema = new mongoose_1.Schema({
     gender: {
         type: String,
         enum: {
-            values: ["M", "F"],
-            message: "gender value must be 'M' or 'F'",
+            values: ["M", "F", "B"],
+            message: "gender value must be 'M', 'F' or 'B'",
         },
     },
     category: {
@@ -55,6 +55,10 @@ const ProductSchema = new mongoose_1.Schema({
         default: 0,
     },
     averageRating: {
+        type: Number,
+        default: 0,
+    },
+    stock: {
         type: Number,
         default: 0,
     },

@@ -5,11 +5,12 @@ interface ProductSchemaInterface {
   image: string[];
   description: string[];
   size: string[];
-  gender: "M" | "F";
+  gender: "M" | "F" | "B";
   category: "clothes" | "shoes";
   subCategory: string;
-  numberOfReviews: Number;
-  averageRating: Number;
+  numberOfReviews: number;
+  averageRating: number;
+  stock: number;
 }
 
 export default ProductSchemaInterface;
