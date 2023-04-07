@@ -5,7 +5,7 @@ interface GetAllProductsQueryInterface {
   size: string;
   price: number;
   isReview: boolean;
-  isStock: boolean;
+  stock: { $gt: number };
   rating: number;
   gender: "M" | "F" | "B";
   page: number;

@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
+// ALL SUB CATEGORIES
+const categoriesAndSubCategories_1 = require("../utilities/categories/categoriesAndSubCategories");
 const ProductSchema = new mongoose_1.Schema({
     name: {
         type: String,
@@ -27,6 +29,7 @@ const ProductSchema = new mongoose_1.Schema({
     description: [
         {
             type: String,
+            required: [true, "product description is required"],
         },
     ],
     gender: {
@@ -35,6 +38,7 @@ const ProductSchema = new mongoose_1.Schema({
             values: ["M", "F", "B"],
             message: "gender value must be 'M', 'F' or 'B'",
         },
+        required: [true, "product gender is required"],
     },
     category: {
         type: String,
@@ -49,6 +53,10 @@ const ProductSchema = new mongoose_1.Schema({
         required: [true, "product sub-category is required"],
         minlength: [3, "product sub-category must be at least 3 characters"],
         maxlength: [25, "product sub-category can not be more than 25 characters"],
+        enum: {
+            values: categoriesAndSubCategories_1.allSubCategories,
+            message: "product sub-category does not match with an expected value",
+        },
     },
     numberOfReviews: {
         type: Number,

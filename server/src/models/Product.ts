@@ -1,7 +1,8 @@
 import { Schema, model } from "mongoose";
 // INTERFACE
 import { ProductSchemaInterface } from "../utilities/interfaces";
-
+// ALL SUB CATEGORIES
+import { allSubCategories } from "../utilities/categories/categoriesAndSubCategories";
 const ProductSchema = new Schema<ProductSchemaInterface>({
   name: {
     type: String,
@@ -28,6 +29,7 @@ const ProductSchema = new Schema<ProductSchemaInterface>({
   description: [
     {
       type: String,
+      required: [true, "product description is required"],
     },
   ],
   gender: {
@@ -36,6 +38,7 @@ const ProductSchema = new Schema<ProductSchemaInterface>({
       values: ["M", "F", "B"],
       message: "gender value must be 'M', 'F' or 'B'",
     },
+    required: [true, "product gender is required"],
   },
   category: {
     type: String,
@@ -50,6 +53,10 @@ const ProductSchema = new Schema<ProductSchemaInterface>({
     required: [true, "product sub-category is required"],
     minlength: [3, "product sub-category must be at least 3 characters"],
     maxlength: [25, "product sub-category can not be more than 25 characters"],
+    enum: {
+      values: allSubCategories,
+      message: "product sub-category does not match with an expected value",
+    },
   },
   numberOfReviews: {
     type: Number,

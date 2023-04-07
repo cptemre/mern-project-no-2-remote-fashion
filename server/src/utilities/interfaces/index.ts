@@ -1,11 +1,12 @@
-import UserSchemaInterface from "./UserSchemaInterface";
-import MailInterface from "./MailInterface";
-import RegisterVerificationInterface from "./RegisterVerificationInterface";
-import TokenInterface from "./TokenInterface";
-import { CreateJwtPayload, JwtInterface } from "./JwtInterfaces";
-import ResetPasswordInterface from "./ResetPasswordInterface";
-import ProductSchemaInterface from "./ProductSchemaInterface";
-import GetAllProductsQueryInterface from "./GetAllProductsQueryInterface";
+import UserSchemaInterface from "./models/UserSchemaInterface";
+import MailInterface from "./mail/MailInterface";
+import RegisterVerificationInterface from "./controllers/auth/RegisterVerificationInterface";
+import TokenInterface from "./jwt/TokenInterface";
+import { CreateJwtPayload, JwtInterface } from "./jwt/JwtInterfaces";
+import ResetPasswordInterface from "./controllers/auth/ResetPasswordInterface";
+import ProductSchemaInterface from "./models/ProductSchemaInterface";
+import GetAllProductsQueryInterface from "./controllers/product/GetAllProductsQueryInterface";
+import GetAllProductsReqBodyInterface from "./controllers/product/GetAllProductsReqBodyInterface";
 
 export {
   UserSchemaInterface,
@@ -17,4 +18,5 @@ export {
   ResetPasswordInterface,
   ProductSchemaInterface,
   GetAllProductsQueryInterface,
+  GetAllProductsReqBodyInterface,
 };
