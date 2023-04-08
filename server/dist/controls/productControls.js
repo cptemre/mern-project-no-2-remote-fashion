@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getAllProducts = exports.createProduct = void 0;
 // MODELS
 const models_1 = require("../models");
 // ARRAYS
@@ -31,12 +32,12 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         !category ||
         !subCategory)
         throw new errors_1.BadRequestError("missing credentials");
-    // IMAGE ARRAY LENGTH CAN NOT BE MORE THAN 4
-    if (image.length > 4)
+    // IMAGE ARRAY LENGTH CAN NOT BE MORE THAN 5
+    if (image.length > 5)
         throw new errors_1.BadRequestError("max image files for a product is 5");
-    // DESCRIPTION ARRAY LENGTH CAN NOT BE MORE THAN 4
-    if (description.length > 4)
-        throw new errors_1.BadRequestError("max description list length for a product is 5");
+    // DESCRIPTION ARRAY LENGTH CAN NOT BE MORE THAN 6
+    if (description.length > 6)
+        throw new errors_1.BadRequestError("max description list length for a product is 6");
     // ONE DESCRIPTION LENGTH ERROR
     for (let i = 0; i < description.length; i++) {
         if (description[i].length > 24)
@@ -66,6 +67,7 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         .status(http_status_codes_1.StatusCodes.CREATED)
         .json({ msg: "product created", product: newProduct });
 });
+exports.createProduct = createProduct;
 const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // QUERY FROM THE CLIENT
     const { name, brand, color, size, price, isReview, isStock, rating, gender, page, } = req.body;
@@ -122,3 +124,4 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const products = yield findProducts.skip(skip).limit(limit);
     res.status(http_status_codes_1.StatusCodes.OK).json({ products });
 });
+exports.getAllProducts = getAllProducts;

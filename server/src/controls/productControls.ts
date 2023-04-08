@@ -43,12 +43,12 @@ const createProduct = async (req: Request, res: Response) => {
   )
     throw new BadRequestError("missing credentials");
 
-  // IMAGE ARRAY LENGTH CAN NOT BE MORE THAN 4
-  if (image.length > 4)
+  // IMAGE ARRAY LENGTH CAN NOT BE MORE THAN 5
+  if (image.length > 5)
     throw new BadRequestError("max image files for a product is 5");
-  // DESCRIPTION ARRAY LENGTH CAN NOT BE MORE THAN 4
-  if (description.length > 4)
-    throw new BadRequestError("max description list length for a product is 5");
+  // DESCRIPTION ARRAY LENGTH CAN NOT BE MORE THAN 6
+  if (description.length > 6)
+    throw new BadRequestError("max description list length for a product is 6");
   // ONE DESCRIPTION LENGTH ERROR
   for (let i = 0; i < description.length; i++) {
     if (description[i].length > 24)
@@ -144,3 +144,5 @@ const getAllProducts = async (req: Request, res: Response) => {
 
   res.status(StatusCodes.OK).json({ products });
 };
+
+export { createProduct, getAllProducts };
