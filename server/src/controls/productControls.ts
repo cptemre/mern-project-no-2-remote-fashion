@@ -1,7 +1,7 @@
 // MODELS
 import { Product } from "../models";
 // EXPRESS
-import { Request, Response } from "express";
+import { RequestHandler } from "express";
 // INTERFACES
 import {
   GetAllProductsQueryInterface,
@@ -14,7 +14,7 @@ import { categoriesAndSubCategories } from "../utilities/categories/categoriesAn
 import { StatusCodes } from "http-status-codes";
 import { BadRequestError, UnauthorizedError } from "../errors";
 
-const createProduct = async (req: Request, res: Response) => {
+const createProduct: RequestHandler = async (req, res) => {
   // GET CLIENT SIDE BODY REQUEST TO CREATE A PRODUCT
   const {
     name,
@@ -82,7 +82,7 @@ const createProduct = async (req: Request, res: Response) => {
     .json({ msg: "product created", product: newProduct });
 };
 
-const getAllProducts = async (req: Request, res: Response) => {
+const getAllProducts: RequestHandler = async (req, res) => {
   // QUERY FROM THE CLIENT
   const {
     name,
@@ -106,7 +106,6 @@ const getAllProducts = async (req: Request, res: Response) => {
   if (price) {
     // EXAMPLE: gte-50_lte-100
     const [gteString, lteString] = price.split("_");
-    let gteVal: number;
     const priceVal: { $gte: number | undefined; $lte: number | undefined } = {
       $gte: undefined,
       $lte: undefined,

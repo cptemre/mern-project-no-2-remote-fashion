@@ -1,7 +1,7 @@
 // MODEL
 import { User, Token } from "../models";
 // EXPRESS VARS
-import { Request, Response } from "express";
+import { RequestHandler } from "express";
 // HTTP CODES
 import { StatusCodes } from "http-status-codes";
 // BCRYPTJS
@@ -23,7 +23,7 @@ import {
   createHash,
 } from "../utilities/token";
 // * CREATE A NEW USER
-const registerUser = async (req: Request, res: Response) => {
+const registerUser: RequestHandler = async (req, res) => {
   // BODY REQUESTS
   const {
     name,
@@ -86,7 +86,7 @@ const registerUser = async (req: Request, res: Response) => {
   } else throw new UnauthorizedError("invalid credentials");
 };
 
-const verifyEmail = async (req: Request, res: Response) => {
+const verifyEmail: RequestHandler = async (req, res) => {
   try {
     // GET TOKEN AND EMAIL FROM THE CLIENT
     const {
@@ -114,7 +114,7 @@ const verifyEmail = async (req: Request, res: Response) => {
   }
 };
 
-const login = async (req: Request, res: Response) => {
+const login: RequestHandler = async (req, res) => {
   // GET EMAIL AND PASSWORD VALUES FROM THE CLIENT
   const { email, password }: { email: string; password: string } = req.body;
   // CHECK IF INFORMATION IS NOT MISSING EMAIL AND PASSWORD
@@ -131,13 +131,16 @@ const login = async (req: Request, res: Response) => {
   if (!isPassword) throw new UnauthorizedError("invalid credentials");
   // IF USER IS VERIFIED
   if (!user.isVerified) throw new UnauthorizedError("invalid credentials");
+
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
   // CHECK IF USER HAS A VALID TOKEN
   const existingToken = await Token.findOne({ user: user._id });
   if (existingToken) {
     if (!existingToken.isValid)
       throw new UnauthorizedError("invalid credentials");
     const refreshToken = existingToken.refreshToken;
-    attachJwtToCookie({ res, user, refreshToken });
+    attachJwtToCookie({ res, user, refreshToken, ip, userAgent });
     res.status(StatusCodes.OK).json({ msg: "login success" });
   }
   // IF NOT CREATE NEW TOKENS
@@ -145,25 +148,22 @@ const login = async (req: Request, res: Response) => {
   // HASH ALL INFORMATION BEFORE STORING THEM TO DB
   const refreshToken = createCrypto();
   const hashedRefreshToken = createHash(refreshToken);
-  const ip = req.ip;
-  const hashedIp = createHash(ip);
-  const userAgent = req.headers["user-agent"];
+
   if (typeof userAgent !== "string")
     throw new UnauthorizedError("user agent is required");
-  const hashedUserAgent = createHash(userAgent);
 
   await Token.create({
     refreshToken: hashedRefreshToken,
-    ip: hashedIp,
-    userAgent: hashedUserAgent,
+    ip,
+    userAgent,
     user: user._id,
   });
-  attachJwtToCookie({ res, user, refreshToken });
+  attachJwtToCookie({ res, user, refreshToken, ip, userAgent });
   res.status(StatusCodes.OK).json({ msg: "login success" });
 };
 
 // ! DELETE TOKEN
-const logout = async (req: Request, res: Response) => {
+const logout: RequestHandler = async (req, res) => {
   // await Token.findOneAndDelete({user:req.user.userId})
   res.cookie("access_token", "", {
     httpOnly: true,
@@ -176,7 +176,7 @@ const logout = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({ msg: "logout success" });
 };
 
-const forgotPassword = async (req: Request, res: Response) => {
+const forgotPassword: RequestHandler = async (req, res) => {
   // GET EMAIL ADDRESS FROM CLIENT
   const { email }: { email: string } = req.body;
   // CHECK IF INFORMATION IS NOT MISSING EMAIL
@@ -204,7 +204,7 @@ const forgotPassword = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({ msg: "reset email sent" });
 };
 
-const resetPassword = async (req: Request, res: Response) => {
+const resetPassword: RequestHandler = async (req, res) => {
   // GET INFORMATION FROM CLIENT
   const { passwordToken, email, password }: ResetPasswordInterface = req.body;
   // CHECK IF INFORMATION IS NOT MISSING ANYTHING

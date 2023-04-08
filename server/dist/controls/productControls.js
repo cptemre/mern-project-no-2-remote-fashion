@@ -84,7 +84,6 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
     if (price) {
         // EXAMPLE: gte-50_lte-100
         const [gteString, lteString] = price.split("_");
-        let gteVal;
         const priceVal = {
             $gte: undefined,
             $lte: undefined,

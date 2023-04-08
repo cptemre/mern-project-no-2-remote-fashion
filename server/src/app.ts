@@ -19,15 +19,17 @@ import authRouter from "./routes/authRoutes";
 import productRouter from "./routes/productRoutes";
 // ERRORS
 import errorHandler from "./middlewares/errorHandler";
+import notFoundError from "./middlewares/notFoundError";
 
 // MIDDLEWARES
 app.use(express.json());
-app.use(cookieParser(jwtSecret));
+app.use(cookieParser(process.env.JWT_SECRET));
 // PAGES MIDDLEWARE
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/product", productRouter);
 // ERROR MIDDLEWARE
 app.use(errorHandler);
+app.use(notFoundError);
 // START SERVER
 const start = async () => {
   try {

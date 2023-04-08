@@ -3,6 +3,8 @@ const router = express();
 
 import { createProduct, getAllProducts } from "../controls/productControls";
 
-router.route("/").post(createProduct);
+import { authUser } from "../middlewares/authorization";
+
+router.route("/").post(authUser, createProduct).get(getAllProducts);
 
 export default router;

@@ -6,5 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const router = (0, express_1.default)();
 const productControls_1 = require("../controls/productControls");
-router.route("/").post(productControls_1.createProduct);
+const authorization_1 = require("../middlewares/authorization");
+router.route("/").post(authorization_1.authUser, productControls_1.createProduct).get(productControls_1.getAllProducts);
 exports.default = router;
