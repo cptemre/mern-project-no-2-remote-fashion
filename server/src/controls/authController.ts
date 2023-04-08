@@ -141,14 +141,21 @@ const login = async (req: Request, res: Response) => {
     res.status(StatusCodes.OK).json({ msg: "login success" });
   }
   // IF NOT CREATE NEW TOKENS
+  // GET BROWSER AND IP INFORMATION
+  // HASH ALL INFORMATION BEFORE STORING THEM TO DB
   const refreshToken = createCrypto();
   const hashedRefreshToken = createHash(refreshToken);
   const ip = req.ip;
+  const hashedIp = createHash(ip);
   const userAgent = req.headers["user-agent"];
+  if (typeof userAgent !== "string")
+    throw new UnauthorizedError("user agent is required");
+  const hashedUserAgent = createHash(userAgent);
+
   await Token.create({
     refreshToken: hashedRefreshToken,
-    ip,
-    userAgent,
+    ip: hashedIp,
+    userAgent: hashedUserAgent,
     user: user._id,
   });
   attachJwtToCookie({ res, user, refreshToken });

@@ -134,14 +134,20 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "login success" });
     }
     // IF NOT CREATE NEW TOKENS
+    // GET BROWSER AND IP INFORMATION
+    // HASH ALL INFORMATION BEFORE STORING THEM TO DB
     const refreshToken = (0, token_1.createCrypto)();
     const hashedRefreshToken = (0, token_1.createHash)(refreshToken);
     const ip = req.ip;
+    const hashedIp = (0, token_1.createHash)(ip);
     const userAgent = req.headers["user-agent"];
+    if (typeof userAgent !== "string")
+        throw new errors_1.UnauthorizedError("user agent is required");
+    const hashedUserAgent = (0, token_1.createHash)(userAgent);
     yield models_1.Token.create({
         refreshToken: hashedRefreshToken,
-        ip,
-        userAgent,
+        ip: hashedIp,
+        userAgent: hashedUserAgent,
         user: user._id,
     });
     (0, token_1.attachJwtToCookie)({ res, user, refreshToken });
