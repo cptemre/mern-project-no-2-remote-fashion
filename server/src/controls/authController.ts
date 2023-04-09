@@ -139,6 +139,7 @@ const login: RequestHandler = async (req, res) => {
     const refreshToken = existingToken.refreshToken;
     attachJwtToCookie({ res, user, refreshToken, ip, userAgent });
     res.status(StatusCodes.OK).json({ msg: "login success" });
+    return;
   }
   // IF NOT CREATE NEW TOKENS
   // GET BROWSER AND IP INFORMATION
@@ -155,7 +156,13 @@ const login: RequestHandler = async (req, res) => {
     userAgent,
     user: user._id,
   });
-  attachJwtToCookie({ res, user, refreshToken, ip, userAgent });
+  attachJwtToCookie({
+    res,
+    user,
+    refreshToken: hashedRefreshToken,
+    ip,
+    userAgent,
+  });
   res.status(StatusCodes.OK).json({ msg: "login success" });
 };
 
@@ -184,11 +191,11 @@ const forgotPassword: RequestHandler = async (req, res) => {
   // CREATE A TOKEN FOR THE CLIENT
   const passwordToken = createCrypto();
   // SEND THE EMAIL TO THE USER
-  await forgotPasswordEmail({
-    userEmail: email,
-    userName: user.name,
-    verificationToken: passwordToken,
-  });
+  // await forgotPasswordEmail({
+  //   userEmail: email,
+  //   userName: user.name,
+  //   verificationToken: passwordToken,
+  // });
   // CREATE HASHED PASSWORD AND EXP DATE FOR 15 MINUTES
   const quarterHour = 1000 * 60 * 15;
   const hashedPasswordToken = await createHash(passwordToken);
@@ -198,7 +205,7 @@ const forgotPassword: RequestHandler = async (req, res) => {
   user.passwordTokenExpDate = passwordTokenExpDate;
   await user.save();
 
-  res.status(StatusCodes.OK).json({ msg: "reset email sent" });
+  res.status(StatusCodes.OK).json({ msg: "reset email sent", passwordToken });
 };
 
 const resetPassword: RequestHandler = async (req, res) => {
@@ -212,10 +219,13 @@ const resetPassword: RequestHandler = async (req, res) => {
   if (!user) throw new UnauthorizedError("invalid credentials");
   // COMPARE TOKEN VALIDATION
   const currentDate = new Date(Date.now());
-  if (
-    user.passwordToken === (await createHash(passwordToken)) ||
-    user.passwordTokenExpDate > currentDate
-  ) {
+
+  // COMPARE HASHED USER TOKEN AND REQUEST TOKEN AND EXP DATE
+  const isPasswordToken = await bcrypt.compare(
+    passwordToken,
+    user.passwordToken
+  );
+  if (isPasswordToken || user.passwordTokenExpDate > currentDate) {
     user.password = password;
     user.passwordToken = "";
     user.passwordTokenExpDate = currentDate;

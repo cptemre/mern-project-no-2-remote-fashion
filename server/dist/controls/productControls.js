@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllProducts = exports.createProduct = void 0;
+exports.deleteProduct = exports.getAllProducts = exports.createProduct = void 0;
 // MODELS
 const models_1 = require("../models");
 // ARRAYS
@@ -124,3 +124,17 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
     res.status(http_status_codes_1.StatusCodes.OK).json({ products });
 });
 exports.getAllProducts = getAllProducts;
+const deleteProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // GET PRODUCT ID FROM BODY
+    const { id: productId } = req.params;
+    // FIND THE PRODUCT
+    const product = yield models_1.Product.findOne({ _id: productId });
+    // IF PRODUCT DOES NOT EXIST SEND AN ERROR
+    if (!product)
+        throw new errors_1.BadRequestError("product does not exist");
+    // DELETE THE PRODUCT
+    yield product.deleteOne();
+    // ! AFTER DELETING PRODUCT DELETE ALL REVIEWS IN THE FUTURE
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "product deleted" });
+});
+exports.deleteProduct = deleteProduct;

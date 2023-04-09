@@ -144,4 +144,17 @@ const getAllProducts: RequestHandler = async (req, res) => {
   res.status(StatusCodes.OK).json({ products });
 };
 
-export { createProduct, getAllProducts };
+const deleteProduct: RequestHandler = async (req, res) => {
+  // GET PRODUCT ID FROM BODY
+  const { id: productId } = req.params;
+  // FIND THE PRODUCT
+  const product = await Product.findOne({ _id: productId });
+  // IF PRODUCT DOES NOT EXIST SEND AN ERROR
+  if (!product) throw new BadRequestError("product does not exist");
+  // DELETE THE PRODUCT
+  await product.deleteOne();
+  // ! AFTER DELETING PRODUCT DELETE ALL REVIEWS IN THE FUTURE
+  res.status(StatusCodes.OK).json({ msg: "product deleted" });
+};
+
+export { createProduct, getAllProducts, deleteProduct };

@@ -21,8 +21,6 @@ const http_status_codes_1 = require("http-status-codes");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 // ERRORS
 const errors_1 = require("../errors");
-// SEND EMAIL
-const email_1 = require("../utilities/email");
 // JWT AND CRYPTO
 const token_1 = require("../utilities/token");
 // * CREATE A NEW USER
@@ -132,6 +130,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const refreshToken = existingToken.refreshToken;
         (0, token_1.attachJwtToCookie)({ res, user, refreshToken, ip, userAgent });
         res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "login success" });
+        return;
     }
     // IF NOT CREATE NEW TOKENS
     // GET BROWSER AND IP INFORMATION
@@ -146,7 +145,13 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         userAgent,
         user: user._id,
     });
-    (0, token_1.attachJwtToCookie)({ res, user, refreshToken, ip, userAgent });
+    (0, token_1.attachJwtToCookie)({
+        res,
+        user,
+        refreshToken: hashedRefreshToken,
+        ip,
+        userAgent,
+    });
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "login success" });
 });
 exports.login = login;
@@ -176,11 +181,11 @@ const forgotPassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
     // CREATE A TOKEN FOR THE CLIENT
     const passwordToken = (0, token_1.createCrypto)();
     // SEND THE EMAIL TO THE USER
-    yield (0, email_1.forgotPasswordEmail)({
-        userEmail: email,
-        userName: user.name,
-        verificationToken: passwordToken,
-    });
+    // await forgotPasswordEmail({
+    //   userEmail: email,
+    //   userName: user.name,
+    //   verificationToken: passwordToken,
+    // });
     // CREATE HASHED PASSWORD AND EXP DATE FOR 15 MINUTES
     const quarterHour = 1000 * 60 * 15;
     const hashedPasswordToken = yield (0, token_1.createHash)(passwordToken);
@@ -189,7 +194,7 @@ const forgotPassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
     user.passwordToken = hashedPasswordToken;
     user.passwordTokenExpDate = passwordTokenExpDate;
     yield user.save();
-    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "reset email sent" });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "reset email sent", passwordToken });
 });
 exports.forgotPassword = forgotPassword;
 const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -204,8 +209,9 @@ const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         throw new errors_1.UnauthorizedError("invalid credentials");
     // COMPARE TOKEN VALIDATION
     const currentDate = new Date(Date.now());
-    if (user.passwordToken === (yield (0, token_1.createHash)(passwordToken)) ||
-        user.passwordTokenExpDate > currentDate) {
+    // COMPARE HASHED USER TOKEN AND REQUEST TOKEN AND EXP DATE
+    const isPasswordToken = yield bcryptjs_1.default.compare(passwordToken, user.passwordToken);
+    if (isPasswordToken || user.passwordTokenExpDate > currentDate) {
         user.password = password;
         user.passwordToken = "";
         user.passwordTokenExpDate = currentDate;
