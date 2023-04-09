@@ -43,9 +43,7 @@ const registerUser: RequestHandler = async (req, res) => {
   const user = await User.findOne({ email });
 
   // THROW ERROR IF USER EXISTS
-  if (user) {
-    throw new ConflictError("user already exists");
-  }
+  if (user) throw new ConflictError("user already exists");
 
   // IF THERE ARE NO USERS, FIRST ACCOUNT WILL BE AN ADMIN
   const isUsers = await User.find({}).countDocuments();
@@ -53,8 +51,8 @@ const registerUser: RequestHandler = async (req, res) => {
   // THERE CAN ONLY BE ONE ADMIN
   if (!isUsers) userType = "admin";
   else {
-    if (userType === "admin") throw new UnauthorizedError("Error");
-    else userType = req.body;
+    if (userType === "admin") throw new BadRequestError("admin already exists");
+    else userType = "user";
   }
 
   const verificationToken = createCrypto();
@@ -74,11 +72,11 @@ const registerUser: RequestHandler = async (req, res) => {
       verificationToken,
     });
 
-    await registerEmail(<RegisterVerificationInterface>{
-      userEmail: user.email,
-      userName: user.name,
-      verificationToken: user.verificationToken,
-    });
+    // await registerEmail(<RegisterVerificationInterface>{
+    //   userEmail: user.email,
+    //   userName: user.name,
+    //   verificationToken: user.verificationToken,
+    // });
     res
       .status(StatusCodes.CREATED)
       .json({ msg: "user created", verificationToken });
@@ -126,7 +124,6 @@ const login: RequestHandler = async (req, res) => {
   if (!user) throw new UnauthorizedError("invalid credentials");
   // COMPARE PASSWORDS
   const isPassword = await bcrypt.compare(password, user.password);
-  console.log(isPassword);
 
   if (!isPassword) throw new UnauthorizedError("invalid credentials");
   // IF USER IS VERIFIED
@@ -147,7 +144,7 @@ const login: RequestHandler = async (req, res) => {
   // GET BROWSER AND IP INFORMATION
   // HASH ALL INFORMATION BEFORE STORING THEM TO DB
   const refreshToken = createCrypto();
-  const hashedRefreshToken = createHash(refreshToken);
+  const hashedRefreshToken = await createHash(refreshToken);
 
   if (typeof userAgent !== "string")
     throw new UnauthorizedError("user agent is required");
@@ -194,7 +191,7 @@ const forgotPassword: RequestHandler = async (req, res) => {
   });
   // CREATE HASHED PASSWORD AND EXP DATE FOR 15 MINUTES
   const quarterHour = 1000 * 60 * 15;
-  const hashedPasswordToken = createHash(passwordToken);
+  const hashedPasswordToken = await createHash(passwordToken);
   const passwordTokenExpDate = new Date(Date.now() + quarterHour);
   // SAVE THE USER WITH HASHED TOKEN AND EXP DATE
   user.passwordToken = hashedPasswordToken;
@@ -216,7 +213,7 @@ const resetPassword: RequestHandler = async (req, res) => {
   // COMPARE TOKEN VALIDATION
   const currentDate = new Date(Date.now());
   if (
-    user.passwordToken === createHash(passwordToken) ||
+    user.passwordToken === (await createHash(passwordToken)) ||
     user.passwordTokenExpDate > currentDate
   ) {
     user.password = password;
