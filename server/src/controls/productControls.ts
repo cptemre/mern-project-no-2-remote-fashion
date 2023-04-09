@@ -140,21 +140,75 @@ const getAllProducts: RequestHandler = async (req, res) => {
   const findProducts = Product.find(query);
 
   const products = await findProducts.skip(skip).limit(limit);
-
-  res.status(StatusCodes.OK).json({ products });
+  const productLength = products.length;
+  res.status(StatusCodes.OK).json({ products, productLength });
 };
 
 const deleteProduct: RequestHandler = async (req, res) => {
   // GET PRODUCT ID FROM BODY
   const { id: productId } = req.params;
   // FIND THE PRODUCT
-  const product = await Product.findOne({ _id: productId });
-  // IF PRODUCT DOES NOT EXIST SEND AN ERROR
-  if (!product) throw new BadRequestError("product does not exist");
+  const product = await findProductById(productId);
   // DELETE THE PRODUCT
   await product.deleteOne();
   // ! AFTER DELETING PRODUCT DELETE ALL REVIEWS IN THE FUTURE
   res.status(StatusCodes.OK).json({ msg: "product deleted" });
 };
 
-export { createProduct, getAllProducts, deleteProduct };
+const getSingleProduct: RequestHandler = async (req, res) => {
+  // GET PRODUCT ID FROM BODY
+  const { id: productId } = req.params;
+  // FIND THE PRODUCT
+  const product = await findProductById(productId);
+
+  res.status(StatusCodes.OK).json({ product });
+};
+
+const updateProduct: RequestHandler = async (req, res) => {
+  // GET PRODUCT ID FROM BODY
+  const { id: productId } = req.params;
+  const {
+    name,
+    brand,
+    price,
+    image,
+    description,
+    size,
+    gender,
+    category,
+    subCategory,
+    stock,
+  }: Omit<ProductSchemaInterface, "numberOfReviews | averageRating"> = req.body;
+  // FIND THE PRODUCT
+  const product = await findProductById(productId);
+  // UPDATE PROPERTIES
+  if (name) product.name = name;
+  if (brand) product.brand = brand;
+  if (price) product.price = Number(price);
+  if (image) product.image = image;
+  if (description) product.description = description;
+  if (gender) product.gender = gender;
+  if (category) product.category = category;
+  if (subCategory) product.subCategory = subCategory;
+  if (stock) product.stock = stock;
+  // SAVE UPDATED PRODUCT
+  await product.save();
+
+  res.status(StatusCodes.OK).json({ msg: "product updated", product });
+};
+
+const findProductById = async (productId: string) => {
+  // FIND THE PRODUCT
+  const product = await Product.findOne({ _id: productId });
+  // IF PRODUCT DOES NOT EXIST SEND AN ERROR
+  if (!product) throw new BadRequestError("product does not exist");
+
+  return product;
+};
+export {
+  createProduct,
+  getAllProducts,
+  deleteProduct,
+  getSingleProduct,
+  updateProduct,
+};

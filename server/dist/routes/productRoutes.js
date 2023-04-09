@@ -11,5 +11,9 @@ router
     .route("/")
     .post(authorization_1.authUser, (0, authorization_1.authRole)("admin"), productControls_1.createProduct)
     .get(productControls_1.getAllProducts);
-router.route("/:id").delete(productControls_1.deleteProduct);
+router
+    .route("/:id")
+    .get(productControls_1.getSingleProduct)
+    .delete(authorization_1.authUser, (0, authorization_1.authRole)("admin"), productControls_1.deleteProduct)
+    .patch(authorization_1.authUser, (0, authorization_1.authRole)("admin"), productControls_1.updateProduct);
 exports.default = router;
