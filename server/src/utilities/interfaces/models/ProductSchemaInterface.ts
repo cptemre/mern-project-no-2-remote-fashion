@@ -1,4 +1,6 @@
-interface ProductSchemaInterface {
+import { Document } from "mongoose";
+
+interface ProductSchemaInterface extends Document {
   name: string;
   brand: string;
   price: number;

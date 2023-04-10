@@ -8,6 +8,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateProduct = exports.getSingleProduct = exports.deleteProduct = exports.getAllProducts = exports.createProduct = void 0;
 // MODELS
@@ -16,7 +19,10 @@ const models_1 = require("../models");
 const categoriesAndSubCategories_1 = require("../utilities/categories/categoriesAndSubCategories");
 // HTTP CODES
 const http_status_codes_1 = require("http-status-codes");
+// ERRORS
 const errors_1 = require("../errors");
+// UTILITY FUNCTIONS
+const findDocumentByIdAndModel_1 = __importDefault(require("../utilities/controllers/findDocumentByIdAndModel"));
 const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET CLIENT SIDE BODY REQUEST TO CREATE A PRODUCT
     const { name, brand, price, image, description, size, gender, category, subCategory, } = req.body;
@@ -129,7 +135,10 @@ const deleteProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     // GET PRODUCT ID FROM BODY
     const { id: productId } = req.params;
     // FIND THE PRODUCT
-    const product = yield findProductById(productId);
+    const product = yield (0, findDocumentByIdAndModel_1.default)({
+        id: productId,
+        MyModel: models_1.Product,
+    });
     // DELETE THE PRODUCT
     yield product.deleteOne();
     // ! AFTER DELETING PRODUCT DELETE ALL REVIEWS IN THE FUTURE
@@ -140,7 +149,10 @@ const getSingleProduct = (req, res) => __awaiter(void 0, void 0, void 0, functio
     // GET PRODUCT ID FROM BODY
     const { id: productId } = req.params;
     // FIND THE PRODUCT
-    const product = yield findProductById(productId);
+    const product = yield (0, findDocumentByIdAndModel_1.default)({
+        id: productId,
+        MyModel: models_1.Product,
+    });
     res.status(http_status_codes_1.StatusCodes.OK).json({ product });
 });
 exports.getSingleProduct = getSingleProduct;
@@ -149,7 +161,10 @@ const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const { id: productId } = req.params;
     const { name, brand, price, image, description, size, gender, category, subCategory, stock, } = req.body;
     // FIND THE PRODUCT
-    const product = yield findProductById(productId);
+    const product = yield (0, findDocumentByIdAndModel_1.default)({
+        id: productId,
+        MyModel: models_1.Product,
+    });
     // UPDATE PROPERTIES
     if (name)
         product.name = name;
@@ -161,6 +176,8 @@ const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         product.image = image;
     if (description)
         product.description = description;
+    if (size)
+        product.size = size;
     if (gender)
         product.gender = gender;
     if (category)
@@ -174,11 +191,3 @@ const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "product updated", product });
 });
 exports.updateProduct = updateProduct;
-const findProductById = (productId) => __awaiter(void 0, void 0, void 0, function* () {
-    // FIND THE PRODUCT
-    const product = yield models_1.Product.findOne({ _id: productId });
-    // IF PRODUCT DOES NOT EXIST SEND AN ERROR
-    if (!product)
-        throw new errors_1.BadRequestError("product does not exist");
-    return product;
-});

@@ -1,3 +1,5 @@
+import { Document } from "mongoose";
+
 interface AddressInterface {
   street: string;
   city: string;
@@ -9,7 +11,7 @@ interface PhoneNumberInterface {
   countryCode: string;
   phoneNumber: number;
 }
-interface UserSchemaInterface {
+interface UserSchemaInterface extends Document {
   name: string;
   surname: string;
   email: string;

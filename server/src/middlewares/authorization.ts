@@ -7,12 +7,14 @@ import { attachJwtToCookie, createHash, verifyToken } from "../utilities/token";
 import { UnauthorizedError } from "../errors";
 // MODELS
 import { Token } from "../models";
+// MONGOOSE
+import { ObjectId } from "mongoose";
 
 // DECLARE A GLOBAL REQUEST KEY
 declare global {
   namespace Express {
     interface Request {
-      user?: UserSchemaInterface;
+      user?: UserSchemaInterface & { _id: ObjectId };
     }
   }
 }

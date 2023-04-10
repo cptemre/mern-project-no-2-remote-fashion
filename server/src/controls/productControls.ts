@@ -12,7 +12,10 @@ import {
 import { categoriesAndSubCategories } from "../utilities/categories/categoriesAndSubCategories";
 // HTTP CODES
 import { StatusCodes } from "http-status-codes";
+// ERRORS
 import { BadRequestError, UnauthorizedError } from "../errors";
+// UTILITY FUNCTIONS
+import findDocumentByIdAndModel from "../utilities/controllers/findDocumentByIdAndModel";
 
 const createProduct: RequestHandler = async (req, res) => {
   // GET CLIENT SIDE BODY REQUEST TO CREATE A PRODUCT
@@ -148,7 +151,10 @@ const deleteProduct: RequestHandler = async (req, res) => {
   // GET PRODUCT ID FROM BODY
   const { id: productId } = req.params;
   // FIND THE PRODUCT
-  const product = await findProductById(productId);
+  const product = await findDocumentByIdAndModel({
+    id: productId,
+    MyModel: Product,
+  });
   // DELETE THE PRODUCT
   await product.deleteOne();
   // ! AFTER DELETING PRODUCT DELETE ALL REVIEWS IN THE FUTURE
@@ -159,7 +165,10 @@ const getSingleProduct: RequestHandler = async (req, res) => {
   // GET PRODUCT ID FROM BODY
   const { id: productId } = req.params;
   // FIND THE PRODUCT
-  const product = await findProductById(productId);
+  const product = await findDocumentByIdAndModel({
+    id: productId,
+    MyModel: Product,
+  });
 
   res.status(StatusCodes.OK).json({ product });
 };
@@ -180,13 +189,17 @@ const updateProduct: RequestHandler = async (req, res) => {
     stock,
   }: Omit<ProductSchemaInterface, "numberOfReviews | averageRating"> = req.body;
   // FIND THE PRODUCT
-  const product = await findProductById(productId);
+  const product = await findDocumentByIdAndModel({
+    id: productId,
+    MyModel: Product,
+  });
   // UPDATE PROPERTIES
   if (name) product.name = name;
   if (brand) product.brand = brand;
   if (price) product.price = Number(price);
   if (image) product.image = image;
   if (description) product.description = description;
+  if (size) product.size = size;
   if (gender) product.gender = gender;
   if (category) product.category = category;
   if (subCategory) product.subCategory = subCategory;
@@ -197,14 +210,6 @@ const updateProduct: RequestHandler = async (req, res) => {
   res.status(StatusCodes.OK).json({ msg: "product updated", product });
 };
 
-const findProductById = async (productId: string) => {
-  // FIND THE PRODUCT
-  const product = await Product.findOne({ _id: productId });
-  // IF PRODUCT DOES NOT EXIST SEND AN ERROR
-  if (!product) throw new BadRequestError("product does not exist");
-
-  return product;
-};
 export {
   createProduct,
   getAllProducts,

@@ -1,9 +1,9 @@
-import { ObjectIdSchemaDefinition } from "mongoose";
+import { ObjectId, Document } from "mongoose";
 
-interface TokenInterface {
+interface TokenInterface extends Document {
   refreshToken: string;
   isValid: boolean;
-  user: ObjectIdSchemaDefinition;
+  user: ObjectId;
 }
 
 export default TokenInterface;

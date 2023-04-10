@@ -10,6 +10,6 @@ const TokenSchema = new Schema<TokenInterface>(
   { timestamps: true }
 );
 
-const Token = model("Token", TokenSchema);
+const Token = model<TokenInterface>("Token", TokenSchema);
 
 export default Token;

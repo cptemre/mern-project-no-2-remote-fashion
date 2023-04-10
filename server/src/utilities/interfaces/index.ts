@@ -11,6 +11,7 @@ import ResetPasswordInterface from "./controllers/auth/ResetPasswordInterface";
 import ProductSchemaInterface from "./models/ProductSchemaInterface";
 import GetAllProductsQueryInterface from "./controllers/product/GetAllProductsQueryInterface";
 import GetAllProductsReqBodyInterface from "./controllers/product/GetAllProductsReqBodyInterface";
+import ReviewSchemaInterface from "./models/ReviewSchemaInterface";
 
 export {
   UserSchemaInterface,
@@ -24,4 +25,5 @@ export {
   ProductSchemaInterface,
   GetAllProductsQueryInterface,
   GetAllProductsReqBodyInterface,
+  ReviewSchemaInterface,
 };
