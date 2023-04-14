@@ -75,8 +75,10 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.createProduct = createProduct;
 const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     // QUERY FROM THE CLIENT
-    const { name, brand, color, size, price, isReview, isStock, rating, gender, page, } = req.body;
+    // !DONT FORGET TO SET ISREVIEW BOOL LATER
+    const { name, brand, color, size, price, isReview, isStock, rating, gender, page, myProducts, } = req.body;
     // EMPTY QUERY IN SERVER TO SET VALUES
     const query = {};
     if (name)
@@ -123,6 +125,8 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
         query.page = Number(page);
     else
         query.page = 1;
+    if (myProducts === "true")
+        query.userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const limit = 10;
     const skip = limit * (Number(page) - 1);
     const findProducts = models_1.Product.find(query);

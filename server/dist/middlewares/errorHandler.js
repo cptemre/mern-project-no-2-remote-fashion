@@ -23,6 +23,8 @@ const errorHandler = (err, req, res, next) => {
         customError.msg = errorArray.toString();
         customError.statusCode = http_status_codes_1.StatusCodes.UNPROCESSABLE_ENTITY;
     }
+    // SHOW ERROR IN CONSOLE FOR DETAILS
+    // console.log(err);
     res.status(customError.statusCode).json({ msg: customError.msg });
 };
 exports.default = errorHandler;

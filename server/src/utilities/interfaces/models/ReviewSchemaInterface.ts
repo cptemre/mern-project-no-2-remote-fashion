@@ -1,4 +1,8 @@
-import { ObjectId, Document } from "mongoose";
+import { ObjectId, Document, Model } from "mongoose";
+
+interface ReviewModelInterface extends Model<ReviewSchemaInterface> {
+  calculateAverageRating(productId: ObjectId): Promise<void>;
+}
 
 interface ReviewSchemaInterface extends Document {
   title: string;
@@ -8,4 +12,4 @@ interface ReviewSchemaInterface extends Document {
   product: ObjectId;
 }
 
-export default ReviewSchemaInterface;
+export { ReviewSchemaInterface, ReviewModelInterface };

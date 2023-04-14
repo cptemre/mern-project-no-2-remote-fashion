@@ -11,9 +11,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 // ERROR
 const errors_1 = require("../../errors");
-const findDocumentByIdAndModel = ({ id, MyModel, }) => __awaiter(void 0, void 0, void 0, function* () {
+const findDocumentByIdAndModel = ({ id, user, MyModel, }) => __awaiter(void 0, void 0, void 0, function* () {
     // FIND THE PRODUCT
-    const product = yield MyModel.findOne({ _id: id });
+    const product = yield MyModel.findOne({ _id: id, user });
     // IF PRODUCT DOES NOT EXIST SEND AN ERROR
     if (!product)
         throw new errors_1.BadRequestError("document does not exist");

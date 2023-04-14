@@ -9,6 +9,7 @@ interface RequestBody {
   rating: string;
   gender: "M" | "F" | "B";
   page: string;
+  myProducts: string;
 }
 
 export default RequestBody;

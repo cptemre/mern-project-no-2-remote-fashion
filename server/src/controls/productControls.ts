@@ -87,6 +87,7 @@ const createProduct: RequestHandler = async (req, res) => {
 
 const getAllProducts: RequestHandler = async (req, res) => {
   // QUERY FROM THE CLIENT
+  // !DONT FORGET TO SET ISREVIEW BOOL LATER
   const {
     name,
     brand,
@@ -98,6 +99,7 @@ const getAllProducts: RequestHandler = async (req, res) => {
     rating,
     gender,
     page,
+    myProducts,
   }: Partial<GetAllProductsReqBodyInterface> = req.body;
   // EMPTY QUERY IN SERVER TO SET VALUES
   const query: Partial<GetAllProductsQueryInterface> = {};
@@ -137,7 +139,7 @@ const getAllProducts: RequestHandler = async (req, res) => {
   if (gender) query.gender = gender;
   if (page) query.page = Number(page);
   else query.page = 1;
-
+  if (myProducts === "true") query.userId = req.user?._id;
   const limit = 10;
   const skip = limit * (Number(page) - 1);
   const findProducts = Product.find(query);

@@ -9,6 +9,7 @@ interface GetAllProductsQueryInterface {
   rating: number;
   gender: "M" | "F" | "B";
   page: number;
+  userId: string;
 }
 
 export default GetAllProductsQueryInterface;
