@@ -16,7 +16,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 // OTHER MODELS
 const Product_1 = __importDefault(require("./Product"));
-const errors_1 = require("../errors");
+const findDocumentByIdAndModel_1 = __importDefault(require("../utilities/controllers/findDocumentByIdAndModel"));
 const ReviewSchema = new mongoose_1.Schema({
     title: {
         type: String,
@@ -51,6 +51,7 @@ const ReviewSchema = new mongoose_1.Schema({
 }, { timestamps: true });
 // ENSURE THAT ONLY ONE REVIEW PER PRODUCT
 ReviewSchema.index({ product: 1, user: 1 }, { unique: true });
+// STATIC MODEL FUNCTION TO GROUP REVIEWS OF SAME PRODUCT BEFORE AND AFTER SAVE
 ReviewSchema.statics.calculateAverageRating = function (productId) {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
@@ -72,21 +73,23 @@ ReviewSchema.statics.calculateAverageRating = function (productId) {
                 },
             ]);
             console.log(result);
+            // QUERY OBJECT
             const findAndUpdateQuery = {
                 averageRating: Number((_a = result[0]) === null || _a === void 0 ? void 0 : _a.averageRating) || 0,
                 numberOfReviews: Number((_b = result[0]) === null || _b === void 0 ? void 0 : _b.numberOfReviews) || 0,
             };
-            const product = yield Product_1.default.findById(productId);
-            if (!product) {
-                // handle error if product not found
-                throw new Error("a");
-            }
+            // FIND THE PRODUCT
+            const product = yield (0, findDocumentByIdAndModel_1.default)({
+                id: productId.toString(),
+                MyModel: Product_1.default,
+            });
+            // UPDATE THE PRODUCT
             product.averageRating = findAndUpdateQuery.averageRating;
             product.numberOfReviews = findAndUpdateQuery.numberOfReviews;
             yield product.save();
         }
         catch (error) {
-            throw new errors_1.BadRequestError("average rate for product can not be calculated");
+            console.log(error);
         }
     });
 };
@@ -100,5 +103,6 @@ ReviewSchema.post("findOneAndDelete", function (doc) {
         yield Review.calculateAverageRating(doc.product);
     });
 });
+// MODEL NEEDS AN EXTRA EXTENDED INTERFACE TO BE ABLE TO RECOGNIZE THE STATIC FUNCTIONS
 const Review = (0, mongoose_1.model)("Review", ReviewSchema);
 exports.default = Review;

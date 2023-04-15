@@ -7,7 +7,7 @@ import {
 } from "../utilities/interfaces";
 // OTHER MODELS
 import Product from "./Product";
-import { BadRequestError } from "../errors";
+import findDocumentByIdAndModel from "../utilities/controllers/findDocumentByIdAndModel";
 const ReviewSchema = new Schema<ReviewSchemaInterface>(
   {
     title: {
@@ -45,7 +45,7 @@ const ReviewSchema = new Schema<ReviewSchemaInterface>(
 );
 // ENSURE THAT ONLY ONE REVIEW PER PRODUCT
 ReviewSchema.index({ product: 1, user: 1 }, { unique: true });
-
+// STATIC MODEL FUNCTION TO GROUP REVIEWS OF SAME PRODUCT BEFORE AND AFTER SAVE
 ReviewSchema.statics.calculateAverageRating = async function (
   productId: ObjectId
 ) {
@@ -67,7 +67,7 @@ ReviewSchema.statics.calculateAverageRating = async function (
       },
     ]);
     console.log(result);
-
+    // QUERY OBJECT
     const findAndUpdateQuery: {
       averageRating: number;
       numberOfReviews: number;
@@ -75,17 +75,17 @@ ReviewSchema.statics.calculateAverageRating = async function (
       averageRating: Number(result[0]?.averageRating) || 0,
       numberOfReviews: Number(result[0]?.numberOfReviews) || 0,
     };
-    const product = await Product.findById(productId);
-    if (!product) {
-      // handle error if product not found
-      throw new Error("a");
-    }
-
+    // FIND THE PRODUCT
+    const product = await findDocumentByIdAndModel({
+      id: productId.toString(),
+      MyModel: Product,
+    });
+    // UPDATE THE PRODUCT
     product.averageRating = findAndUpdateQuery.averageRating;
     product.numberOfReviews = findAndUpdateQuery.numberOfReviews;
     await product.save();
   } catch (error) {
-    throw new BadRequestError("average rate for product can not be calculated");
+    console.log(error);
   }
 };
 ReviewSchema.post("save", async function () {
@@ -94,6 +94,7 @@ ReviewSchema.post("save", async function () {
 ReviewSchema.post("findOneAndDelete", async function (doc) {
   await Review.calculateAverageRating(doc.product);
 });
+// MODEL NEEDS AN EXTRA EXTENDED INTERFACE TO BE ABLE TO RECOGNIZE THE STATIC FUNCTIONS
 const Review: ReviewModelInterface = model<
   ReviewSchemaInterface,
   ReviewModelInterface
