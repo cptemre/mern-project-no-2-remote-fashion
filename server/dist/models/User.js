@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const validator = require("validator");
+const token_1 = require("../utilities/token");
 // * SCHEMA
 const UserSchema = new mongoose_1.Schema({
     name: {
@@ -86,7 +87,7 @@ UserSchema.pre("save", function () {
         if (this.isModified("surname"))
             this.surname = this.surname.toUpperCase();
         const salt = yield bcryptjs_1.default.genSalt(10);
-        const hash = yield bcryptjs_1.default.hash(this.password, salt);
+        const hash = yield (0, token_1.createHash)(this.password);
         this.password = hash;
     });
 });

@@ -8,15 +8,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllProducts = exports.createProduct = void 0;
+exports.updateProduct = exports.getSingleProduct = exports.deleteProduct = exports.getAllProducts = exports.createProduct = void 0;
 // MODELS
 const models_1 = require("../models");
 // ARRAYS
 const categoriesAndSubCategories_1 = require("../utilities/categories/categoriesAndSubCategories");
 // HTTP CODES
 const http_status_codes_1 = require("http-status-codes");
+// ERRORS
 const errors_1 = require("../errors");
+// UTILITY FUNCTIONS
+const findDocumentByIdAndModel_1 = __importDefault(require("../utilities/controllers/findDocumentByIdAndModel"));
 const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET CLIENT SIDE BODY REQUEST TO CREATE A PRODUCT
     const { name, brand, price, image, description, size, gender, category, subCategory, } = req.body;
@@ -69,8 +75,10 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.createProduct = createProduct;
 const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     // QUERY FROM THE CLIENT
-    const { name, brand, color, size, price, isReview, isStock, rating, gender, page, } = req.body;
+    // !DONT FORGET TO SET ISREVIEW BOOL LATER
+    const { name, brand, color, size, price, isReview, isStock, rating, gender, page, myProducts, } = req.body;
     // EMPTY QUERY IN SERVER TO SET VALUES
     const query = {};
     if (name)
@@ -84,7 +92,6 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
     if (price) {
         // EXAMPLE: gte-50_lte-100
         const [gteString, lteString] = price.split("_");
-        let gteVal;
         const priceVal = {
             $gte: undefined,
             $lte: undefined,
@@ -118,10 +125,73 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
         query.page = Number(page);
     else
         query.page = 1;
+    if (myProducts === "true")
+        query.userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const limit = 10;
     const skip = limit * (Number(page) - 1);
     const findProducts = models_1.Product.find(query);
     const products = yield findProducts.skip(skip).limit(limit);
-    res.status(http_status_codes_1.StatusCodes.OK).json({ products });
+    const productLength = products.length;
+    res.status(http_status_codes_1.StatusCodes.OK).json({ products, productLength });
 });
 exports.getAllProducts = getAllProducts;
+const deleteProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // GET PRODUCT ID FROM BODY
+    const { id: productId } = req.params;
+    // FIND THE PRODUCT
+    const product = yield (0, findDocumentByIdAndModel_1.default)({
+        id: productId,
+        MyModel: models_1.Product,
+    });
+    // DELETE THE PRODUCT
+    yield product.deleteOne();
+    // ! AFTER DELETING PRODUCT DELETE ALL REVIEWS IN THE FUTURE
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "product deleted" });
+});
+exports.deleteProduct = deleteProduct;
+const getSingleProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // GET PRODUCT ID FROM BODY
+    const { id: productId } = req.params;
+    // FIND THE PRODUCT
+    const product = yield (0, findDocumentByIdAndModel_1.default)({
+        id: productId,
+        MyModel: models_1.Product,
+    });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ product });
+});
+exports.getSingleProduct = getSingleProduct;
+const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // GET PRODUCT ID FROM BODY
+    const { id: productId } = req.params;
+    const { name, brand, price, image, description, size, gender, category, subCategory, stock, } = req.body;
+    // FIND THE PRODUCT
+    const product = yield (0, findDocumentByIdAndModel_1.default)({
+        id: productId,
+        MyModel: models_1.Product,
+    });
+    // UPDATE PROPERTIES
+    if (name)
+        product.name = name;
+    if (brand)
+        product.brand = brand;
+    if (price)
+        product.price = Number(price);
+    if (image)
+        product.image = image;
+    if (description)
+        product.description = description;
+    if (size)
+        product.size = size;
+    if (gender)
+        product.gender = gender;
+    if (category)
+        product.category = category;
+    if (subCategory)
+        product.subCategory = subCategory;
+    if (stock)
+        product.stock = stock;
+    // SAVE UPDATED PRODUCT
+    yield product.save();
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "product updated", product });
+});
+exports.updateProduct = updateProduct;

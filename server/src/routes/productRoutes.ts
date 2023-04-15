@@ -1,8 +1,25 @@
 import express from "express";
 const router = express();
 
-import { createProduct, getAllProducts } from "../controls/productControls";
+import {
+  createProduct,
+  getAllProducts,
+  deleteProduct,
+  getSingleProduct,
+  updateProduct,
+} from "../controls/productControls";
 
-router.route("/").post(createProduct);
+import { authUser, authRole } from "../middlewares/authorization";
+
+router
+  .route("/")
+  .post(authUser, authRole("admin"), createProduct)
+  .get(getAllProducts);
+
+router
+  .route("/:id")
+  .get(getSingleProduct)
+  .delete(authUser, authRole("admin"), deleteProduct)
+  .patch(authUser, authRole("admin"), updateProduct);
 
 export default router;

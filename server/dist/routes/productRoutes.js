@@ -6,5 +6,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const router = (0, express_1.default)();
 const productControls_1 = require("../controls/productControls");
-router.route("/").post(productControls_1.createProduct);
+const authorization_1 = require("../middlewares/authorization");
+router
+    .route("/")
+    .post(authorization_1.authUser, (0, authorization_1.authRole)("admin"), productControls_1.createProduct)
+    .get(productControls_1.getAllProducts);
+router
+    .route("/:id")
+    .get(productControls_1.getSingleProduct)
+    .delete(authorization_1.authUser, (0, authorization_1.authRole)("admin"), productControls_1.deleteProduct)
+    .patch(authorization_1.authUser, (0, authorization_1.authRole)("admin"), productControls_1.updateProduct);
 exports.default = router;

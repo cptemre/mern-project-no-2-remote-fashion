@@ -1,7 +1,7 @@
 // MODEL
 import { User, Token } from "../models";
 // EXPRESS VARS
-import { Request, Response } from "express";
+import { RequestHandler } from "express";
 // HTTP CODES
 import { StatusCodes } from "http-status-codes";
 // BCRYPTJS
@@ -23,7 +23,7 @@ import {
   createHash,
 } from "../utilities/token";
 // * CREATE A NEW USER
-const registerUser = async (req: Request, res: Response) => {
+const registerUser: RequestHandler = async (req, res) => {
   // BODY REQUESTS
   const {
     name,
@@ -43,9 +43,7 @@ const registerUser = async (req: Request, res: Response) => {
   const user = await User.findOne({ email });
 
   // THROW ERROR IF USER EXISTS
-  if (user) {
-    throw new ConflictError("user already exists");
-  }
+  if (user) throw new ConflictError("user already exists");
 
   // IF THERE ARE NO USERS, FIRST ACCOUNT WILL BE AN ADMIN
   const isUsers = await User.find({}).countDocuments();
@@ -53,8 +51,8 @@ const registerUser = async (req: Request, res: Response) => {
   // THERE CAN ONLY BE ONE ADMIN
   if (!isUsers) userType = "admin";
   else {
-    if (userType === "admin") throw new UnauthorizedError("Error");
-    else userType = req.body;
+    if (userType === "admin") throw new BadRequestError("admin already exists");
+    else userType = "user";
   }
 
   const verificationToken = createCrypto();
@@ -74,11 +72,11 @@ const registerUser = async (req: Request, res: Response) => {
       verificationToken,
     });
 
-    await registerEmail(<RegisterVerificationInterface>{
-      userEmail: user.email,
-      userName: user.name,
-      verificationToken: user.verificationToken,
-    });
+    // await registerEmail(<RegisterVerificationInterface>{
+    //   userEmail: user.email,
+    //   userName: user.name,
+    //   verificationToken: user.verificationToken,
+    // });
     res
       .status(StatusCodes.CREATED)
       .json({ msg: "user created", verificationToken });
@@ -86,7 +84,7 @@ const registerUser = async (req: Request, res: Response) => {
   } else throw new UnauthorizedError("invalid credentials");
 };
 
-const verifyEmail = async (req: Request, res: Response) => {
+const verifyEmail: RequestHandler = async (req, res) => {
   try {
     // GET TOKEN AND EMAIL FROM THE CLIENT
     const {
@@ -114,7 +112,7 @@ const verifyEmail = async (req: Request, res: Response) => {
   }
 };
 
-const login = async (req: Request, res: Response) => {
+const login: RequestHandler = async (req, res) => {
   // GET EMAIL AND PASSWORD VALUES FROM THE CLIENT
   const { email, password }: { email: string; password: string } = req.body;
   // CHECK IF INFORMATION IS NOT MISSING EMAIL AND PASSWORD
@@ -126,44 +124,50 @@ const login = async (req: Request, res: Response) => {
   if (!user) throw new UnauthorizedError("invalid credentials");
   // COMPARE PASSWORDS
   const isPassword = await bcrypt.compare(password, user.password);
-  console.log(isPassword);
 
   if (!isPassword) throw new UnauthorizedError("invalid credentials");
   // IF USER IS VERIFIED
   if (!user.isVerified) throw new UnauthorizedError("invalid credentials");
+
+  const ip = req.ip;
+  const userAgent = req.headers["user-agent"];
   // CHECK IF USER HAS A VALID TOKEN
   const existingToken = await Token.findOne({ user: user._id });
   if (existingToken) {
     if (!existingToken.isValid)
       throw new UnauthorizedError("invalid credentials");
     const refreshToken = existingToken.refreshToken;
-    attachJwtToCookie({ res, user, refreshToken });
+    attachJwtToCookie({ res, user, refreshToken, ip, userAgent });
     res.status(StatusCodes.OK).json({ msg: "login success" });
+    return;
   }
   // IF NOT CREATE NEW TOKENS
   // GET BROWSER AND IP INFORMATION
   // HASH ALL INFORMATION BEFORE STORING THEM TO DB
   const refreshToken = createCrypto();
-  const hashedRefreshToken = createHash(refreshToken);
-  const ip = req.ip;
-  const hashedIp = createHash(ip);
-  const userAgent = req.headers["user-agent"];
+  const hashedRefreshToken = await createHash(refreshToken);
+
   if (typeof userAgent !== "string")
     throw new UnauthorizedError("user agent is required");
-  const hashedUserAgent = createHash(userAgent);
 
   await Token.create({
     refreshToken: hashedRefreshToken,
-    ip: hashedIp,
-    userAgent: hashedUserAgent,
+    ip,
+    userAgent,
     user: user._id,
   });
-  attachJwtToCookie({ res, user, refreshToken });
+  attachJwtToCookie({
+    res,
+    user,
+    refreshToken: hashedRefreshToken,
+    ip,
+    userAgent,
+  });
   res.status(StatusCodes.OK).json({ msg: "login success" });
 };
 
 // ! DELETE TOKEN
-const logout = async (req: Request, res: Response) => {
+const logout: RequestHandler = async (req, res) => {
   // await Token.findOneAndDelete({user:req.user.userId})
   res.cookie("access_token", "", {
     httpOnly: true,
@@ -176,7 +180,7 @@ const logout = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({ msg: "logout success" });
 };
 
-const forgotPassword = async (req: Request, res: Response) => {
+const forgotPassword: RequestHandler = async (req, res) => {
   // GET EMAIL ADDRESS FROM CLIENT
   const { email }: { email: string } = req.body;
   // CHECK IF INFORMATION IS NOT MISSING EMAIL
@@ -187,24 +191,24 @@ const forgotPassword = async (req: Request, res: Response) => {
   // CREATE A TOKEN FOR THE CLIENT
   const passwordToken = createCrypto();
   // SEND THE EMAIL TO THE USER
-  await forgotPasswordEmail({
-    userEmail: email,
-    userName: user.name,
-    verificationToken: passwordToken,
-  });
+  // await forgotPasswordEmail({
+  //   userEmail: email,
+  //   userName: user.name,
+  //   verificationToken: passwordToken,
+  // });
   // CREATE HASHED PASSWORD AND EXP DATE FOR 15 MINUTES
   const quarterHour = 1000 * 60 * 15;
-  const hashedPasswordToken = createHash(passwordToken);
+  const hashedPasswordToken = await createHash(passwordToken);
   const passwordTokenExpDate = new Date(Date.now() + quarterHour);
   // SAVE THE USER WITH HASHED TOKEN AND EXP DATE
   user.passwordToken = hashedPasswordToken;
   user.passwordTokenExpDate = passwordTokenExpDate;
   await user.save();
 
-  res.status(StatusCodes.OK).json({ msg: "reset email sent" });
+  res.status(StatusCodes.OK).json({ msg: "reset email sent", passwordToken });
 };
 
-const resetPassword = async (req: Request, res: Response) => {
+const resetPassword: RequestHandler = async (req, res) => {
   // GET INFORMATION FROM CLIENT
   const { passwordToken, email, password }: ResetPasswordInterface = req.body;
   // CHECK IF INFORMATION IS NOT MISSING ANYTHING
@@ -215,10 +219,13 @@ const resetPassword = async (req: Request, res: Response) => {
   if (!user) throw new UnauthorizedError("invalid credentials");
   // COMPARE TOKEN VALIDATION
   const currentDate = new Date(Date.now());
-  if (
-    user.passwordToken === createHash(passwordToken) ||
-    user.passwordTokenExpDate > currentDate
-  ) {
+
+  // COMPARE HASHED USER TOKEN AND REQUEST TOKEN AND EXP DATE
+  const isPasswordToken = await bcrypt.compare(
+    passwordToken,
+    user.passwordToken
+  );
+  if (isPasswordToken || user.passwordTokenExpDate > currentDate) {
     user.password = password;
     user.passwordToken = "";
     user.passwordTokenExpDate = currentDate;

@@ -21,8 +21,6 @@ const http_status_codes_1 = require("http-status-codes");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 // ERRORS
 const errors_1 = require("../errors");
-// SEND EMAIL
-const email_1 = require("../utilities/email");
 // JWT AND CRYPTO
 const token_1 = require("../utilities/token");
 // * CREATE A NEW USER
@@ -36,9 +34,8 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     // CHECK IF USER EXISTS
     const user = yield models_1.User.findOne({ email });
     // THROW ERROR IF USER EXISTS
-    if (user) {
+    if (user)
         throw new errors_1.ConflictError("user already exists");
-    }
     // IF THERE ARE NO USERS, FIRST ACCOUNT WILL BE AN ADMIN
     const isUsers = yield models_1.User.find({}).countDocuments();
     // THERE CAN ONLY BE ONE ADMIN
@@ -46,9 +43,9 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         userType = "admin";
     else {
         if (userType === "admin")
-            throw new errors_1.UnauthorizedError("Error");
+            throw new errors_1.BadRequestError("admin already exists");
         else
-            userType = req.body;
+            userType = "user";
     }
     const verificationToken = (0, token_1.createCrypto)();
     // CREATE USER IF REQUIRED CREDENTIALS EXIST
@@ -65,11 +62,11 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             avatar,
             verificationToken,
         });
-        yield (0, email_1.registerEmail)({
-            userEmail: user.email,
-            userName: user.name,
-            verificationToken: user.verificationToken,
-        });
+        // await registerEmail(<RegisterVerificationInterface>{
+        //   userEmail: user.email,
+        //   userName: user.name,
+        //   verificationToken: user.verificationToken,
+        // });
         res
             .status(http_status_codes_1.StatusCodes.CREATED)
             .json({ msg: "user created", verificationToken });
@@ -118,39 +115,43 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         throw new errors_1.UnauthorizedError("invalid credentials");
     // COMPARE PASSWORDS
     const isPassword = yield bcryptjs_1.default.compare(password, user.password);
-    console.log(isPassword);
     if (!isPassword)
         throw new errors_1.UnauthorizedError("invalid credentials");
     // IF USER IS VERIFIED
     if (!user.isVerified)
         throw new errors_1.UnauthorizedError("invalid credentials");
+    const ip = req.ip;
+    const userAgent = req.headers["user-agent"];
     // CHECK IF USER HAS A VALID TOKEN
     const existingToken = yield models_1.Token.findOne({ user: user._id });
     if (existingToken) {
         if (!existingToken.isValid)
             throw new errors_1.UnauthorizedError("invalid credentials");
         const refreshToken = existingToken.refreshToken;
-        (0, token_1.attachJwtToCookie)({ res, user, refreshToken });
+        (0, token_1.attachJwtToCookie)({ res, user, refreshToken, ip, userAgent });
         res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "login success" });
+        return;
     }
     // IF NOT CREATE NEW TOKENS
     // GET BROWSER AND IP INFORMATION
     // HASH ALL INFORMATION BEFORE STORING THEM TO DB
     const refreshToken = (0, token_1.createCrypto)();
-    const hashedRefreshToken = (0, token_1.createHash)(refreshToken);
-    const ip = req.ip;
-    const hashedIp = (0, token_1.createHash)(ip);
-    const userAgent = req.headers["user-agent"];
+    const hashedRefreshToken = yield (0, token_1.createHash)(refreshToken);
     if (typeof userAgent !== "string")
         throw new errors_1.UnauthorizedError("user agent is required");
-    const hashedUserAgent = (0, token_1.createHash)(userAgent);
     yield models_1.Token.create({
         refreshToken: hashedRefreshToken,
-        ip: hashedIp,
-        userAgent: hashedUserAgent,
+        ip,
+        userAgent,
         user: user._id,
     });
-    (0, token_1.attachJwtToCookie)({ res, user, refreshToken });
+    (0, token_1.attachJwtToCookie)({
+        res,
+        user,
+        refreshToken: hashedRefreshToken,
+        ip,
+        userAgent,
+    });
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "login success" });
 });
 exports.login = login;
@@ -180,20 +181,20 @@ const forgotPassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
     // CREATE A TOKEN FOR THE CLIENT
     const passwordToken = (0, token_1.createCrypto)();
     // SEND THE EMAIL TO THE USER
-    yield (0, email_1.forgotPasswordEmail)({
-        userEmail: email,
-        userName: user.name,
-        verificationToken: passwordToken,
-    });
+    // await forgotPasswordEmail({
+    //   userEmail: email,
+    //   userName: user.name,
+    //   verificationToken: passwordToken,
+    // });
     // CREATE HASHED PASSWORD AND EXP DATE FOR 15 MINUTES
     const quarterHour = 1000 * 60 * 15;
-    const hashedPasswordToken = (0, token_1.createHash)(passwordToken);
+    const hashedPasswordToken = yield (0, token_1.createHash)(passwordToken);
     const passwordTokenExpDate = new Date(Date.now() + quarterHour);
     // SAVE THE USER WITH HASHED TOKEN AND EXP DATE
     user.passwordToken = hashedPasswordToken;
     user.passwordTokenExpDate = passwordTokenExpDate;
     yield user.save();
-    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "reset email sent" });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "reset email sent", passwordToken });
 });
 exports.forgotPassword = forgotPassword;
 const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -208,8 +209,9 @@ const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         throw new errors_1.UnauthorizedError("invalid credentials");
     // COMPARE TOKEN VALIDATION
     const currentDate = new Date(Date.now());
-    if (user.passwordToken === (0, token_1.createHash)(passwordToken) ||
-        user.passwordTokenExpDate > currentDate) {
+    // COMPARE HASHED USER TOKEN AND REQUEST TOKEN AND EXP DATE
+    const isPasswordToken = yield bcryptjs_1.default.compare(passwordToken, user.passwordToken);
+    if (isPasswordToken || user.passwordTokenExpDate > currentDate) {
         user.password = password;
         user.passwordToken = "";
         user.passwordTokenExpDate = currentDate;

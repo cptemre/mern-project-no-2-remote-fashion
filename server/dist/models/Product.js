@@ -52,7 +52,10 @@ const ProductSchema = new mongoose_1.Schema({
         type: String,
         required: [true, "product sub-category is required"],
         minlength: [3, "product sub-category must be at least 3 characters"],
-        maxlength: [25, "product sub-category can not be more than 25 characters"],
+        maxlength: [
+            25,
+            "product sub-category can not be more than 25 characters",
+        ],
         enum: {
             values: categoriesAndSubCategories_1.allSubCategories,
             message: "product sub-category does not match with an expected value",
@@ -70,6 +73,6 @@ const ProductSchema = new mongoose_1.Schema({
         type: Number,
         default: 0,
     },
-});
+}, { timestamps: true });
 const Product = (0, mongoose_1.model)("Product", ProductSchema);
 exports.default = Product;

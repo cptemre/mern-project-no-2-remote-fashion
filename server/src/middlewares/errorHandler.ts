@@ -34,6 +34,9 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     customError.msg = errorArray.toString();
     customError.statusCode = StatusCodes.UNPROCESSABLE_ENTITY;
   }
+
+  // SHOW ERROR IN CONSOLE FOR DETAILS
+  // console.log(err);
   res.status(customError.statusCode).json({ msg: customError.msg });
 };
 

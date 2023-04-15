@@ -2,6 +2,7 @@ import { Schema, model } from "mongoose";
 import bcrypt from "bcryptjs";
 import { UserSchemaInterface } from "../utilities/interfaces/";
 const validator = require("validator");
+import { createHash } from "../utilities/token";
 
 // * SCHEMA
 const UserSchema = new Schema<UserSchemaInterface>(
@@ -75,7 +76,8 @@ UserSchema.pre("save", async function () {
   if (this.isModified("surname")) this.surname = this.surname.toUpperCase();
 
   const salt = await bcrypt.genSalt(10);
-  const hash = await bcrypt.hash(this.password, salt);
+  const hash = await createHash(this.password);
+
   this.password = hash;
 });
 

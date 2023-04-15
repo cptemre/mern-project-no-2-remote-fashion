@@ -1,6 +1,10 @@
-import crypto from "crypto";
+import bcrypt from "bcryptjs";
 
-const createHash = (string: string) =>
-  crypto.createHash("md5").update(string).digest("hex");
+const createHash = async (string: string) => {
+  const salt = await bcrypt.genSalt(10);
+  const hash = await bcrypt.hash(string, salt);
+
+  return hash;
+};
 
 export default createHash;

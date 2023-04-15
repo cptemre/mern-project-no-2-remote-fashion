@@ -31,16 +31,20 @@ const jwtSecret = process.env.JWT_SECRET;
 // ROUTES
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const productRoutes_1 = __importDefault(require("./routes/productRoutes"));
+const reviewRoutes_1 = __importDefault(require("./routes/reviewRoutes"));
 // ERRORS
 const errorHandler_1 = __importDefault(require("./middlewares/errorHandler"));
+const notFoundError_1 = __importDefault(require("./middlewares/notFoundError"));
 // MIDDLEWARES
 app.use(express_1.default.json());
-app.use((0, cookie_parser_1.default)(jwtSecret));
+app.use((0, cookie_parser_1.default)(process.env.JWT_SECRET));
 // PAGES MIDDLEWARE
 app.use("/api/v1/auth", authRoutes_1.default);
 app.use("/api/v1/product", productRoutes_1.default);
+app.use("/api/v1/review", reviewRoutes_1.default);
 // ERROR MIDDLEWARE
 app.use(errorHandler_1.default);
+app.use(notFoundError_1.default);
 // START SERVER
 const start = () => __awaiter(void 0, void 0, void 0, function* () {
     try {

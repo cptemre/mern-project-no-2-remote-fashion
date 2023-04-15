@@ -7,21 +7,27 @@ const createJWT = ({ payload }: CreateJwtPayload) => {
   return token;
 };
 
-const attachJwtToCookie = ({ res, user, refreshToken }: JwtInterface) => {
-  const payload = { user, refreshToken };
+const attachJwtToCookie = ({
+  res,
+  user,
+  refreshToken,
+  ip,
+  userAgent,
+}: JwtInterface) => {
+  const payload = { user, refreshToken, ip, userAgent };
   const status = process.env.STATUS as string;
   const oneDay = 1000 * 60 * 60 * 24;
   const oneMonth = oneDay * 30;
   const access_token = createJWT(<CreateJwtPayload>{ payload });
   const refresh_token = createJWT(<CreateJwtPayload>{ payload });
 
-  res.cookie(access_token, "access_token", {
+  res.cookie("access_token", access_token, {
     httpOnly: true,
     expires: new Date(Date.now() + oneDay),
     signed: true,
     secure: status === "production",
   });
-  res.cookie(refresh_token, "refresh_token", {
+  res.cookie("refresh_token", refresh_token, {
     httpOnly: true,
     expires: new Date(Date.now() + oneMonth),
     signed: true,

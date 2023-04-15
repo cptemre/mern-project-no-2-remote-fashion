@@ -1,7 +1,7 @@
 // MODELS
 import { Product } from "../models";
 // EXPRESS
-import { Request, Response } from "express";
+import { RequestHandler } from "express";
 // INTERFACES
 import {
   GetAllProductsQueryInterface,
@@ -12,9 +12,12 @@ import {
 import { categoriesAndSubCategories } from "../utilities/categories/categoriesAndSubCategories";
 // HTTP CODES
 import { StatusCodes } from "http-status-codes";
+// ERRORS
 import { BadRequestError, UnauthorizedError } from "../errors";
+// UTILITY FUNCTIONS
+import findDocumentByIdAndModel from "../utilities/controllers/findDocumentByIdAndModel";
 
-const createProduct = async (req: Request, res: Response) => {
+const createProduct: RequestHandler = async (req, res) => {
   // GET CLIENT SIDE BODY REQUEST TO CREATE A PRODUCT
   const {
     name,
@@ -82,8 +85,9 @@ const createProduct = async (req: Request, res: Response) => {
     .json({ msg: "product created", product: newProduct });
 };
 
-const getAllProducts = async (req: Request, res: Response) => {
+const getAllProducts: RequestHandler = async (req, res) => {
   // QUERY FROM THE CLIENT
+  // !DONT FORGET TO SET ISREVIEW BOOL LATER
   const {
     name,
     brand,
@@ -95,6 +99,7 @@ const getAllProducts = async (req: Request, res: Response) => {
     rating,
     gender,
     page,
+    myProducts,
   }: Partial<GetAllProductsReqBodyInterface> = req.body;
   // EMPTY QUERY IN SERVER TO SET VALUES
   const query: Partial<GetAllProductsQueryInterface> = {};
@@ -106,7 +111,6 @@ const getAllProducts = async (req: Request, res: Response) => {
   if (price) {
     // EXAMPLE: gte-50_lte-100
     const [gteString, lteString] = price.split("_");
-    let gteVal: number;
     const priceVal: { $gte: number | undefined; $lte: number | undefined } = {
       $gte: undefined,
       $lte: undefined,
@@ -135,14 +139,83 @@ const getAllProducts = async (req: Request, res: Response) => {
   if (gender) query.gender = gender;
   if (page) query.page = Number(page);
   else query.page = 1;
-
+  if (myProducts === "true") query.userId = req.user?._id;
   const limit = 10;
   const skip = limit * (Number(page) - 1);
   const findProducts = Product.find(query);
 
   const products = await findProducts.skip(skip).limit(limit);
-
-  res.status(StatusCodes.OK).json({ products });
+  const productLength = products.length;
+  res.status(StatusCodes.OK).json({ products, productLength });
 };
 
-export { createProduct, getAllProducts };
+const deleteProduct: RequestHandler = async (req, res) => {
+  // GET PRODUCT ID FROM BODY
+  const { id: productId } = req.params;
+  // FIND THE PRODUCT
+  const product = await findDocumentByIdAndModel({
+    id: productId,
+    MyModel: Product,
+  });
+  // DELETE THE PRODUCT
+  await product.deleteOne();
+  // ! AFTER DELETING PRODUCT DELETE ALL REVIEWS IN THE FUTURE
+  res.status(StatusCodes.OK).json({ msg: "product deleted" });
+};
+
+const getSingleProduct: RequestHandler = async (req, res) => {
+  // GET PRODUCT ID FROM BODY
+  const { id: productId } = req.params;
+  // FIND THE PRODUCT
+  const product = await findDocumentByIdAndModel({
+    id: productId,
+    MyModel: Product,
+  });
+
+  res.status(StatusCodes.OK).json({ product });
+};
+
+const updateProduct: RequestHandler = async (req, res) => {
+  // GET PRODUCT ID FROM BODY
+  const { id: productId } = req.params;
+  const {
+    name,
+    brand,
+    price,
+    image,
+    description,
+    size,
+    gender,
+    category,
+    subCategory,
+    stock,
+  }: Omit<ProductSchemaInterface, "numberOfReviews | averageRating"> = req.body;
+  // FIND THE PRODUCT
+  const product = await findDocumentByIdAndModel({
+    id: productId,
+    MyModel: Product,
+  });
+  // UPDATE PROPERTIES
+  if (name) product.name = name;
+  if (brand) product.brand = brand;
+  if (price) product.price = Number(price);
+  if (image) product.image = image;
+  if (description) product.description = description;
+  if (size) product.size = size;
+  if (gender) product.gender = gender;
+  if (category) product.category = category;
+  if (subCategory) product.subCategory = subCategory;
+  if (stock) product.stock = stock;
+  // SAVE UPDATED PRODUCT
+  await product.save();
+
+  res.status(StatusCodes.OK).json({ msg: "product updated", product });
+};
+
+export {
+  createProduct,
+  getAllProducts,
+  deleteProduct,
+  getSingleProduct,
+  updateProduct,
+};
