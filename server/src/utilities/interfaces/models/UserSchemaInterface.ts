@@ -7,9 +7,8 @@ interface AddressInterface {
   country: string;
 }
 interface PhoneNumberInterface {
-  country: string;
   countryCode: string;
-  phoneNumber: number;
+  phoneNo: number;
 }
 interface UserSchemaInterface extends Document {
   name: string;
@@ -28,4 +27,4 @@ interface UserSchemaInterface extends Document {
   passwordTokenExpDate: Date;
 }
 
-export default UserSchemaInterface;
+export { UserSchemaInterface, AddressInterface, PhoneNumberInterface };

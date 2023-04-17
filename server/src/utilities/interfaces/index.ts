@@ -1,4 +1,8 @@
-import UserSchemaInterface from "./models/UserSchemaInterface";
+import {
+  UserSchemaInterface,
+  AddressInterface,
+  PhoneNumberInterface,
+} from "./models/UserSchemaInterface";
 import MailInterface from "./mail/MailInterface";
 import RegisterVerificationInterface from "./controllers/auth/RegisterVerificationInterface";
 import TokenInterface from "./models/TokenInterface";
@@ -18,6 +22,8 @@ import {
 
 export {
   UserSchemaInterface,
+  AddressInterface,
+  PhoneNumberInterface,
   MailInterface,
   RegisterVerificationInterface,
   TokenInterface,
