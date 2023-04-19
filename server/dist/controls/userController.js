@@ -9,14 +9,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.updateUser = exports.deleteUser = exports.showCurrentUser = exports.getSingleUser = exports.getAllUsers = void 0;
 // MODELS
 const models_1 = require("../models");
 // STATUS CODES
 const http_status_codes_1 = require("http-status-codes");
 // FIND DOCUMENT
 const controllers_1 = require("../utilities/controllers");
-// ERRORS
-const errors_1 = require("../errors");
+// CRYPTO
+const token_1 = require("../utilities/token");
 const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // BODY FROM THE CLIENT
     const { name, surname, email, userType, country, isVerified, userPage, } = req.body;
@@ -36,14 +37,15 @@ const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (isVerified)
         query.isVerified = isVerified;
     // GET USERS
-    const result = models_1.User.find({ query });
+    const result = models_1.User.find({ query }).select("-password");
     // SET LIMIT AND SKIP
     const limit = 10;
     const skip = 10 * (userPage || 0);
-    const users = yield result.skip(skip).limit(10);
+    const users = yield result.skip(skip).limit(limit);
     // SEND BACK FETCHED USERS
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "users fetched", users });
 });
+exports.getAllUsers = getAllUsers;
 const getSingleUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET USER ID FROM PARAMS
     const { id: userId } = req.params;
@@ -52,20 +54,23 @@ const getSingleUser = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         id: userId,
         MyModel: models_1.User,
     });
+    // HIDE USER PASSWORD BEFORE SENDING IT TO THE CLIENT
+    user.password = "";
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "user fetched", user });
 });
+exports.getSingleUser = getSingleUser;
 const showCurrentUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res
         .status(http_status_codes_1.StatusCodes.OK)
         .json({ msg: "current user fetched", user: req.user });
 });
+exports.showCurrentUser = showCurrentUser;
 const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     // GET USER ID FROM PARAMS
     const { id: userId } = req.params;
     // CHECK IF THE USER HAS PERMISSION TO GET THE USER.
     // HAS TO BE SAME USER OR AN ADMIN TO DO THAT
-    // ! USE THIS FUNCTION IN OTHER CONTROLLERS TO CHECK PROPER USER ID MATCH
     // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
     if ((_a = req.user) === null || _a === void 0 ? void 0 : _a._id)
         (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId });
@@ -74,26 +79,32 @@ const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         id: userId,
         MyModel: models_1.User,
     });
+    // SET THE USER PASSWORD TO EMPTY BEFORE SENDING IT TO THE CLIENT
+    user.password = "";
     // DELETE THE USER
     yield models_1.User.findOneAndDelete({ _id: userId });
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "user deleted", user });
 });
+exports.deleteUser = deleteUser;
+// ! BEFORE UPDATE CLIENT SHOULD ASK FOR PASSWORD CHECK
 const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b, _c;
+    var _b;
     // GET USER ID FROM PARAMS
     const { id: userId } = req.params;
     // GET UPDATED VALUES FROM THE CLIENT
     const { name, surname, email, userType, street, city, postalCode, country, countryCode, phoneNo, cardNumber, avatar, } = req.body;
-    // CHECK IF THE USER HAS PERMISSION TO GET THE USER.
-    // HAS TO BE SAME USER OR AN ADMIN TO DO THAT
-    if (((_b = req.user) === null || _b === void 0 ? void 0 : _b.userType) !== "admin" && userId !== ((_c = req.user) === null || _c === void 0 ? void 0 : _c._id))
-        throw new errors_1.UnauthorizedError("authorization failed");
+    // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
+    if ((_b = req.user) === null || _b === void 0 ? void 0 : _b._id)
+        (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId });
     // CHECK IF THE USER EXISTS
     const user = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: userId,
         user: userId,
         MyModel: models_1.User,
     });
+    // SAVE THE OLD EMAIL TO COMPARE IF CHANGED
+    let oldEmail = user.email;
+    let isEmailChanged = false;
     // MAIN INFO UPDATE
     if (name)
         user.name = name;
@@ -122,4 +133,21 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         user.cardNumber = cardNumber;
     if (avatar)
         user.avatar = avatar;
+    // IF EMAIL DID NOT CHANGE THEN SEND THE RESPONSE
+    if (oldEmail === user.email) {
+        isEmailChanged = true;
+        // RESET THE VERIFICATION
+        user.verificationToken = (0, token_1.createCrypto)();
+        user.verified = undefined;
+        user.isVerified = false;
+        // ! CLIENT SHOULD CALL LOGOUT AFTER THIS EVENT
+    }
+    // SAVE THE USER
+    yield user.save();
+    // HIDE USER PASSWORD BEFORE SENDING IT TO THE CLIENT
+    user.password = "";
+    res
+        .status(http_status_codes_1.StatusCodes.OK)
+        .json({ msg: "user updated", user, isEmailChanged });
 });
+exports.updateUser = updateUser;

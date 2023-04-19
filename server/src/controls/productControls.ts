@@ -15,7 +15,7 @@ import { StatusCodes } from "http-status-codes";
 // ERRORS
 import { BadRequestError, UnauthorizedError } from "../errors";
 // UTILITY FUNCTIONS
-import findDocumentByIdAndModel from "../utilities/controllers/findDocumentByIdAndModel";
+import { findDocumentByIdAndModel } from "../utilities/controllers";
 
 const createProduct: RequestHandler = async (req, res) => {
   // GET CLIENT SIDE BODY REQUEST TO CREATE A PRODUCT
@@ -158,7 +158,7 @@ const deleteProduct: RequestHandler = async (req, res) => {
     MyModel: Product,
   });
   // DELETE THE PRODUCT
-  await product.deleteOne();
+  await Product.findOneAndDelete({ _id: productId });
   // ! AFTER DELETING PRODUCT DELETE ALL REVIEWS IN THE FUTURE
   res.status(StatusCodes.OK).json({ msg: "product deleted" });
 };

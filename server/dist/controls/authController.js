@@ -124,6 +124,10 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userAgent = req.headers["user-agent"];
     // CHECK IF USER HAS A VALID TOKEN
     const existingToken = yield models_1.Token.findOne({ user: user._id });
+    // DELETE PASSWORD KEY TO NOT ATTACH IT TO TOKEN
+    // * THIS CAN CREATE A PROBLEM. CHECK THIS IN THE FUTURE
+    // HIDE USER PASSWORD BEFORE SENDING IT TO THE CLIENT
+    user.password = "";
     if (existingToken) {
         if (!existingToken.isValid)
             throw new errors_1.UnauthorizedError("invalid credentials");
@@ -157,7 +161,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.login = login;
 // ! DELETE TOKEN
 const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // await Token.findOneAndDelete({user:req.user.userId})
+    // ! await Token.findOneAndDelete({user:req.user.userId})
     res.cookie("access_token", "", {
         httpOnly: true,
         expires: new Date(Date.now()),

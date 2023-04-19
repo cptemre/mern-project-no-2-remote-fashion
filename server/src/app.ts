@@ -18,6 +18,7 @@ const jwtSecret = process.env.JWT_SECRET as string;
 import authRouter from "./routes/authRoutes";
 import productRouter from "./routes/productRoutes";
 import reviewRouter from "./routes/reviewRoutes";
+import userRouter from "./routes/userRoutes";
 // ERRORS
 import errorHandler from "./middlewares/errorHandler";
 import notFoundError from "./middlewares/notFoundError";
@@ -29,6 +30,7 @@ app.use(cookieParser(process.env.JWT_SECRET));
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/product", productRouter);
 app.use("/api/v1/review", reviewRouter);
+app.use("/api/v1/user", userRouter);
 // ERROR MIDDLEWARE
 app.use(errorHandler);
 app.use(notFoundError);

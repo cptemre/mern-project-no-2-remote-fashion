@@ -8,13 +8,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateReview = exports.deleteReview = exports.createReview = exports.getSingleReview = exports.getAllReviews = void 0;
 // UTILITY FUNCTIONS
-const findDocumentByIdAndModel_1 = __importDefault(require("../utilities/controllers/findDocumentByIdAndModel"));
+const controllers_1 = require("../utilities/controllers");
 // MODELS
 const models_1 = require("../models");
 // HTTP CODES
@@ -26,7 +23,7 @@ const createReview = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     // USER ID
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     // FIND THE PRODUCT
-    const product = yield (0, findDocumentByIdAndModel_1.default)({
+    const product = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: productId,
         MyModel: models_1.Product,
     });
@@ -44,36 +41,48 @@ const createReview = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.createReview = createReview;
 const deleteReview = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b;
+    var _b, _c;
     // GET REVIEW ID
     const { id: reviewId } = req.params;
     // USER AUTH ID
     const userId = (_b = req.user) === null || _b === void 0 ? void 0 : _b._id;
     // FIND REVIEW FROM DB
-    const review = yield (0, findDocumentByIdAndModel_1.default)({
+    const review = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: reviewId,
         user: userId,
         MyModel: models_1.Review,
     });
+    // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
+    if ((_c = req.user) === null || _c === void 0 ? void 0 : _c._id)
+        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+            user: req.user,
+            userId: review.user.toString(),
+        });
     // DELETE REVIEW
     yield models_1.Review.findOneAndDelete({ _id: reviewId });
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "review deleted" });
 });
 exports.deleteReview = deleteReview;
 const updateReview = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _c;
+    var _d, _e;
     // GET REVIEW ID
     const { id: reviewId } = req.params;
     // GET UPDATE VALUES FROM CLIENT BODY
     const { title, comment, rating, } = req.body;
     // USER AUTH ID
-    const userId = (_c = req.user) === null || _c === void 0 ? void 0 : _c._id;
+    const userId = (_d = req.user) === null || _d === void 0 ? void 0 : _d._id;
     // FIND THE REVIEW
-    const review = yield (0, findDocumentByIdAndModel_1.default)({
+    const review = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: reviewId,
         user: userId,
         MyModel: models_1.Review,
     });
+    // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
+    if ((_e = req.user) === null || _e === void 0 ? void 0 : _e._id)
+        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+            user: req.user,
+            userId: review.user.toString(),
+        });
     // UPDATE THE REVIEW DOCUMENT
     if (title)
         review.title = title;
@@ -88,15 +97,15 @@ const updateReview = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.updateReview = updateReview;
 const getSingleReview = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _d;
+    var _f;
     // GET REVIEW ID
     const { id: reviewId } = req.params;
     // GET IF YOU REQUIRE YOUR OWN REVIEWS
     const { myReview } = req.body;
     // USER AUTH ID
-    const userId = myReview === "true" ? (_d = req.user) === null || _d === void 0 ? void 0 : _d._id : null;
+    const userId = myReview === "true" ? (_f = req.user) === null || _f === void 0 ? void 0 : _f._id : null;
     // GET THE REVIEW
-    const review = yield (0, findDocumentByIdAndModel_1.default)({
+    const review = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: reviewId,
         user: userId,
         MyModel: models_1.Review,
@@ -105,15 +114,15 @@ const getSingleReview = (req, res) => __awaiter(void 0, void 0, void 0, function
 });
 exports.getSingleReview = getSingleReview;
 const getAllReviews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _e, _f;
+    var _g, _h;
     // GET PRODUCT ID
     const { productId } = req.body;
     // GET REVIEW PAGE
     const { reviewPage, myReviews } = req.body;
     // USER AUTH ID
-    const userId = myReviews === "true" ? (_e = req.user) === null || _e === void 0 ? void 0 : _e._id : null;
+    const userId = myReviews === "true" ? (_g = req.user) === null || _g === void 0 ? void 0 : _g._id : null;
     // FIND THE REVIEW
-    const product = yield (0, findDocumentByIdAndModel_1.default)({
+    const product = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: productId,
         user: userId,
         MyModel: models_1.Product,
@@ -122,7 +131,7 @@ const getAllReviews = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const query = { product: "" };
     query.product = productId;
     if (myReviews === "true")
-        query.user = (_f = req.user) === null || _f === void 0 ? void 0 : _f._id;
+        query.user = (_h = req.user) === null || _h === void 0 ? void 0 : _h._id;
     // SKIP NECESSARY PART AND LIMIT IT TO 10
     const limit = 10;
     const skip = limit * reviewPage ? reviewPage - 1 : 0;
