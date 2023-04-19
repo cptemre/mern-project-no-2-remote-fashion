@@ -133,6 +133,10 @@ const login: RequestHandler = async (req, res) => {
   const userAgent = req.headers["user-agent"];
   // CHECK IF USER HAS A VALID TOKEN
   const existingToken = await Token.findOne({ user: user._id });
+  // DELETE PASSWORD KEY TO NOT ATTACH IT TO TOKEN
+  // * THIS CAN CREATE A PROBLEM. CHECK THIS IN THE FUTURE
+  // HIDE USER PASSWORD BEFORE SENDING IT TO THE CLIENT
+  user.password = "";
   if (existingToken) {
     if (!existingToken.isValid)
       throw new UnauthorizedError("invalid credentials");
@@ -168,7 +172,7 @@ const login: RequestHandler = async (req, res) => {
 
 // ! DELETE TOKEN
 const logout: RequestHandler = async (req, res) => {
-  // await Token.findOneAndDelete({user:req.user.userId})
+  // ! await Token.findOneAndDelete({user:req.user.userId})
   res.cookie("access_token", "", {
     httpOnly: true,
     expires: new Date(Date.now()),

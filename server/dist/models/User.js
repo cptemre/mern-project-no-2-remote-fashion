@@ -72,6 +72,7 @@ const UserSchema = new mongoose_1.Schema({
         default: false,
     },
     verified: Date,
+    // ! ADD HERE VERTOKEN EXP DATE
     passwordToken: String,
     passwordTokenExpDate: Date,
 }, { timestamps: true });

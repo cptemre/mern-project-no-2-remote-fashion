@@ -61,6 +61,7 @@ const UserSchema = new Schema<UserSchemaInterface>(
       default: false,
     },
     verified: Date,
+    // ! ADD HERE VERTOKEN EXP DATE
     passwordToken: String,
     passwordTokenExpDate: Date,
   },

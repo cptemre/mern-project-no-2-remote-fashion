@@ -8,9 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateProduct = exports.getSingleProduct = exports.deleteProduct = exports.getAllProducts = exports.createProduct = void 0;
 // MODELS
@@ -22,7 +19,7 @@ const http_status_codes_1 = require("http-status-codes");
 // ERRORS
 const errors_1 = require("../errors");
 // UTILITY FUNCTIONS
-const findDocumentByIdAndModel_1 = __importDefault(require("../utilities/controllers/findDocumentByIdAndModel"));
+const controllers_1 = require("../utilities/controllers");
 const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET CLIENT SIDE BODY REQUEST TO CREATE A PRODUCT
     const { name, brand, price, image, description, size, gender, category, subCategory, } = req.body;
@@ -139,12 +136,12 @@ const deleteProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     // GET PRODUCT ID FROM BODY
     const { id: productId } = req.params;
     // FIND THE PRODUCT
-    const product = yield (0, findDocumentByIdAndModel_1.default)({
+    const product = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: productId,
         MyModel: models_1.Product,
     });
     // DELETE THE PRODUCT
-    yield product.deleteOne();
+    yield models_1.Product.findOneAndDelete({ _id: productId });
     // ! AFTER DELETING PRODUCT DELETE ALL REVIEWS IN THE FUTURE
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "product deleted" });
 });
@@ -153,7 +150,7 @@ const getSingleProduct = (req, res) => __awaiter(void 0, void 0, void 0, functio
     // GET PRODUCT ID FROM BODY
     const { id: productId } = req.params;
     // FIND THE PRODUCT
-    const product = yield (0, findDocumentByIdAndModel_1.default)({
+    const product = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: productId,
         MyModel: models_1.Product,
     });
@@ -165,7 +162,7 @@ const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const { id: productId } = req.params;
     const { name, brand, price, image, description, size, gender, category, subCategory, stock, } = req.body;
     // FIND THE PRODUCT
-    const product = yield (0, findDocumentByIdAndModel_1.default)({
+    const product = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: productId,
         MyModel: models_1.Product,
     });

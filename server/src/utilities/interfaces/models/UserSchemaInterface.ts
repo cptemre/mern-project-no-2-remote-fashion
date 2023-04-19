@@ -22,7 +22,7 @@ interface UserSchemaInterface extends Document {
   avatar?: string;
   verificationToken: string;
   isVerified: boolean;
-  verified: Date;
+  verified: Date | undefined;
   passwordToken: string;
   passwordTokenExpDate: Date;
 }

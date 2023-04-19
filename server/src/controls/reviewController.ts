@@ -1,7 +1,10 @@
 // EXPRESS
 import { RequestHandler } from "express";
 // UTILITY FUNCTIONS
-import findDocumentByIdAndModel from "../utilities/controllers/findDocumentByIdAndModel";
+import {
+  findDocumentByIdAndModel,
+  userIdAndModelUserIdMatchCheck,
+} from "../utilities/controllers";
 // MODELS
 import { Review, Product } from "../models";
 // HTTP CODES
@@ -51,6 +54,12 @@ const deleteReview: RequestHandler = async (req, res) => {
     user: userId,
     MyModel: Review,
   });
+  // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
+  if (req.user?._id)
+    userIdAndModelUserIdMatchCheck({
+      user: req.user,
+      userId: review.user.toString(),
+    });
   // DELETE REVIEW
   await Review.findOneAndDelete({ _id: reviewId });
 
@@ -74,6 +83,12 @@ const updateReview: RequestHandler = async (req, res) => {
     user: userId,
     MyModel: Review,
   });
+  // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
+  if (req.user?._id)
+    userIdAndModelUserIdMatchCheck({
+      user: req.user,
+      userId: review.user.toString(),
+    });
   // UPDATE THE REVIEW DOCUMENT
   if (title) review.title = title;
   if (comment) review.comment = comment;
