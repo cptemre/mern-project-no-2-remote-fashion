@@ -66,7 +66,6 @@ ReviewSchema.statics.calculateAverageRating = async function (
         },
       },
     ]);
-    console.log(result);
     // QUERY OBJECT
     const findAndUpdateQuery: {
       averageRating: number;

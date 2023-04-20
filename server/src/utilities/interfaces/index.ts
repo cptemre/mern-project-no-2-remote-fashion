@@ -19,7 +19,12 @@ import {
   ReviewSchemaInterface,
   ReviewModelInterface,
 } from "./models/ReviewSchemaInterface";
-
+import {
+  OrderSchemaInterface,
+  SingleOrderSchemaInterface,
+  SingleOrderModelInterface,
+} from "../interfaces/models/OrderSchemaInterface";
+import StripePaymentArgumentsSchema from "./payment/StripePaymentArgumentsSchema";
 export {
   UserSchemaInterface,
   AddressInterface,
@@ -36,4 +41,8 @@ export {
   GetAllProductsReqBodyInterface,
   ReviewSchemaInterface,
   ReviewModelInterface,
+  OrderSchemaInterface,
+  SingleOrderSchemaInterface,
+  SingleOrderModelInterface,
+  StripePaymentArgumentsSchema,
 };

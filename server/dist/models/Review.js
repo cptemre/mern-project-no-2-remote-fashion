@@ -72,7 +72,6 @@ ReviewSchema.statics.calculateAverageRating = function (productId) {
                     },
                 },
             ]);
-            console.log(result);
             // QUERY OBJECT
             const findAndUpdateQuery = {
                 averageRating: Number((_a = result[0]) === null || _a === void 0 ? void 0 : _a.averageRating) || 0,
