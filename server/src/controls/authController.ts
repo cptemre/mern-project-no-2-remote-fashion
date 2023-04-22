@@ -11,10 +11,7 @@ import { ConflictError, UnauthorizedError, BadRequestError } from "../errors";
 // SEND EMAIL
 import { registerEmail, forgotPasswordEmail } from "../utilities/email";
 // INTERFACES
-import {
-  RegisterVerificationInterface,
-  ResetPasswordInterface,
-} from "../utilities/interfaces";
+import { ResetPasswordInterface } from "../utilities/interfaces/controllers";
 // USER MODEL INTERFACE
 import { UserSchemaInterface } from "../utilities/interfaces/models";
 // JWT AND CRYPTO

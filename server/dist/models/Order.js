@@ -32,11 +32,15 @@ const SingleOrderSchema = new mongoose_1.Schema({
         type: Number,
         required: [true, "product order tax percentage required"],
     },
+    user: {
+        type: mongoose_1.Types.ObjectId,
+        required: [true, "user id is required"],
+    },
     product: {
         type: mongoose_1.Types.ObjectId,
         required: [true, "product id is required"],
     },
-});
+}, { timestamps: true });
 const OrderSchema = new mongoose_1.Schema({
     orderItems: {
         type: [SingleOrderSchema],

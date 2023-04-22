@@ -23,7 +23,7 @@ const errors_1 = require("../errors");
 // HTTP STATUS CODES
 const http_status_codes_1 = require("http-status-codes");
 const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _a, _b;
     // CLIENT SIDE REQUESTS
     const { item: cartItems, currency, } = req.body;
     // THROW AN ERROR IF THERE IS NO CART ITEMS OR CURRENCY
@@ -45,7 +45,12 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (price !== product.price)
             throw new errors_1.BadRequestError("price does not match");
         // CREATE A SINGLE ORDER
-        const singleOrder = yield models_1.SingleOrder.create({ amount, price, product });
+        const singleOrder = yield models_1.SingleOrder.create({
+            amount,
+            price,
+            user: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id,
+            product,
+        });
         // APPEND THIS ORDER TO ORDERITEMS ARRAY
         orderItems = [...orderItems, singleOrder];
         // PRODUCT ORDER PRICE AS GBP
@@ -77,7 +82,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         shippingFee,
         subTotal,
         totalPrice,
-        user: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id,
+        user: (_b = req.user) === null || _b === void 0 ? void 0 : _b._id,
         clientSecret: client_secret,
         paymentIntentID: paymentIntentId,
     });
@@ -87,14 +92,14 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 // *ONLY FOR ADMIN
 const getAllSingleOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET CLIENT SIDE QUERIES
-    const { amount, price, tax, product: productId, orderPage, } = req.body;
+    const { amount, priceVal, tax, product: productId, orderPage, } = req.body;
     // EMPTY QUERY
     const query = {};
     // SET QUERY KEYS AND VALUES
     if (amount)
         query.amount = amount;
-    if (price)
-        query.price = (0, controllers_1.gteAndLteQueryForDb)(price.toString());
+    if (priceVal)
+        query.price = (0, controllers_1.gteAndLteQueryForDb)(priceVal);
     if (tax)
         query.tax = tax;
     if (productId)
@@ -102,16 +107,15 @@ const getAllSingleOrders = (req, res) => __awaiter(void 0, void 0, void 0, funct
     // FIND DOCUMENTS OF SINGLE ORDERS
     const singleOrder = models_1.SingleOrder.find(query);
     // LIMIT AND SKIP VALUES
-    const myLimit = 20;
+    const myLimit = 10;
     const { limit, skip } = (0, controllers_1.limitAndSkip)({ limit: myLimit, page: orderPage });
     const result = yield singleOrder.skip(skip).limit(limit);
     // RESPONSE
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "single orders fetched", result });
 });
-// *ONLY FOR ADMIN
 const getSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET CLIENT SIDE QUERIES
-    const { product: productId } = req.body;
+    const { product: productId, user: userId, } = req.body;
     // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
     if (!productId)
         throw new errors_1.BadRequestError("product id is required");
@@ -120,15 +124,41 @@ const getSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, function*
         id: productId,
         MyModel: models_1.SingleOrder,
     });
+    // CHECK USER MATCHES WITH THE SINGLE ORDER USER
+    if (req.user)
+        (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId });
     // RESPONSE
     res
         .status(http_status_codes_1.StatusCodes.OK)
         .json({ msg: "single order fetched", result: singleOrder });
 });
-// *FOR ADMIN AND USER
 const getAllOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET CLIENT SIDE QUERIES
-    const { orderItems, isShipping, totalPrice, status: productId, user, orderPage, currency, } = req.body;
+    const { isShipping, status, user: userId, orderPage, priceVal, currency, } = req.body;
     // EMPTY QUERY
     const query = {};
+    // SET QUERY KEY AND VALUES
+    isShipping
+        ? (query.isShipping = isShipping)
+        : (query.isShipping = !isShipping);
+    if (status)
+        query.status = status;
+    // COMPARE IF USER ID AND AUTHORIZED USERS ARE SAME
+    if (req.user && userId) {
+        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+            user: req.user,
+            userId: userId,
+        });
+    }
+    if (priceVal)
+        query.price = (0, controllers_1.gteAndLteQueryForDb)(priceVal);
+    // ! HERE CALCULATE THE PRICE TO GBP
+    // FIND ALL ORDERS WITH QUERY
+    const order = models_1.Order.find(query);
+    // LIMIT AND SKIP
+    const myLimit = 10;
+    const { limit, skip } = (0, controllers_1.limitAndSkip)({ limit: myLimit, page: orderPage });
+    const result = yield order.skip(skip).limit(limit);
+    // RESPONSE
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "orders fetched", result });
 });

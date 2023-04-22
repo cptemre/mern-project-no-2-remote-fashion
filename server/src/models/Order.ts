@@ -11,24 +11,31 @@ import Product from "./Product";
 // UTILITIES
 import { findDocumentByIdAndModel } from "../utilities/controllers";
 
-const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>({
-  amount: {
-    type: Number,
-    required: [true, "product order amount is required"],
+const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>(
+  {
+    amount: {
+      type: Number,
+      required: [true, "product order amount is required"],
+    },
+    price: {
+      type: Number,
+      required: [true, "product order price is required"],
+    },
+    tax: {
+      type: Number,
+      required: [true, "product order tax percentage required"],
+    },
+    user: {
+      type: Types.ObjectId,
+      required: [true, "user id is required"],
+    },
+    product: {
+      type: Types.ObjectId,
+      required: [true, "product id is required"],
+    },
   },
-  price: {
-    type: Number,
-    required: [true, "product order price is required"],
-  },
-  tax: {
-    type: Number,
-    required: [true, "product order tax percentage required"],
-  },
-  product: {
-    type: Types.ObjectId,
-    required: [true, "product id is required"],
-  },
-});
+  { timestamps: true }
+);
 
 const OrderSchema = new Schema<OrderSchemaInterface>(
   {

@@ -5,6 +5,7 @@ interface SingleOrderSchemaInterface extends Document {
   amount: number;
   price: number;
   tax: number;
+  user: ObjectId | string;
   product: ObjectId | string;
 }
 interface SingleOrderModelInterface extends Model<SingleOrderSchemaInterface> {
@@ -18,13 +19,7 @@ interface SingleOrderModelInterface extends Model<SingleOrderSchemaInterface> {
     operation: "+" | "-";
   }): Promise<void>;
 }
-interface SingleOrderQuery {
-  amount: number;
-  price: { $gte: number | undefined; $lte: number | undefined };
-  tax: number;
-  product: ObjectId | string;
-  orderPage: number;
-}
+
 // FOR CLIENT CART ITEMS LENGTH
 interface CartItemsInterface extends SingleOrderSchemaInterface {
   length: number;
@@ -46,21 +41,9 @@ interface OrderSchemaInterface extends CurrencyInterface, Document {
   clientSecret: string;
   paymentIntentID: string;
 }
-// TO GET REQ FROM CLIENT SIDE
-// !CHANGE PRICE
-interface OrderClientReqInterface extends CurrencyInterface {
-  orderItems: SingleOrderSchemaInterface[];
-  isShipping: boolean;
-  totalPrice: number;
-  status: "pending" | "failed" | "paid" | "delivered" | "canceled";
-  user: ObjectId | string;
-  orderPage: number;
-}
 export {
   SingleOrderSchemaInterface,
   OrderSchemaInterface,
   SingleOrderModelInterface,
   CartItemsInterface,
-  SingleOrderQuery,
-  OrderClientReqInterface,
 };

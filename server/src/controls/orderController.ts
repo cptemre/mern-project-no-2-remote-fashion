@@ -1,12 +1,16 @@
 // EXPRESS
 import { RequestHandler } from "express";
 // INTERFACES
+// MODELS
 import {
   CartItemsInterface,
   SingleOrderSchemaInterface,
-  SingleOrderQuery,
-  OrderClientReqInterface,
 } from "../utilities/interfaces/models";
+// QUERY MODELS
+import {
+  OrderClientReqInterface,
+  SingleOrderQuery,
+} from "../utilities/interfaces/controllers";
 // CURRENCY
 import { CurrencyInterface } from "../utilities/interfaces/payment";
 // MODELS
@@ -52,7 +56,12 @@ const createOrder: RequestHandler = async (req, res) => {
     if (price !== product.price)
       throw new BadRequestError("price does not match");
     // CREATE A SINGLE ORDER
-    const singleOrder = await SingleOrder.create({ amount, price, product });
+    const singleOrder = await SingleOrder.create({
+      amount,
+      price,
+      user: req.user?._id,
+      product,
+    });
     // APPEND THIS ORDER TO ORDERITEMS ARRAY
     orderItems = [...orderItems, singleOrder];
     // PRODUCT ORDER PRICE AS GBP
@@ -98,32 +107,37 @@ const getAllSingleOrders: RequestHandler = async (req, res) => {
   // GET CLIENT SIDE QUERIES
   const {
     amount,
-    price,
+    priceVal,
     tax,
     product: productId,
     orderPage,
-  }: SingleOrderSchemaInterface & { orderPage: number } = req.body;
+  }: SingleOrderSchemaInterface & {
+    orderPage: number;
+    priceVal: string;
+  } = req.body;
   // EMPTY QUERY
   const query: Partial<SingleOrderQuery> = {};
   // SET QUERY KEYS AND VALUES
   if (amount) query.amount = amount;
-  if (price) query.price = gteAndLteQueryForDb(price.toString());
+  if (priceVal) query.price = gteAndLteQueryForDb(priceVal);
   if (tax) query.tax = tax;
   if (productId) query.product = productId;
   // FIND DOCUMENTS OF SINGLE ORDERS
   const singleOrder = SingleOrder.find(query);
   // LIMIT AND SKIP VALUES
-  const myLimit = 20;
+  const myLimit = 10;
   const { limit, skip } = limitAndSkip({ limit: myLimit, page: orderPage });
   const result = await singleOrder.skip(skip).limit(limit);
   // RESPONSE
   res.status(StatusCodes.OK).json({ msg: "single orders fetched", result });
 };
 
-// *ONLY FOR ADMIN
 const getSingleOrder: RequestHandler = async (req, res) => {
   // GET CLIENT SIDE QUERIES
-  const { product: productId }: { product: string } = req.body;
+  const {
+    product: productId,
+    user: userId,
+  }: { product: string; user: string } = req.body;
   // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
   if (!productId) throw new BadRequestError("product id is required");
   // FIND THE SINGLE ORDER
@@ -131,24 +145,46 @@ const getSingleOrder: RequestHandler = async (req, res) => {
     id: productId,
     MyModel: SingleOrder,
   });
+  // CHECK USER MATCHES WITH THE SINGLE ORDER USER
+  if (req.user) userIdAndModelUserIdMatchCheck({ user: req.user, userId });
   // RESPONSE
   res
     .status(StatusCodes.OK)
     .json({ msg: "single order fetched", result: singleOrder });
 };
 
-// *FOR ADMIN AND USER
 const getAllOrders: RequestHandler = async (req, res) => {
   // GET CLIENT SIDE QUERIES
   const {
-    orderItems,
     isShipping,
-    totalPrice,
-    status: productId,
-    user,
+    status,
+    user: userId,
     orderPage,
+    priceVal,
     currency,
-  }: OrderClientReqInterface = req.body;
+  }: Omit<OrderClientReqInterface, "price"> = req.body;
   // EMPTY QUERY
-  const query: Partial<SingleOrderQuery> = {};
+  const query: Partial<Omit<OrderClientReqInterface, "priceVal">> = {};
+  // SET QUERY KEY AND VALUES
+  isShipping
+    ? (query.isShipping = isShipping)
+    : (query.isShipping = !isShipping);
+  if (status) query.status = status;
+  // COMPARE IF USER ID AND AUTHORIZED USERS ARE SAME
+  if (req.user && userId) {
+    userIdAndModelUserIdMatchCheck({
+      user: req.user,
+      userId: userId as string,
+    });
+  }
+  if (priceVal) query.price = gteAndLteQueryForDb(priceVal);
+  // ! HERE CALCULATE THE PRICE TO GBP
+  // FIND ALL ORDERS WITH QUERY
+  const order = Order.find(query);
+  // LIMIT AND SKIP
+  const myLimit = 10;
+  const { limit, skip } = limitAndSkip({ limit: myLimit, page: orderPage });
+  const result = await order.skip(skip).limit(limit);
+  // RESPONSE
+  res.status(StatusCodes.OK).json({ msg: "orders fetched", result });
 };

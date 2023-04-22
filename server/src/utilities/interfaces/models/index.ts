@@ -1,9 +1,7 @@
 import {
   CartItemsInterface,
-  OrderClientReqInterface,
   OrderSchemaInterface,
   SingleOrderModelInterface,
-  SingleOrderQuery,
   SingleOrderSchemaInterface,
 } from "./OrderSchemaInterface";
 
@@ -24,10 +22,8 @@ import {
 
 export {
   CartItemsInterface,
-  OrderClientReqInterface,
   OrderSchemaInterface,
   SingleOrderModelInterface,
-  SingleOrderQuery,
   SingleOrderSchemaInterface,
   ProductSchemaInterface,
   ReviewModelInterface,
