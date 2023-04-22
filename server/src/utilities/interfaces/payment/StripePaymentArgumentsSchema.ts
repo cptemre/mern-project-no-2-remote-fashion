@@ -3,14 +3,8 @@ import { ObjectId } from "mongoose";
 import { AddressInterface } from "../models/UserSchemaInterface";
 import CurrencyInterface from "./CurrencyInterface";
 
-interface StripePaymentArgumentsSchema
-  extends CurrencyInterface,
-    AddressInterface {
-  unit_amount: number;
-  productId: ObjectId | string;
-  name: string;
-  email: string;
-  phone: string;
+interface StripePaymentArgumentsSchema extends CurrencyInterface {
+  totalPrice: number;
 }
 
 export default StripePaymentArgumentsSchema;

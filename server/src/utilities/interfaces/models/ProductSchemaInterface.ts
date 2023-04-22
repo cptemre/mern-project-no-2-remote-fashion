@@ -4,6 +4,7 @@ interface ProductSchemaInterface extends Document {
   name: string;
   brand: string;
   price: number;
+  tax: number;
   image: string[];
   description: string[];
   size: string[];

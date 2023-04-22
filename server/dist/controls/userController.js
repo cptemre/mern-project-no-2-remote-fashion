@@ -38,9 +38,9 @@ const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         query.isVerified = isVerified;
     // GET USERS
     const result = models_1.User.find({ query }).select("-password");
-    // SET LIMIT AND SKIP
-    const limit = 10;
-    const skip = 10 * (userPage || 0);
+    // LIMIT AND SKIP VALUES
+    const myLimit = 20;
+    const { limit, skip } = (0, controllers_1.limitAndSkip)({ limit: myLimit, page: userPage });
     const users = yield result.skip(skip).limit(limit);
     // SEND BACK FETCHED USERS
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "users fetched", users });

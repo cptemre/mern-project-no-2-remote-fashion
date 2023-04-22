@@ -3,7 +3,7 @@ interface GetAllProductsQueryInterface {
   brand: string;
   color: string;
   size: string;
-  price: number;
+  price: { $gte: number | undefined; $lte: number | undefined };
   isReview: boolean;
   stock: { $gt: number };
   rating: number;

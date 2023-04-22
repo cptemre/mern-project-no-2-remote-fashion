@@ -22,12 +22,13 @@ const errors_1 = require("../errors");
 const controllers_1 = require("../utilities/controllers");
 const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET CLIENT SIDE BODY REQUEST TO CREATE A PRODUCT
-    const { name, brand, price, image, description, size, gender, category, subCategory, } = req.body;
+    const { name, brand, price, tax, image, description, size, gender, category, subCategory, } = req.body;
     const stock = Number(req.body.stock) || 0;
     // CHECK IF ALL NECESSARY CREDENTIALS ARE PROVIDED
     if (!name ||
         !brand ||
         !price ||
+        !tax ||
         !image ||
         !description ||
         !size ||
@@ -58,6 +59,7 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         name,
         brand,
         price,
+        tax,
         image,
         description,
         size,
@@ -86,30 +88,8 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
         query.color = color;
     if (size)
         query.size = size;
-    if (price) {
-        // EXAMPLE: gte-50_lte-100
-        const [gteString, lteString] = price.split("_");
-        const priceVal = {
-            $gte: undefined,
-            $lte: undefined,
-        };
-        if (gteString && gteString.startsWith("gte-")) {
-            // EXAMPLE: [gte,50]
-            const gte = gteString.split("-");
-            // EXAMPLE: 50
-            let gteVal = Number(gte[1]);
-            // {$gte: 50}
-            priceVal.$gte = gteVal;
-        }
-        if (lteString && lteString.startsWith("lte-")) {
-            // EXAMPLE: [lte,100]
-            const lte = lteString.split("-");
-            // EXAMPLE: 100
-            let lteVal = Number(lte[1]);
-            // {$lte: 100}
-            priceVal.$lte = lteVal;
-        }
-    }
+    if (price)
+        query.price = (0, controllers_1.gteAndLteQueryForDb)(price);
     // ! CHECK HERE AFTER REVIEW MODEL CREATED
     // if (isReview) query.isReview = isReview === "true";
     if (isStock === "true")
@@ -124,9 +104,12 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
         query.page = 1;
     if (myProducts === "true")
         query.userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-    const limit = 10;
-    const skip = limit * (Number(page) - 1);
+    // LIMIT AND SKIP VALUES
+    const myLimit = 20;
+    const { limit, skip } = (0, controllers_1.limitAndSkip)({ limit: myLimit, page: Number(page) });
+    // FIND PRODUCTS
     const findProducts = models_1.Product.find(query);
+    // LIMIT AND SKIP
     const products = yield findProducts.skip(skip).limit(limit);
     const productLength = products.length;
     res.status(http_status_codes_1.StatusCodes.OK).json({ products, productLength });

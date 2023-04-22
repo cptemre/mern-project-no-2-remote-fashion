@@ -4,6 +4,7 @@ import { RequestHandler } from "express";
 import {
   findDocumentByIdAndModel,
   userIdAndModelUserIdMatchCheck,
+  limitAndSkip,
 } from "../utilities/controllers";
 // MODELS
 import { Review, Product } from "../models";
@@ -133,9 +134,9 @@ const getAllReviews: RequestHandler = async (req, res) => {
   const query: { product: string; user?: string } = { product: "" };
   query.product = productId;
   if (myReviews === "true") query.user = req.user?._id;
-  // SKIP NECESSARY PART AND LIMIT IT TO 10
-  const limit = 10;
-  const skip = limit * reviewPage ? reviewPage - 1 : 0;
+  // LIMIT AND SKIP VALUES
+  const myLimit = 5;
+  const { limit, skip } = limitAndSkip({ limit: myLimit, page: reviewPage });
   const result = Review.find(query);
   const reviews = await result.skip(skip).limit(limit);
   res.status(StatusCodes.OK).json({ msg: "reviews fetched", product, reviews });

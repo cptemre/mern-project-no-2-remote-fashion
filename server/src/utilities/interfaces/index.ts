@@ -23,8 +23,11 @@ import {
   OrderSchemaInterface,
   SingleOrderSchemaInterface,
   SingleOrderModelInterface,
+  CartItemsInterface,
+  SingleOrderQuery,
 } from "../interfaces/models/OrderSchemaInterface";
 import StripePaymentArgumentsSchema from "./payment/StripePaymentArgumentsSchema";
+import CurrencyInterface from "./payment/CurrencyInterface";
 export {
   UserSchemaInterface,
   AddressInterface,
@@ -44,5 +47,8 @@ export {
   OrderSchemaInterface,
   SingleOrderSchemaInterface,
   SingleOrderModelInterface,
+  CartItemsInterface,
   StripePaymentArgumentsSchema,
+  CurrencyInterface,
+  SingleOrderQuery,
 };

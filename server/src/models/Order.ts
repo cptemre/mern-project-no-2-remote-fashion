@@ -20,6 +20,10 @@ const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>({
     type: Number,
     required: [true, "product order price is required"],
   },
+  tax: {
+    type: Number,
+    required: [true, "product order tax percentage required"],
+  },
   product: {
     type: Types.ObjectId,
     required: [true, "product id is required"],
@@ -30,7 +34,15 @@ const OrderSchema = new Schema<OrderSchemaInterface>(
   {
     orderItems: {
       type: [SingleOrderSchema],
-      required: [true, "order item(s) are required"],
+      required: [true, "order item is required"],
+    },
+    shippingFee: {
+      type: Number,
+      default: 0,
+    },
+    subTotal: {
+      type: Number,
+      required: [true, "order sub total price is required"],
     },
     totalPrice: {
       type: Number,
@@ -102,11 +114,12 @@ SingleOrderSchema.post("findOneAndDelete", async function (doc) {
   });
 });
 // SINGLE ORDER MODEL
-const SingleOrder: SingleOrderModelInterface = model<
+const SingleOrder = model<
   SingleOrderSchemaInterface,
   SingleOrderModelInterface
 >("SingleOrder", SingleOrderSchema);
+
 // ORDER MODEL
 const Order = model<OrderSchemaInterface>("Order", OrderSchema);
 
-export default Order;
+export { Order, SingleOrder };

@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.SingleOrder = exports.Order = void 0;
 // MONGOOSE
 const mongoose_1 = require("mongoose");
 // MODELS
@@ -27,6 +28,10 @@ const SingleOrderSchema = new mongoose_1.Schema({
         type: Number,
         required: [true, "product order price is required"],
     },
+    tax: {
+        type: Number,
+        required: [true, "product order tax percentage required"],
+    },
     product: {
         type: mongoose_1.Types.ObjectId,
         required: [true, "product id is required"],
@@ -35,7 +40,15 @@ const SingleOrderSchema = new mongoose_1.Schema({
 const OrderSchema = new mongoose_1.Schema({
     orderItems: {
         type: [SingleOrderSchema],
-        required: [true, "order item(s) are required"],
+        required: [true, "order item is required"],
+    },
+    shippingFee: {
+        type: Number,
+        default: 0,
+    },
+    subTotal: {
+        type: Number,
+        required: [true, "order sub total price is required"],
     },
     totalPrice: {
         type: Number,
@@ -105,6 +118,7 @@ SingleOrderSchema.post("findOneAndDelete", function (doc) {
 });
 // SINGLE ORDER MODEL
 const SingleOrder = (0, mongoose_1.model)("SingleOrder", SingleOrderSchema);
+exports.SingleOrder = SingleOrder;
 // ORDER MODEL
 const Order = (0, mongoose_1.model)("Order", OrderSchema);
-exports.default = Order;
+exports.Order = Order;

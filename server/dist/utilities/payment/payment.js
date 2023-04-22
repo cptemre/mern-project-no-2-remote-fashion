@@ -17,39 +17,17 @@ const stripe_1 = __importDefault(require("stripe"));
 const stripe = new stripe_1.default("sk_test_51MpbFZLI8qA1IP9XKA3aSXeHWooAsUf6lI4yHwOd1ktLbr00pmbNN3H5UKLDNyzQB4WAp1kmmDWLtRoSOxzjzoaK005Glaqe05", {
     apiVersion: "2022-11-15",
 });
-const createPayment = ({ name, email, phone, unit_amount, currency, productId, street: line1, city, postalCode, country, }) => __awaiter(void 0, void 0, void 0, function* () {
+const createPayment = ({ totalPrice, currency, }) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // CREATE CUSTOMER
-        const customer = yield stripe.customers.create({
-            name,
-            email,
-            phone,
-            address: { city, country, line1, postal_code: postalCode.toString() },
-        });
-        // CREATE PRODUCT
-        const product = yield stripe.products.create({
-            name: "Online Fashion",
-            description: "Online fashion order payment",
-        });
-        // CREATE PRICE
-        const price = yield stripe.prices.create({
-            unit_amount,
-            currency,
-            product: productId,
-        });
-        // PAYMENT INTENT TO GET ID IN CONTROLLER TO ADD IT TO THE ORDER MODEL
+        // PAYMENT INTENT TO GET ID & SECRET IN CONTROLLER TO ADD IT TO THE ORDER MODEL
         const paymentIntent = yield stripe.paymentIntents.create({
-            amount: unit_amount,
+            amount: totalPrice,
             currency,
-            customer: customer.id,
-            payment_method_types: ["card"],
-            payment_method_options: {
-                card: {
-                    request_three_d_secure: "automatic",
-                },
+            automatic_payment_methods: {
+                enabled: true,
             },
         });
-        return { paymentIntent };
+        return paymentIntent;
     }
     catch (error) {
         console.error(error);

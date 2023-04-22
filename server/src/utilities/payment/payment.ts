@@ -12,50 +12,20 @@ const stripe = new Stripe(
 import { StripePaymentArgumentsSchema } from "../interfaces/index";
 
 const createPayment = async ({
-  name,
-  email,
-  phone,
-  unit_amount,
+  totalPrice,
   currency,
-  productId,
-  street: line1,
-  city,
-  postalCode,
-  country,
 }: StripePaymentArgumentsSchema) => {
   try {
-    // CREATE CUSTOMER
-    const customer: Stripe.Customer = await stripe.customers.create({
-      name,
-      email,
-      phone,
-      address: { city, country, line1, postal_code: postalCode.toString() },
-    });
-    // CREATE PRODUCT
-    const product: Stripe.Product = await stripe.products.create({
-      name: "Online Fashion",
-      description: "Online fashion order payment",
-    });
-    // CREATE PRICE
-    const price: Stripe.Price = await stripe.prices.create({
-      unit_amount,
-      currency,
-      product: productId as string,
-    });
-    // PAYMENT INTENT TO GET ID IN CONTROLLER TO ADD IT TO THE ORDER MODEL
+    // PAYMENT INTENT TO GET ID & SECRET IN CONTROLLER TO ADD IT TO THE ORDER MODEL
     const paymentIntent: Stripe.PaymentIntent =
       await stripe.paymentIntents.create({
-        amount: unit_amount,
+        amount: totalPrice,
         currency,
-        customer: customer.id,
-        payment_method_types: ["card"],
-        payment_method_options: {
-          card: {
-            request_three_d_secure: "automatic",
-          },
+        automatic_payment_methods: {
+          enabled: true,
         },
       });
-    return { paymentIntent };
+    return paymentIntent;
   } catch (error) {
     console.error(error);
   }

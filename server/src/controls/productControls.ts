@@ -15,7 +15,11 @@ import { StatusCodes } from "http-status-codes";
 // ERRORS
 import { BadRequestError, UnauthorizedError } from "../errors";
 // UTILITY FUNCTIONS
-import { findDocumentByIdAndModel } from "../utilities/controllers";
+import {
+  findDocumentByIdAndModel,
+  gteAndLteQueryForDb,
+  limitAndSkip,
+} from "../utilities/controllers";
 
 const createProduct: RequestHandler = async (req, res) => {
   // GET CLIENT SIDE BODY REQUEST TO CREATE A PRODUCT
@@ -23,6 +27,7 @@ const createProduct: RequestHandler = async (req, res) => {
     name,
     brand,
     price,
+    tax,
     image,
     description,
     size,
@@ -37,6 +42,7 @@ const createProduct: RequestHandler = async (req, res) => {
     !name ||
     !brand ||
     !price ||
+    !tax ||
     !image ||
     !description ||
     !size ||
@@ -72,6 +78,7 @@ const createProduct: RequestHandler = async (req, res) => {
     name,
     brand,
     price,
+    tax,
     image,
     description,
     size,
@@ -107,31 +114,7 @@ const getAllProducts: RequestHandler = async (req, res) => {
   if (brand) query.brand = brand;
   if (color) query.color = color;
   if (size) query.size = size;
-
-  if (price) {
-    // EXAMPLE: gte-50_lte-100
-    const [gteString, lteString] = price.split("_");
-    const priceVal: { $gte: number | undefined; $lte: number | undefined } = {
-      $gte: undefined,
-      $lte: undefined,
-    };
-    if (gteString && gteString.startsWith("gte-")) {
-      // EXAMPLE: [gte,50]
-      const gte: string[] = gteString.split("-");
-      // EXAMPLE: 50
-      let gteVal: number = Number(gte[1]);
-      // {$gte: 50}
-      priceVal.$gte = gteVal;
-    }
-    if (lteString && lteString.startsWith("lte-")) {
-      // EXAMPLE: [lte,100]
-      const lte: string[] = lteString.split("-");
-      // EXAMPLE: 100
-      let lteVal: number = Number(lte[1]);
-      // {$lte: 100}
-      priceVal.$lte = lteVal;
-    }
-  }
+  if (price) query.price = gteAndLteQueryForDb(price);
   // ! CHECK HERE AFTER REVIEW MODEL CREATED
   // if (isReview) query.isReview = isReview === "true";
   if (isStock === "true") query.stock = { $gt: 0 };
@@ -140,10 +123,12 @@ const getAllProducts: RequestHandler = async (req, res) => {
   if (page) query.page = Number(page);
   else query.page = 1;
   if (myProducts === "true") query.userId = req.user?._id;
-  const limit = 10;
-  const skip = limit * (Number(page) - 1);
+  // LIMIT AND SKIP VALUES
+  const myLimit = 20;
+  const { limit, skip } = limitAndSkip({ limit: myLimit, page: Number(page) });
+  // FIND PRODUCTS
   const findProducts = Product.find(query);
-
+  // LIMIT AND SKIP
   const products = await findProducts.skip(skip).limit(limit);
   const productLength = products.length;
   res.status(StatusCodes.OK).json({ products, productLength });

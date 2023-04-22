@@ -20,6 +20,10 @@ const ProductSchema = new mongoose_1.Schema({
         type: Number,
         required: [true, "product price is required"],
     },
+    tax: {
+        type: Number,
+        required: [true, "product tax percentage is required"],
+    },
     image: [
         {
             type: String,

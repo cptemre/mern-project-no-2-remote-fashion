@@ -14,6 +14,7 @@ import { StatusCodes } from "http-status-codes";
 import {
   findDocumentByIdAndModel,
   userIdAndModelUserIdMatchCheck,
+  limitAndSkip,
 } from "../utilities/controllers";
 // CRYPTO
 import { createCrypto } from "../utilities/token";
@@ -43,9 +44,9 @@ const getAllUsers: RequestHandler = async (req, res) => {
   if (isVerified) query.isVerified = isVerified;
   // GET USERS
   const result = User.find({ query }).select("-password");
-  // SET LIMIT AND SKIP
-  const limit = 10;
-  const skip = 10 * (userPage || 0);
+  // LIMIT AND SKIP VALUES
+  const myLimit = 20;
+  const { limit, skip } = limitAndSkip({ limit: myLimit, page: userPage });
   const users = await result.skip(skip).limit(limit);
   // SEND BACK FETCHED USERS
   res.status(StatusCodes.OK).json({ msg: "users fetched", users });
