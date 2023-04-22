@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 // INTERFACE
-import { ProductSchemaInterface } from "../utilities/interfaces";
+import { ProductSchemaInterface } from "../utilities/interfaces/models";
 // ALL SUB CATEGORIES
 import { allSubCategories } from "../utilities/categories/categoriesAndSubCategories";
 const ProductSchema = new Schema<ProductSchemaInterface>(

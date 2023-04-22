@@ -9,7 +9,7 @@ const stripe = new Stripe(
 );
 
 // SCHEMA FOR ARGS
-import { StripePaymentArgumentsSchema } from "../interfaces/index";
+import { StripePaymentArgumentsSchema } from "../interfaces/payment";
 
 const createPayment = async ({
   totalPrice,

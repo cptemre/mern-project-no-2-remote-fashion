@@ -12,10 +12,11 @@ import { ConflictError, UnauthorizedError, BadRequestError } from "../errors";
 import { registerEmail, forgotPasswordEmail } from "../utilities/email";
 // INTERFACES
 import {
-  UserSchemaInterface,
   RegisterVerificationInterface,
   ResetPasswordInterface,
 } from "../utilities/interfaces";
+// USER MODEL INTERFACE
+import { UserSchemaInterface } from "../utilities/interfaces/models";
 // JWT AND CRYPTO
 import {
   attachJwtToCookie,

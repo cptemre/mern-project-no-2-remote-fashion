@@ -1,5 +1,5 @@
 // INTERFACE
-import { UserSchemaInterface } from "../utilities/interfaces";
+import { UserSchemaInterface } from "../utilities/interfaces/models";
 import { RequestHandler } from "express";
 // JWT
 import { attachJwtToCookie, createHash, verifyToken } from "../utilities/token";

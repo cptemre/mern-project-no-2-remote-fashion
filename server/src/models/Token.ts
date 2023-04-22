@@ -1,6 +1,6 @@
 import { Schema, model, Types } from "mongoose";
 // INTERFACE
-import { TokenInterface } from "../utilities/interfaces";
+import { TokenInterface } from "../utilities/interfaces/models";
 const TokenSchema = new Schema<TokenInterface>(
   {
     refreshToken: { type: String, required: true },

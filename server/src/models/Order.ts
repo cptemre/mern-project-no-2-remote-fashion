@@ -5,7 +5,7 @@ import {
   SingleOrderSchemaInterface,
   SingleOrderModelInterface,
   OrderSchemaInterface,
-} from "../utilities/interfaces/index";
+} from "../utilities/interfaces/models";
 // MODELS
 import Product from "./Product";
 // UTILITIES

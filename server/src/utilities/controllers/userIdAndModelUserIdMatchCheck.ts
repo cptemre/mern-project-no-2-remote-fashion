@@ -1,5 +1,5 @@
 // EXPRESS
-import { UserSchemaInterface } from "../interfaces";
+import { UserSchemaInterface } from "../interfaces/models";
 // ERRORS
 import { UnauthorizedError } from "../../errors";
 // MONGOOSE

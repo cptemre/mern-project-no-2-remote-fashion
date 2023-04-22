@@ -37,7 +37,7 @@ interface CartItemsInterface extends SingleOrderSchemaInterface {
 }
 
 interface OrderSchemaInterface extends CurrencyInterface, Document {
-  orderItems: object[];
+  orderItems: SingleOrderSchemaInterface[];
   shippingFee: number;
   subTotal: number;
   totalPrice: number;
@@ -46,11 +46,21 @@ interface OrderSchemaInterface extends CurrencyInterface, Document {
   clientSecret: string;
   paymentIntentID: string;
 }
-
+// TO GET REQ FROM CLIENT SIDE
+// !CHANGE PRICE
+interface OrderClientReqInterface extends CurrencyInterface {
+  orderItems: SingleOrderSchemaInterface[];
+  isShipping: boolean;
+  totalPrice: number;
+  status: "pending" | "failed" | "paid" | "delivered" | "canceled";
+  user: ObjectId | string;
+  orderPage: number;
+}
 export {
   SingleOrderSchemaInterface,
   OrderSchemaInterface,
   SingleOrderModelInterface,
   CartItemsInterface,
   SingleOrderQuery,
+  OrderClientReqInterface,
 };

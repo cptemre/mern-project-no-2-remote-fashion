@@ -2,11 +2,13 @@
 import { RequestHandler } from "express";
 // INTERFACES
 import {
-  CurrencyInterface,
   CartItemsInterface,
   SingleOrderSchemaInterface,
   SingleOrderQuery,
-} from "../utilities/interfaces";
+  OrderClientReqInterface,
+} from "../utilities/interfaces/models";
+// CURRENCY
+import { CurrencyInterface } from "../utilities/interfaces/payment";
 // MODELS
 import { Product, Order, SingleOrder } from "../models";
 // UTILITIES
@@ -26,10 +28,10 @@ import { StatusCodes } from "http-status-codes";
 const createOrder: RequestHandler = async (req, res) => {
   // CLIENT SIDE REQUESTS
   const {
-    cartItems,
+    item: cartItems,
     currency,
   }: {
-    cartItems: CartItemsInterface;
+    item: CartItemsInterface;
     currency: CurrencyInterface;
   } = req.body;
   // THROW AN ERROR IF THERE IS NO CART ITEMS OR CURRENCY
@@ -56,7 +58,9 @@ const createOrder: RequestHandler = async (req, res) => {
     // PRODUCT ORDER PRICE AS GBP
     const productOrderPrice = amount * price;
     // TAX VALUE WITHOUT DOT
-    const taxValueWithoutDot = Number((tax / 100).toString().replace(".", ""));
+    const taxValueWithoutDot = Number(
+      (tax / 10000).toString().replace(".", "")
+    );
     // APPEND TAX RATE TO EVERY ITEM DEPENDS ON THEIR TAX VALUE
     const productOrderPriceWithTax = productOrderPrice * taxValueWithoutDot;
     // APPEND PRODUCT ORDER PRICE TO SUBTOTAL
@@ -64,7 +68,7 @@ const createOrder: RequestHandler = async (req, res) => {
   }
   // *LOOP END
   // SHIPPING FEE AS GBP. IF TOTAL SHOPPING IS ABOVE 75 GBP THEN FREE
-  const shippingFee = subTotal >= 75 ? 0 : 999;
+  const shippingFee = subTotal >= 7500 ? 0 : 999;
   // APPEND SHIPPING FEE TO FIND TOTAL PRICE
   const totalPrice = subTotal + shippingFee;
   // CREATE THE PAYMENT INTENT
@@ -131,4 +135,20 @@ const getSingleOrder: RequestHandler = async (req, res) => {
   res
     .status(StatusCodes.OK)
     .json({ msg: "single order fetched", result: singleOrder });
+};
+
+// *FOR ADMIN AND USER
+const getAllOrders: RequestHandler = async (req, res) => {
+  // GET CLIENT SIDE QUERIES
+  const {
+    orderItems,
+    isShipping,
+    totalPrice,
+    status: productId,
+    user,
+    orderPage,
+    currency,
+  }: OrderClientReqInterface = req.body;
+  // EMPTY QUERY
+  const query: Partial<SingleOrderQuery> = {};
 };

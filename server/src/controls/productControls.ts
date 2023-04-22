@@ -6,8 +6,9 @@ import { RequestHandler } from "express";
 import {
   GetAllProductsQueryInterface,
   GetAllProductsReqBodyInterface,
-  ProductSchemaInterface,
 } from "../utilities/interfaces";
+// MODEL INTERFACES
+import { ProductSchemaInterface } from "../utilities/interfaces/models";
 // ARRAYS
 import { categoriesAndSubCategories } from "../utilities/categories/categoriesAndSubCategories";
 // HTTP CODES

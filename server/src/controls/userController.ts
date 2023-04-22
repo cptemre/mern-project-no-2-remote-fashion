@@ -7,7 +7,7 @@ import {
   UserSchemaInterface,
   AddressInterface,
   PhoneNumberInterface,
-} from "../utilities/interfaces";
+} from "../utilities/interfaces/models";
 // STATUS CODES
 import { StatusCodes } from "http-status-codes";
 // FIND DOCUMENT

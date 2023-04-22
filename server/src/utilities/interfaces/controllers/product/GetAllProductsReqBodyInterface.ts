@@ -1,4 +1,4 @@
-interface RequestBody {
+interface GetAllProductsReqBodyInterface {
   name: string;
   brand: string;
   color: string;
@@ -12,4 +12,4 @@ interface RequestBody {
   myProducts: string;
 }
 
-export default RequestBody;
+export default GetAllProductsReqBodyInterface;

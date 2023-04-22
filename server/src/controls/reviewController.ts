@@ -11,7 +11,7 @@ import { Review, Product } from "../models";
 // HTTP CODES
 import { StatusCodes } from "http-status-codes";
 // INTERFACES
-import { ReviewSchemaInterface } from "../utilities/interfaces";
+import { ReviewSchemaInterface } from "../utilities/interfaces/models";
 
 const createReview: RequestHandler = async (req, res) => {
   // REVIEW KEYS FROM THE CLIENT TO CREATE A NEW REVIEW
