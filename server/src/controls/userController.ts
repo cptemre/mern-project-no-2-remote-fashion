@@ -107,6 +107,8 @@ const updateUser: RequestHandler = async (req, res) => {
     country,
     countryCode,
     phoneNo,
+    state,
+    // ! CHANGE THIS TO OBJECT
     cardNumber,
     avatar,
   }: UserSchemaInterface & AddressInterface & PhoneNumberInterface = req.body;
@@ -127,12 +129,13 @@ const updateUser: RequestHandler = async (req, res) => {
   if (email) user.email = email;
   if (userType) user.userType = userType;
   // ADDRESS OBJECT UPDATE
-  if (street && city && postalCode && country)
+  if (street && city && postalCode && country && state)
     user.address = {
       street,
       city,
       postalCode,
       country,
+      state,
     };
   // PHONE NUMBER UPDATE
   if (countryCode && phoneNo)

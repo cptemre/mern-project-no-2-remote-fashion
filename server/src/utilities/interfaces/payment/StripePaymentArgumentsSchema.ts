@@ -1,9 +1,15 @@
 import { ObjectId } from "mongoose";
 // INTERFACES
-import { AddressInterface } from "../models/UserSchemaInterface";
+import {
+  AddressInterface,
+  CreditCardInformationInterface,
+} from "../models/UserSchemaInterface";
 import CurrencyInterface from "./CurrencyInterface";
 
-interface StripePaymentArgumentsSchema extends CurrencyInterface {
+interface StripePaymentArgumentsSchema
+  extends CurrencyInterface,
+    CreditCardInformationInterface,
+    AddressInterface {
   totalPrice: number;
 }
 

@@ -5,6 +5,7 @@ interface SingleOrderSchemaInterface extends Document {
   amount: number;
   price: number;
   tax: number;
+  status: "pending" | "failed" | "paid" | "delivered" | "canceled";
   user: ObjectId | string;
   product: ObjectId | string;
 }

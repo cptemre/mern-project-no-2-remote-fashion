@@ -25,6 +25,15 @@ const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>(
       type: Number,
       required: [true, "product order tax percentage required"],
     },
+    status: {
+      type: String,
+      default: "pending",
+      enum: {
+        values: ["pending", "failed", "paid", "delivered", "canceled"],
+        message:
+          'acceptable values: "pending" ,"failed" ,"paid" ,"delivered", "canceled"',
+      },
+    },
     user: {
       type: Types.ObjectId,
       required: [true, "user id is required"],
@@ -106,6 +115,13 @@ SingleOrderSchema.statics.updateProductStock = async function ({
 };
 // SAVE SINGLE ORDER FUNCTION CALL TO DECREASE STOCK VALUES OF THE PRODUCT
 SingleOrderSchema.pre("save", async function () {
+  // IF STATUS IS SAVED AS FAILED OR CANCELED THEN ADD IT BACK TO STOCK, ELSE DECREASE THE STOCK
+  let operation: "+" | "-" =
+    (this.isModified(this.status) && this.status === "failed") ||
+    this.status === "canceled"
+      ? "+"
+      : "-";
+
   await SingleOrder.updateProductStock({
     productId: this.product as string,
     amount: this.amount,

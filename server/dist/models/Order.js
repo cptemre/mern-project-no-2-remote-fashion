@@ -32,6 +32,14 @@ const SingleOrderSchema = new mongoose_1.Schema({
         type: Number,
         required: [true, "product order tax percentage required"],
     },
+    status: {
+        type: String,
+        default: "pending",
+        enum: {
+            values: ["pending", "failed", "paid", "delivered", "canceled"],
+            message: 'acceptable values: "pending" ,"failed" ,"paid" ,"delivered", "canceled"',
+        },
+    },
     user: {
         type: mongoose_1.Types.ObjectId,
         required: [true, "user id is required"],
@@ -103,6 +111,11 @@ SingleOrderSchema.statics.updateProductStock = function ({ productId, amount, op
 // SAVE SINGLE ORDER FUNCTION CALL TO DECREASE STOCK VALUES OF THE PRODUCT
 SingleOrderSchema.pre("save", function () {
     return __awaiter(this, void 0, void 0, function* () {
+        // IF STATUS IS SAVED AS FAILED OR CANCELED THEN ADD IT BACK TO STOCK, ELSE DECREASE THE STOCK
+        let operation = (this.isModified(this.status) && this.status === "failed") ||
+            this.status === "canceled"
+            ? "+"
+            : "-";
         yield SingleOrder.updateProductStock({
             productId: this.product,
             amount: this.amount,

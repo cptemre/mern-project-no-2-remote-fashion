@@ -25,9 +25,19 @@ const http_status_codes_1 = require("http-status-codes");
 const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     // CLIENT SIDE REQUESTS
-    const { item: cartItems, currency, } = req.body;
-    // THROW AN ERROR IF THERE IS NO CART ITEMS OR CURRENCY
-    if (!cartItems || currency)
+    const { item: cartItems, currency, cardNumber, expMonth, expYear, cvc, street, city, postalCode, country, state, } = req.body;
+    // THROW AN ERROR IF THERE IS NO CART ITEMS, CURRENCY, PHONE OR ADDRESS INFO
+    if (!cartItems ||
+        !currency ||
+        !cardNumber ||
+        !expMonth ||
+        !expYear ||
+        !cvc ||
+        !street ||
+        !city ||
+        !postalCode ||
+        !country ||
+        !state)
         throw new errors_1.BadRequestError("invalid credientals");
     // ALL ORDERS IN AN ARRAY TO APPEND IT TO ORDER MODEL LATER
     let orderItems = [];
@@ -67,8 +77,24 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const shippingFee = subTotal >= 7500 ? 0 : 999;
     // APPEND SHIPPING FEE TO FIND TOTAL PRICE
     const totalPrice = subTotal + shippingFee;
+    //
+    if (!req.user)
+        throw new errors_1.UnauthorizedError("authorization denied");
     // CREATE THE PAYMENT INTENT
-    const paymentIntent = yield (0, payment_1.default)({ totalPrice, currency });
+    const paymentIntent = yield (0, payment_1.default)({
+        totalPrice,
+        currency,
+        cardNumber,
+        expMonth,
+        expYear,
+        cvc,
+        street,
+        city,
+        postalCode,
+        country,
+        state,
+        user: req.user,
+    });
     // CHECK IF PAYMENT INTENT EXISTS
     if (!paymentIntent)
         throw new errors_1.PaymentRequiredError("payment required");
@@ -117,8 +143,8 @@ const getSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, function*
     // GET CLIENT SIDE QUERIES
     const { product: productId, user: userId, } = req.body;
     // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
-    if (!productId)
-        throw new errors_1.BadRequestError("product id is required");
+    if (!productId || !userId)
+        throw new errors_1.BadRequestError("product and user id is required");
     // FIND THE SINGLE ORDER
     const singleOrder = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: productId,
@@ -161,4 +187,23 @@ const getAllOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     const result = yield order.skip(skip).limit(limit);
     // RESPONSE
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "orders fetched", result });
+});
+const getOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // GET CLIENT SIDE QUERIES
+    const { order: orderId, user: userId } = req.body;
+    // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
+    if (!orderId || !userId)
+        throw new errors_1.BadRequestError("order and user id is required");
+    // FIND THE SINGLE ORDER
+    const order = yield (0, controllers_1.findDocumentByIdAndModel)({
+        id: orderId,
+        MyModel: models_1.Order,
+    });
+    // CHECK USER MATCHES WITH THE SINGLE ORDER USER
+    if (req.user)
+        (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId });
+    // RESPONSE
+    res
+        .status(http_status_codes_1.StatusCodes.OK)
+        .json({ msg: "single order fetched", result: order });
 });

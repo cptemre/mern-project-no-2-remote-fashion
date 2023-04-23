@@ -5,6 +5,8 @@ import { RequestHandler } from "express";
 import {
   CartItemsInterface,
   SingleOrderSchemaInterface,
+  CreditCardInformationInterface,
+  AddressInterface,
 } from "../utilities/interfaces/models";
 // QUERY MODELS
 import {
@@ -12,7 +14,10 @@ import {
   SingleOrderQuery,
 } from "../utilities/interfaces/controllers";
 // CURRENCY
-import { CurrencyInterface } from "../utilities/interfaces/payment";
+import {
+  CurrencyInterface,
+  StripePaymentArgumentsSchema,
+} from "../utilities/interfaces/payment";
 // MODELS
 import { Product, Order, SingleOrder } from "../models";
 // UTILITIES
@@ -25,7 +30,11 @@ import {
 // PAYMENT
 import createPayment from "../utilities/payment/payment";
 // ERRORS
-import { BadRequestError, PaymentRequiredError } from "../errors";
+import {
+  BadRequestError,
+  PaymentRequiredError,
+  UnauthorizedError,
+} from "../errors";
 // HTTP STATUS CODES
 import { StatusCodes } from "http-status-codes";
 
@@ -34,12 +43,31 @@ const createOrder: RequestHandler = async (req, res) => {
   const {
     item: cartItems,
     currency,
-  }: {
-    item: CartItemsInterface;
-    currency: CurrencyInterface;
-  } = req.body;
-  // THROW AN ERROR IF THERE IS NO CART ITEMS OR CURRENCY
-  if (!cartItems || currency) throw new BadRequestError("invalid credientals");
+    cardNumber,
+    expMonth,
+    expYear,
+    cvc,
+    street,
+    city,
+    postalCode,
+    country,
+    state,
+  }: StripePaymentArgumentsSchema & { item: CartItemsInterface } = req.body;
+  // THROW AN ERROR IF THERE IS NO CART ITEMS, CURRENCY, PHONE OR ADDRESS INFO
+  if (
+    !cartItems ||
+    !currency ||
+    !cardNumber ||
+    !expMonth ||
+    !expYear ||
+    !cvc ||
+    !street ||
+    !city ||
+    !postalCode ||
+    !country ||
+    !state
+  )
+    throw new BadRequestError("invalid credientals");
   // ALL ORDERS IN AN ARRAY TO APPEND IT TO ORDER MODEL LATER
   let orderItems: SingleOrderSchemaInterface[] = [];
   // TOTAL PRICE OF SINGLE ORDERS
@@ -80,8 +108,23 @@ const createOrder: RequestHandler = async (req, res) => {
   const shippingFee = subTotal >= 7500 ? 0 : 999;
   // APPEND SHIPPING FEE TO FIND TOTAL PRICE
   const totalPrice = subTotal + shippingFee;
+  //
+  if (!req.user) throw new UnauthorizedError("authorization denied");
   // CREATE THE PAYMENT INTENT
-  const paymentIntent = await createPayment({ totalPrice, currency });
+  const paymentIntent = await createPayment({
+    totalPrice,
+    currency,
+    cardNumber,
+    expMonth,
+    expYear,
+    cvc,
+    street,
+    city,
+    postalCode,
+    country,
+    state,
+    user: req.user,
+  });
   // CHECK IF PAYMENT INTENT EXISTS
   if (!paymentIntent) throw new PaymentRequiredError("payment required");
   // IF PAYMENT INTENT PROPERTIES DO NOT EXIST THAN THROW AN ERROR
@@ -139,7 +182,8 @@ const getSingleOrder: RequestHandler = async (req, res) => {
     user: userId,
   }: { product: string; user: string } = req.body;
   // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
-  if (!productId) throw new BadRequestError("product id is required");
+  if (!productId || !userId)
+    throw new BadRequestError("product and user id is required");
   // FIND THE SINGLE ORDER
   const singleOrder = await findDocumentByIdAndModel({
     id: productId,
@@ -187,4 +231,24 @@ const getAllOrders: RequestHandler = async (req, res) => {
   const result = await order.skip(skip).limit(limit);
   // RESPONSE
   res.status(StatusCodes.OK).json({ msg: "orders fetched", result });
+};
+
+const getOrder: RequestHandler = async (req, res) => {
+  // GET CLIENT SIDE QUERIES
+  const { order: orderId, user: userId }: { order: string; user: string } =
+    req.body;
+  // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
+  if (!orderId || !userId)
+    throw new BadRequestError("order and user id is required");
+  // FIND THE SINGLE ORDER
+  const order = await findDocumentByIdAndModel({
+    id: orderId,
+    MyModel: Order,
+  });
+  // CHECK USER MATCHES WITH THE SINGLE ORDER USER
+  if (req.user) userIdAndModelUserIdMatchCheck({ user: req.user, userId });
+  // RESPONSE
+  res
+    .status(StatusCodes.OK)
+    .json({ msg: "single order fetched", result: order });
 };

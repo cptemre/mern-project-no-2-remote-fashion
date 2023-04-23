@@ -14,23 +14,102 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 // STRIPE
 const stripe_1 = __importDefault(require("stripe"));
-const stripe = new stripe_1.default("sk_test_51MpbFZLI8qA1IP9XKA3aSXeHWooAsUf6lI4yHwOd1ktLbr00pmbNN3H5UKLDNyzQB4WAp1kmmDWLtRoSOxzjzoaK005Glaqe05", {
+const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY, {
     apiVersion: "2022-11-15",
 });
-const createPayment = ({ totalPrice, currency, }) => __awaiter(void 0, void 0, void 0, function* () {
+const createPayment = ({ totalPrice, currency, cardNumber, expMonth, expYear, cvc, street, city, postalCode, country, state, user, }) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
     try {
-        // PAYMENT INTENT TO GET ID & SECRET IN CONTROLLER TO ADD IT TO THE ORDER MODEL
-        const paymentIntent = yield stripe.paymentIntents.create({
-            amount: totalPrice,
-            currency,
-            automatic_payment_methods: {
-                enabled: true,
+        // NAME OF THE CUSTOMER
+        const name = user.name + " " + user.surname;
+        // EMAIL OF THE USER
+        const email = user.email;
+        // PHONE OF THE USER
+        const phone = user.phoneNumber
+            ? ((_a = user.phoneNumber) === null || _a === void 0 ? void 0 : _a.countryCode) + ((_b = user.phoneNumber) === null || _b === void 0 ? void 0 : _b.phoneNo)
+            : "";
+        // ADDRESS OF THE CUSTOMER
+        const address = {
+            city,
+            country,
+            line1: street,
+            postal_code: postalCode.toString(),
+            state,
+        };
+        // * CUSTOMER
+        const customer = yield createOrGetCustomer({ name, email, phone, address });
+        // * PAYMENT METHOD
+        const paymentMethod = yield stripe.paymentMethods.create({
+            card: {
+                number: cardNumber,
+                exp_month: expMonth,
+                exp_year: expYear,
+                cvc,
             },
+            billing_details: {
+                name: "John Doe",
+                email: "john.doe@example.com",
+                address,
+            },
+        });
+        // * PAYMENT INTENT TO GET ID & SECRET IN CONTROLLER TO ADD IT TO THE ORDER MODEL
+        const paymentIntent = createPaymentIntent({
+            totalPrice,
+            currency,
+            paymentMethodId: paymentMethod.id,
+            customerId: customer.id,
         });
         return paymentIntent;
     }
     catch (error) {
         console.error(error);
     }
+});
+const transferMoney = ({ amount, currency, destination, }) => __awaiter(void 0, void 0, void 0, function* () {
+    const transfer = yield stripe.transfers.create({
+        amount,
+        currency,
+        destination,
+    });
+    return transfer;
+});
+// * PAYMENT INTENT TO GET ID & SECRET IN CONTROLLER TO ADD IT TO THE ORDER MODEL
+const createPaymentIntent = ({ totalPrice, currency, paymentMethodId, customerId, }) => __awaiter(void 0, void 0, void 0, function* () {
+    // PAYMENT IS CONFIRMED DIRECTLY FOR TESTING
+    const paymentIntent = yield stripe.paymentIntents.create({
+        amount: totalPrice,
+        currency,
+        automatic_payment_methods: {
+            enabled: true,
+        },
+        payment_method_types: ["card"],
+        payment_method: paymentMethodId,
+        return_url: process.env.CLIENT_ADDRESS + "/payment-verified",
+        customer: customerId,
+        confirm: true,
+    });
+    return paymentIntent;
+});
+const createOrGetCustomer = ({ name, email, phone, address, }) => __awaiter(void 0, void 0, void 0, function* () {
+    let customer;
+    // Check if the customer already exists
+    const existingCustomer = yield stripe.customers.list({
+        email,
+        limit: 1,
+    });
+    if (existingCustomer.data.length > 0) {
+        // Retrieve the existing customer
+        customer = existingCustomer.data[0];
+    }
+    else {
+        // Create a new customer
+        customer = yield stripe.customers.create({
+            name,
+            email,
+            phone,
+            address,
+        });
+    }
+    return customer;
 });
 exports.default = createPayment;

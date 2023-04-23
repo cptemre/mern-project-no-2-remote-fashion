@@ -18,6 +18,7 @@ import {
   AddressInterface,
   PhoneNumberInterface,
   UserSchemaInterface,
+  CreditCardInformationInterface,
 } from "./UserSchemaInterface";
 
 export {
@@ -32,4 +33,5 @@ export {
   AddressInterface,
   PhoneNumberInterface,
   UserSchemaInterface,
+  CreditCardInformationInterface,
 };

@@ -49,11 +49,7 @@ const UserSchema = new Schema<UserSchemaInterface>(
     address: {
       type: Object,
     },
-    cardNumber: {
-      type: Number,
-      minlength: [13, "card number must have at least 13 characters"],
-      maxlength: [19, "card number can not be more than 19 characters"],
-    },
+    cardInfo: Object,
     avatar: String,
     verificationToken: String,
     isVerified: {
