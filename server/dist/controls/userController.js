@@ -94,7 +94,7 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     // GET UPDATED VALUES FROM THE CLIENT
     const { name, surname, email, userType, street, city, postalCode, country, countryCode, phoneNo, state, 
     // ! CHANGE THIS TO OBJECT
-    cardNumber, avatar, } = req.body;
+    card, avatar, } = req.body;
     // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
     if ((_b = req.user) === null || _b === void 0 ? void 0 : _b._id)
         (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId });
@@ -132,8 +132,10 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             phoneNo,
         };
     // REST OF THE OPTIONAL KEY UPDATES
-    if (cardNumber)
-        user.cardNumber = cardNumber;
+    // CARD INFO BODY KEY AND VALUE SPLIT
+    let cardInfo = {};
+    if (card)
+        cardInfo = (0, controllers_1.cardInfoSplitter)({ card });
     if (avatar)
         user.avatar = avatar;
     // IF EMAIL DID NOT CHANGE THEN SEND THE RESPONSE

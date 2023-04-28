@@ -5,8 +5,7 @@ import { RequestHandler } from "express";
 import {
   CartItemsInterface,
   SingleOrderSchemaInterface,
-  CreditCardInformationInterface,
-  AddressInterface,
+  OrderStatusInterface,
 } from "../utilities/interfaces/models";
 // QUERY MODELS
 import {
@@ -28,7 +27,7 @@ import {
   userIdAndModelUserIdMatchCheck,
 } from "../utilities/controllers";
 // PAYMENT
-import createPayment from "../utilities/payment/payment";
+import { createPayment, transferMoney } from "../utilities/payment/payment";
 // ERRORS
 import {
   BadRequestError,
@@ -104,6 +103,8 @@ const createOrder: RequestHandler = async (req, res) => {
     subTotal += productOrderPriceWithTax;
   }
   // *LOOP END
+  // CURRENCY CHANGE TO GBP
+
   // SHIPPING FEE AS GBP. IF TOTAL SHOPPING IS ABOVE 75 GBP THEN FREE
   const shippingFee = subTotal >= 7500 ? 0 : 999;
   // APPEND SHIPPING FEE TO FIND TOTAL PRICE
@@ -132,7 +133,7 @@ const createOrder: RequestHandler = async (req, res) => {
   if (!amount || client_secret || paymentIntentId)
     throw new PaymentRequiredError("payment required");
   // CREATE ACTUAL ORDER HERE
-  const order = await Order.create({
+  const result = await Order.create({
     orderItems,
     shippingFee,
     subTotal,
@@ -142,10 +143,11 @@ const createOrder: RequestHandler = async (req, res) => {
     paymentIntentID: paymentIntentId,
   });
   // SENT CLIENT SECRET TO THE CLIENT
-  res.status(StatusCodes.CREATED).json({ msg: "order created", client_secret });
+  res
+    .status(StatusCodes.CREATED)
+    .json({ msg: "order created", result, client_secret });
 };
 
-// *ONLY FOR ADMIN
 const getAllSingleOrders: RequestHandler = async (req, res) => {
   // GET CLIENT SIDE QUERIES
   const {
@@ -165,32 +167,39 @@ const getAllSingleOrders: RequestHandler = async (req, res) => {
   if (priceVal) query.price = gteAndLteQueryForDb(priceVal);
   if (tax) query.tax = tax;
   if (productId) query.product = productId;
+  // IF USER IS NOT ADMIN THEN ADD TO QUERY OF THE USERS ID TO FIND ONLY RELATED SINGLE ORDERS
+  if (req.user && req.user.userType !== "admin") query.user = req.user._id;
   // FIND DOCUMENTS OF SINGLE ORDERS
   const singleOrder = SingleOrder.find(query);
+  // COUNT THE DOCUMENTS
+  const singleOrderLength = singleOrder.countDocuments();
   // LIMIT AND SKIP VALUES
   const myLimit = 10;
   const { limit, skip } = limitAndSkip({ limit: myLimit, page: orderPage });
+
   const result = await singleOrder.skip(skip).limit(limit);
   // RESPONSE
-  res.status(StatusCodes.OK).json({ msg: "single orders fetched", result });
+  res
+    .status(StatusCodes.OK)
+    .json({ msg: "single orders fetched", result, lenght: singleOrderLength });
 };
 
 const getSingleOrder: RequestHandler = async (req, res) => {
   // GET CLIENT SIDE QUERIES
-  const {
-    product: productId,
-    user: userId,
-  }: { product: string; user: string } = req.body;
+  const { product: productId } = req.params;
   // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
-  if (!productId || !userId)
-    throw new BadRequestError("product and user id is required");
+  if (!productId) throw new BadRequestError("product id is required");
   // FIND THE SINGLE ORDER
   const singleOrder = await findDocumentByIdAndModel({
     id: productId,
     MyModel: SingleOrder,
   });
   // CHECK USER MATCHES WITH THE SINGLE ORDER USER
-  if (req.user) userIdAndModelUserIdMatchCheck({ user: req.user, userId });
+  if (req.user)
+    userIdAndModelUserIdMatchCheck({
+      user: req.user,
+      userId: singleOrder.user.toString(),
+    });
   // RESPONSE
   res
     .status(StatusCodes.OK)
@@ -202,11 +211,10 @@ const getAllOrders: RequestHandler = async (req, res) => {
   const {
     isShipping,
     status,
-    user: userId,
     orderPage,
     priceVal,
     currency,
-  }: Omit<OrderClientReqInterface, "price"> = req.body;
+  }: Omit<OrderClientReqInterface, "price | user"> = req.body;
   // EMPTY QUERY
   const query: Partial<Omit<OrderClientReqInterface, "priceVal">> = {};
   // SET QUERY KEY AND VALUES
@@ -214,41 +222,118 @@ const getAllOrders: RequestHandler = async (req, res) => {
     ? (query.isShipping = isShipping)
     : (query.isShipping = !isShipping);
   if (status) query.status = status;
-  // COMPARE IF USER ID AND AUTHORIZED USERS ARE SAME
-  if (req.user && userId) {
-    userIdAndModelUserIdMatchCheck({
-      user: req.user,
-      userId: userId as string,
-    });
-  }
+  // IF USER IS NOT ADMIN THEN ADD TO QUERY OF THE USERS ID TO FIND ONLY RELATED SINGLE ORDERS
+  if (req.user && req.user.userType !== "admin") query.user = req.user._id;
   if (priceVal) query.price = gteAndLteQueryForDb(priceVal);
   // ! HERE CALCULATE THE PRICE TO GBP
   // FIND ALL ORDERS WITH QUERY
   const order = Order.find(query);
+  // COUNT THE DOCUMENTS
+  const orderLength = order.countDocuments();
   // LIMIT AND SKIP
   const myLimit = 10;
   const { limit, skip } = limitAndSkip({ limit: myLimit, page: orderPage });
   const result = await order.skip(skip).limit(limit);
   // RESPONSE
-  res.status(StatusCodes.OK).json({ msg: "orders fetched", result });
+  res
+    .status(StatusCodes.OK)
+    .json({ msg: "orders fetched", result, length: orderLength });
 };
 
 const getOrder: RequestHandler = async (req, res) => {
-  // GET CLIENT SIDE QUERIES
-  const { order: orderId, user: userId }: { order: string; user: string } =
-    req.body;
+  // GET CLIENT SIDE QUERY
+  const { order: orderId } = req.params;
   // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
-  if (!orderId || !userId)
-    throw new BadRequestError("order and user id is required");
+  if (!orderId) throw new BadRequestError("order id is required");
   // FIND THE SINGLE ORDER
   const order = await findDocumentByIdAndModel({
     id: orderId,
     MyModel: Order,
   });
-  // CHECK USER MATCHES WITH THE SINGLE ORDER USER
-  if (req.user) userIdAndModelUserIdMatchCheck({ user: req.user, userId });
+  // CHECK USER MATCHES WITH THE ORDER USER
+  if (req.user)
+    userIdAndModelUserIdMatchCheck({
+      user: req.user,
+      userId: order._id.toString(),
+    });
   // RESPONSE
   res
     .status(StatusCodes.OK)
     .json({ msg: "single order fetched", result: order });
+};
+
+const updateOrder: RequestHandler = async (req, res) => {
+  // GET ORDER ID FROM THE CLIENT
+  const { id: orderId } = req.params;
+  // CHECK IF SINGLE ORDER ID IS PROVIDED
+  if (!orderId) throw new BadRequestError("order id is required");
+  // GET USER ID
+  const {
+    status,
+    singleOrderId,
+    destination,
+  }: {
+    userId: string;
+    singleOrderId: string;
+    destination: string;
+  } & OrderStatusInterface = req.body;
+
+  // CHECK IF BODY VARIABLES ARE PROVIDED
+
+  if (!status || !singleOrderId)
+    throw new BadRequestError("status and single order id are required");
+
+  // GET ORDER
+  const order = await findDocumentByIdAndModel({
+    id: orderId,
+    MyModel: Order,
+  });
+  // CHECK IF CURRENT USER IS NOT ADMIN AND ORDER USER ID IS NOT EQUAL TO USER ID
+  if (req.user)
+    userIdAndModelUserIdMatchCheck({
+      user: req.user,
+      userId: order.user.toString(),
+    });
+  // FIND THIS SINGLE ORDER IN DOCUMENTS
+  const singleOrder = await findDocumentByIdAndModel({
+    id: singleOrderId,
+    MyModel: SingleOrder,
+  });
+  // IF IT IS A CANCELATION THEN PAY BACK THE MONEY
+  if (status === "canceled") {
+    if (!destination)
+      throw new BadRequestError("destination account no is required");
+    const amount = singleOrder.amount;
+    const currency = order.currency;
+    const transfer = await transferMoney({ amount, currency, destination });
+    singleOrder.cancelTransferId = transfer.id;
+    // ORDER PAYMENT DECREASE CHANGE DUE TO CANCELATION
+    order.subTotal -= singleOrder.amount;
+    order.totalPrice -= singleOrder.amount;
+    // UPDATE SINGLE ORDER IN ORDER FOR ITS CANCELATION
+    order.orderItems.forEach((orderItem) => {
+      if (orderItem._id === singleOrder._id) {
+        orderItem.cancelTransferId = singleOrder.cancelTransferId;
+      }
+    });
+  }
+  // UPDATE THE STATUS OF SINGLE ORDER
+  singleOrder.status = status;
+  // SAVE THE SINGLE ORDER
+  await singleOrder.save();
+
+  res
+    .status(StatusCodes.OK)
+    .json({ msg: "order updated", result: singleOrder });
+};
+
+// THERE WONT BE A DELETE CONTROLER FOR ORDERS
+
+export {
+  createOrder,
+  getAllOrders,
+  getOrder,
+  getAllSingleOrders,
+  getSingleOrder,
+  updateOrder,
 };

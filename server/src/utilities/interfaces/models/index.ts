@@ -3,6 +3,7 @@ import {
   OrderSchemaInterface,
   SingleOrderModelInterface,
   SingleOrderSchemaInterface,
+  OrderStatusInterface,
 } from "./OrderSchemaInterface";
 
 import ProductSchemaInterface from "./ProductSchemaInterface";
@@ -34,4 +35,5 @@ export {
   PhoneNumberInterface,
   UserSchemaInterface,
   CreditCardInformationInterface,
+  OrderStatusInterface,
 };

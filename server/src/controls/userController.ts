@@ -15,6 +15,7 @@ import {
   findDocumentByIdAndModel,
   userIdAndModelUserIdMatchCheck,
   limitAndSkip,
+  cardInfoSplitter,
 } from "../utilities/controllers";
 // CRYPTO
 import { createCrypto } from "../utilities/token";
@@ -109,9 +110,11 @@ const updateUser: RequestHandler = async (req, res) => {
     phoneNo,
     state,
     // ! CHANGE THIS TO OBJECT
-    cardNumber,
+    card,
     avatar,
-  }: UserSchemaInterface & AddressInterface & PhoneNumberInterface = req.body;
+  }: UserSchemaInterface &
+    AddressInterface &
+    PhoneNumberInterface & { card: string } = req.body;
   // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
   if (req.user?._id) userIdAndModelUserIdMatchCheck({ user: req.user, userId });
   // CHECK IF THE USER EXISTS
@@ -144,7 +147,9 @@ const updateUser: RequestHandler = async (req, res) => {
       phoneNo,
     };
   // REST OF THE OPTIONAL KEY UPDATES
-  if (cardNumber) user.cardNumber = cardNumber;
+  // CARD INFO BODY KEY AND VALUE SPLIT
+  let cardInfo = {};
+  if (card) cardInfo = cardInfoSplitter({ card });
   if (avatar) user.avatar = avatar;
   // IF EMAIL DID NOT CHANGE THEN SEND THE RESPONSE
   if (oldEmail === user.email) {

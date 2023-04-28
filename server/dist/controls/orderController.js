@@ -8,16 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.updateOrder = exports.getSingleOrder = exports.getAllSingleOrders = exports.getOrder = exports.getAllOrders = exports.createOrder = void 0;
 // MODELS
 const models_1 = require("../models");
 // UTILITIES
 const controllers_1 = require("../utilities/controllers");
 // PAYMENT
-const payment_1 = __importDefault(require("../utilities/payment/payment"));
+const payment_1 = require("../utilities/payment/payment");
 // ERRORS
 const errors_1 = require("../errors");
 // HTTP STATUS CODES
@@ -73,6 +71,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         subTotal += productOrderPriceWithTax;
     }
     // *LOOP END
+    // CURRENCY CHANGE TO GBP
     // SHIPPING FEE AS GBP. IF TOTAL SHOPPING IS ABOVE 75 GBP THEN FREE
     const shippingFee = subTotal >= 7500 ? 0 : 999;
     // APPEND SHIPPING FEE TO FIND TOTAL PRICE
@@ -81,7 +80,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (!req.user)
         throw new errors_1.UnauthorizedError("authorization denied");
     // CREATE THE PAYMENT INTENT
-    const paymentIntent = yield (0, payment_1.default)({
+    const paymentIntent = yield (0, payment_1.createPayment)({
         totalPrice,
         currency,
         cardNumber,
@@ -103,7 +102,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (!amount || client_secret || paymentIntentId)
         throw new errors_1.PaymentRequiredError("payment required");
     // CREATE ACTUAL ORDER HERE
-    const order = yield models_1.Order.create({
+    const result = yield models_1.Order.create({
         orderItems,
         shippingFee,
         subTotal,
@@ -113,9 +112,11 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         paymentIntentID: paymentIntentId,
     });
     // SENT CLIENT SECRET TO THE CLIENT
-    res.status(http_status_codes_1.StatusCodes.CREATED).json({ msg: "order created", client_secret });
+    res
+        .status(http_status_codes_1.StatusCodes.CREATED)
+        .json({ msg: "order created", result, client_secret });
 });
-// *ONLY FOR ADMIN
+exports.createOrder = createOrder;
 const getAllSingleOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET CLIENT SIDE QUERIES
     const { amount, priceVal, tax, product: productId, orderPage, } = req.body;
@@ -130,21 +131,29 @@ const getAllSingleOrders = (req, res) => __awaiter(void 0, void 0, void 0, funct
         query.tax = tax;
     if (productId)
         query.product = productId;
+    // IF USER IS NOT ADMIN THEN ADD TO QUERY OF THE USERS ID TO FIND ONLY RELATED SINGLE ORDERS
+    if (req.user && req.user.userType !== "admin")
+        query.user = req.user._id;
     // FIND DOCUMENTS OF SINGLE ORDERS
     const singleOrder = models_1.SingleOrder.find(query);
+    // COUNT THE DOCUMENTS
+    const singleOrderLength = singleOrder.countDocuments();
     // LIMIT AND SKIP VALUES
     const myLimit = 10;
     const { limit, skip } = (0, controllers_1.limitAndSkip)({ limit: myLimit, page: orderPage });
     const result = yield singleOrder.skip(skip).limit(limit);
     // RESPONSE
-    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "single orders fetched", result });
+    res
+        .status(http_status_codes_1.StatusCodes.OK)
+        .json({ msg: "single orders fetched", result, lenght: singleOrderLength });
 });
+exports.getAllSingleOrders = getAllSingleOrders;
 const getSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET CLIENT SIDE QUERIES
-    const { product: productId, user: userId, } = req.body;
+    const { product: productId } = req.params;
     // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
-    if (!productId || !userId)
-        throw new errors_1.BadRequestError("product and user id is required");
+    if (!productId)
+        throw new errors_1.BadRequestError("product id is required");
     // FIND THE SINGLE ORDER
     const singleOrder = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: productId,
@@ -152,15 +161,19 @@ const getSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, function*
     });
     // CHECK USER MATCHES WITH THE SINGLE ORDER USER
     if (req.user)
-        (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId });
+        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+            user: req.user,
+            userId: singleOrder.user.toString(),
+        });
     // RESPONSE
     res
         .status(http_status_codes_1.StatusCodes.OK)
         .json({ msg: "single order fetched", result: singleOrder });
 });
+exports.getSingleOrder = getSingleOrder;
 const getAllOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET CLIENT SIDE QUERIES
-    const { isShipping, status, user: userId, orderPage, priceVal, currency, } = req.body;
+    const { isShipping, status, orderPage, priceVal, currency, } = req.body;
     // EMPTY QUERY
     const query = {};
     // SET QUERY KEY AND VALUES
@@ -169,41 +182,100 @@ const getAllOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         : (query.isShipping = !isShipping);
     if (status)
         query.status = status;
-    // COMPARE IF USER ID AND AUTHORIZED USERS ARE SAME
-    if (req.user && userId) {
-        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
-            user: req.user,
-            userId: userId,
-        });
-    }
+    // IF USER IS NOT ADMIN THEN ADD TO QUERY OF THE USERS ID TO FIND ONLY RELATED SINGLE ORDERS
+    if (req.user && req.user.userType !== "admin")
+        query.user = req.user._id;
     if (priceVal)
         query.price = (0, controllers_1.gteAndLteQueryForDb)(priceVal);
     // ! HERE CALCULATE THE PRICE TO GBP
     // FIND ALL ORDERS WITH QUERY
     const order = models_1.Order.find(query);
+    // COUNT THE DOCUMENTS
+    const orderLength = order.countDocuments();
     // LIMIT AND SKIP
     const myLimit = 10;
     const { limit, skip } = (0, controllers_1.limitAndSkip)({ limit: myLimit, page: orderPage });
     const result = yield order.skip(skip).limit(limit);
     // RESPONSE
-    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "orders fetched", result });
+    res
+        .status(http_status_codes_1.StatusCodes.OK)
+        .json({ msg: "orders fetched", result, length: orderLength });
 });
+exports.getAllOrders = getAllOrders;
 const getOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // GET CLIENT SIDE QUERIES
-    const { order: orderId, user: userId } = req.body;
+    // GET CLIENT SIDE QUERY
+    const { order: orderId } = req.params;
     // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
-    if (!orderId || !userId)
-        throw new errors_1.BadRequestError("order and user id is required");
+    if (!orderId)
+        throw new errors_1.BadRequestError("order id is required");
     // FIND THE SINGLE ORDER
     const order = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: orderId,
         MyModel: models_1.Order,
     });
-    // CHECK USER MATCHES WITH THE SINGLE ORDER USER
+    // CHECK USER MATCHES WITH THE ORDER USER
     if (req.user)
-        (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId });
+        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+            user: req.user,
+            userId: order._id.toString(),
+        });
     // RESPONSE
     res
         .status(http_status_codes_1.StatusCodes.OK)
         .json({ msg: "single order fetched", result: order });
 });
+exports.getOrder = getOrder;
+const updateOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // GET ORDER ID FROM THE CLIENT
+    const { id: orderId } = req.params;
+    // CHECK IF SINGLE ORDER ID IS PROVIDED
+    if (!orderId)
+        throw new errors_1.BadRequestError("order id is required");
+    // GET USER ID
+    const { status, singleOrderId, destination, } = req.body;
+    // CHECK IF BODY VARIABLES ARE PROVIDED
+    if (!status || !singleOrderId)
+        throw new errors_1.BadRequestError("status and single order id are required");
+    // GET ORDER
+    const order = yield (0, controllers_1.findDocumentByIdAndModel)({
+        id: orderId,
+        MyModel: models_1.Order,
+    });
+    // CHECK IF CURRENT USER IS NOT ADMIN AND ORDER USER ID IS NOT EQUAL TO USER ID
+    if (req.user)
+        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+            user: req.user,
+            userId: order.user.toString(),
+        });
+    // FIND THIS SINGLE ORDER IN DOCUMENTS
+    const singleOrder = yield (0, controllers_1.findDocumentByIdAndModel)({
+        id: singleOrderId,
+        MyModel: models_1.SingleOrder,
+    });
+    // IF IT IS A CANCELATION THEN PAY BACK THE MONEY
+    if (status === "canceled") {
+        if (!destination)
+            throw new errors_1.BadRequestError("destination account no is required");
+        const amount = singleOrder.amount;
+        const currency = order.currency;
+        const transfer = yield (0, payment_1.transferMoney)({ amount, currency, destination });
+        singleOrder.cancelTransferId = transfer.id;
+        // ORDER PAYMENT DECREASE CHANGE DUE TO CANCELATION
+        order.subTotal -= singleOrder.amount;
+        order.totalPrice -= singleOrder.amount;
+        // UPDATE SINGLE ORDER IN ORDER FOR ITS CANCELATION
+        order.orderItems.forEach((orderItem) => {
+            if (orderItem._id === singleOrder._id) {
+                orderItem.cancelTransferId = singleOrder.cancelTransferId;
+            }
+        });
+    }
+    // UPDATE THE STATUS OF SINGLE ORDER
+    singleOrder.status = status;
+    // SAVE THE SINGLE ORDER
+    yield singleOrder.save();
+    res
+        .status(http_status_codes_1.StatusCodes.OK)
+        .json({ msg: "order updated", result: singleOrder });
+});
+exports.updateOrder = updateOrder;

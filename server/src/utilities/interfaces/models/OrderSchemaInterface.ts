@@ -8,6 +8,7 @@ interface SingleOrderSchemaInterface extends Document {
   status: "pending" | "failed" | "paid" | "delivered" | "canceled";
   user: ObjectId | string;
   product: ObjectId | string;
+  cancelTransferId?: string;
 }
 interface SingleOrderModelInterface extends Model<SingleOrderSchemaInterface> {
   updateProductStock({
@@ -32,12 +33,18 @@ interface CartItemsInterface extends SingleOrderSchemaInterface {
   };
 }
 
-interface OrderSchemaInterface extends CurrencyInterface, Document {
+interface OrderStatusInterface {
+  status: "pending" | "failed" | "paid" | "delivered" | "canceled";
+}
+
+interface OrderSchemaInterface
+  extends CurrencyInterface,
+    OrderStatusInterface,
+    Document {
   orderItems: SingleOrderSchemaInterface[];
   shippingFee: number;
   subTotal: number;
   totalPrice: number;
-  status: "pending" | "failed" | "paid" | "delivered" | "canceled";
   user: ObjectId | string;
   clientSecret: string;
   paymentIntentID: string;
@@ -47,4 +54,5 @@ export {
   OrderSchemaInterface,
   SingleOrderModelInterface,
   CartItemsInterface,
+  OrderStatusInterface,
 };

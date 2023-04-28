@@ -59,8 +59,8 @@ const createPayment = async ({
           cvc,
         },
         billing_details: {
-          name: "John Doe",
-          email: "john.doe@example.com",
+          name,
+          email,
           address,
         },
       });
@@ -75,24 +75,6 @@ const createPayment = async ({
   } catch (error) {
     console.error(error);
   }
-};
-
-const transferMoney = async ({
-  amount,
-  currency,
-  destination,
-}: {
-  amount: number;
-  currency: string;
-  destination: string;
-}) => {
-  const transfer = await stripe.transfers.create({
-    amount,
-    currency,
-    destination,
-  });
-
-  return transfer;
 };
 
 // * PAYMENT INTENT TO GET ID & SECRET IN CONTROLLER TO ADD IT TO THE ORDER MODEL
@@ -156,4 +138,23 @@ const createOrGetCustomer = async ({
   return customer;
 };
 
-export default createPayment;
+// PAY BACK FOR PRODUCT
+const transferMoney = async ({
+  amount,
+  currency,
+  destination,
+}: {
+  amount: number;
+  currency: string;
+  destination: string;
+}) => {
+  const transfer = await stripe.transfers.create({
+    amount,
+    currency,
+    destination,
+  });
+
+  return transfer;
+};
+
+export { createPayment, transferMoney };

@@ -6,6 +6,8 @@ import {
   SingleOrderModelInterface,
   OrderSchemaInterface,
 } from "../utilities/interfaces/models";
+// VALUES ARRAY
+import { orderStatusValues } from "../utilities/categories";
 // MODELS
 import Product from "./Product";
 // UTILITIES
@@ -29,7 +31,7 @@ const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>(
       type: String,
       default: "pending",
       enum: {
-        values: ["pending", "failed", "paid", "delivered", "canceled"],
+        values: orderStatusValues,
         message:
           'acceptable values: "pending" ,"failed" ,"paid" ,"delivered", "canceled"',
       },
@@ -42,6 +44,7 @@ const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>(
       type: Types.ObjectId,
       required: [true, "product id is required"],
     },
+    cancelTransferId: String,
   },
   { timestamps: true }
 );
@@ -68,7 +71,7 @@ const OrderSchema = new Schema<OrderSchemaInterface>(
       type: String,
       default: "pending",
       enum: {
-        values: ["pending", "failed", "paid", "delivered", "canceled"],
+        values: orderStatusValues,
         message:
           'acceptable values: "pending" ,"failed" ,"paid" ,"delivered", "canceled"',
       },
@@ -115,17 +118,20 @@ SingleOrderSchema.statics.updateProductStock = async function ({
 };
 // SAVE SINGLE ORDER FUNCTION CALL TO DECREASE STOCK VALUES OF THE PRODUCT
 SingleOrderSchema.pre("save", async function () {
-  // IF STATUS IS SAVED AS FAILED OR CANCELED THEN ADD IT BACK TO STOCK, ELSE DECREASE THE STOCK
-  let operation: "+" | "-" =
-    (this.isModified(this.status) && this.status === "failed") ||
-    this.status === "canceled"
+  // IF STATUS IS SAVED AS CANCELED THEN ADD IT BACK TO STOCK, ELSE IF IT IS NOT FAILED DECREASE THE STOCK
+  let operation: "+" | "-" | "" =
+    this.isModified(this.status) && this.status === "canceled"
       ? "+"
-      : "-";
+      : this.status !== "failed"
+      ? "-"
+      : "";
+  // RETURN BACK IF IT IS FAILED
+  if (operation === "") return;
 
   await SingleOrder.updateProductStock({
     productId: this.product as string,
     amount: this.amount,
-    operation: "-",
+    operation,
   });
 });
 // DELETE SINGLE ORDER FUNCTION CALL TO INCREASE STOCK VALUES OF THE PRODUCT

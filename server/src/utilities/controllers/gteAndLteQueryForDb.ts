@@ -5,6 +5,7 @@ const gteAndLteQueryForDb = (price: string) => {
     $gte: undefined,
     $lte: undefined,
   };
+  // ! CHANGE THIS IFS TO A FUNCTION TO NOT REPEAT
   if (gteString && gteString.startsWith("gte-")) {
     // EXAMPLE: [gte,50]
     const gte: string[] = gteString.split("-");

@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.transferMoney = exports.createPayment = void 0;
 // STRIPE
 const stripe_1 = __importDefault(require("stripe"));
 const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY, {
@@ -47,8 +48,8 @@ const createPayment = ({ totalPrice, currency, cardNumber, expMonth, expYear, cv
                 cvc,
             },
             billing_details: {
-                name: "John Doe",
-                email: "john.doe@example.com",
+                name,
+                email,
                 address,
             },
         });
@@ -65,14 +66,7 @@ const createPayment = ({ totalPrice, currency, cardNumber, expMonth, expYear, cv
         console.error(error);
     }
 });
-const transferMoney = ({ amount, currency, destination, }) => __awaiter(void 0, void 0, void 0, function* () {
-    const transfer = yield stripe.transfers.create({
-        amount,
-        currency,
-        destination,
-    });
-    return transfer;
-});
+exports.createPayment = createPayment;
 // * PAYMENT INTENT TO GET ID & SECRET IN CONTROLLER TO ADD IT TO THE ORDER MODEL
 const createPaymentIntent = ({ totalPrice, currency, paymentMethodId, customerId, }) => __awaiter(void 0, void 0, void 0, function* () {
     // PAYMENT IS CONFIRMED DIRECTLY FOR TESTING
@@ -112,4 +106,13 @@ const createOrGetCustomer = ({ name, email, phone, address, }) => __awaiter(void
     }
     return customer;
 });
-exports.default = createPayment;
+// PAY BACK FOR PRODUCT
+const transferMoney = ({ amount, currency, destination, }) => __awaiter(void 0, void 0, void 0, function* () {
+    const transfer = yield stripe.transfers.create({
+        amount,
+        currency,
+        destination,
+    });
+    return transfer;
+});
+exports.transferMoney = transferMoney;

@@ -2,6 +2,8 @@
 import CurrencyInterface from "../../payment/CurrencyInterface";
 // SINGLE ORDER SCHEMA INTERFACE
 import { SingleOrderSchemaInterface } from "../../models";
+// STATUS SCHEMA
+import { OrderStatusInterface } from "../../models";
 // PRICE INTERFACE FOR QUERY GTE & LTE
 import { priceQueryInterface } from "../";
 // MONGOOSE
@@ -13,13 +15,14 @@ interface SingleOrderQuery {
   tax: number;
   product: ObjectId | string;
   orderPage: number;
+  user: ObjectId | string;
 }
 // TO GET REQ FROM CLIENT SIDE
 interface OrderClientReqInterface
   extends CurrencyInterface,
-    priceQueryInterface {
+    priceQueryInterface,
+    OrderStatusInterface {
   isShipping: boolean;
-  status: "pending" | "failed" | "paid" | "delivered" | "canceled";
   user: ObjectId | string;
   orderPage: number;
   priceVal: string;

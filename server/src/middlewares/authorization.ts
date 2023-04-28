@@ -11,6 +11,7 @@ import { Token } from "../models";
 import { ObjectId } from "mongoose";
 
 // DECLARE A GLOBAL REQUEST KEY
+// ! CHANGE THIS TO ONE INTERFACE
 declare global {
   namespace Express {
     interface Request {
