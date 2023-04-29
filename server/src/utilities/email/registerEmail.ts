@@ -1,4 +1,4 @@
-import { RegisterVerificationInterface } from "../interfaces";
+import { RegisterVerificationInterface } from "../interfaces/controllers";
 import sendEmail from "./sendEmail";
 
 const registerEmail = async ({

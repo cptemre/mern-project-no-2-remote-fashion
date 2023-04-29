@@ -1,5 +1,5 @@
 import sendEmail from "./sendEmail";
-import { RegisterVerificationInterface } from "../interfaces";
+import { RegisterVerificationInterface } from "../interfaces/controllers";
 const forgotPasswordEmail = async ({
   userEmail,
   userName,

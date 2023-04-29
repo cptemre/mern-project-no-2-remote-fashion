@@ -3,7 +3,7 @@ import sgMail from "@sendgrid/mail";
 const sgApiKey = process.env.SENDGRID_API_KEY as string;
 sgMail.setApiKey(sgApiKey);
 // MAIL INTERFACE
-import { MailInterface } from "../interfaces/index";
+import MailInterface from "../interfaces/email/MailInterface";
 
 // ! FOR NOW DON'T SEND ANY EMAIL
 const sendEmail = async ({ to, subject, html }: MailInterface) => {

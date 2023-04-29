@@ -7,13 +7,15 @@ import {
   UserSchemaInterface,
   AddressInterface,
   PhoneNumberInterface,
-} from "../utilities/interfaces";
+} from "../utilities/interfaces/models";
 // STATUS CODES
 import { StatusCodes } from "http-status-codes";
 // FIND DOCUMENT
 import {
   findDocumentByIdAndModel,
   userIdAndModelUserIdMatchCheck,
+  limitAndSkip,
+  cardInfoSplitter,
 } from "../utilities/controllers";
 // CRYPTO
 import { createCrypto } from "../utilities/token";
@@ -43,9 +45,9 @@ const getAllUsers: RequestHandler = async (req, res) => {
   if (isVerified) query.isVerified = isVerified;
   // GET USERS
   const result = User.find({ query }).select("-password");
-  // SET LIMIT AND SKIP
-  const limit = 10;
-  const skip = 10 * (userPage || 0);
+  // LIMIT AND SKIP VALUES
+  const myLimit = 20;
+  const { limit, skip } = limitAndSkip({ limit: myLimit, page: userPage });
   const users = await result.skip(skip).limit(limit);
   // SEND BACK FETCHED USERS
   res.status(StatusCodes.OK).json({ msg: "users fetched", users });
@@ -106,9 +108,13 @@ const updateUser: RequestHandler = async (req, res) => {
     country,
     countryCode,
     phoneNo,
-    cardNumber,
+    state,
+    // ! CHANGE THIS TO OBJECT
+    card,
     avatar,
-  }: UserSchemaInterface & AddressInterface & PhoneNumberInterface = req.body;
+  }: UserSchemaInterface &
+    AddressInterface &
+    PhoneNumberInterface & { card: string } = req.body;
   // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
   if (req.user?._id) userIdAndModelUserIdMatchCheck({ user: req.user, userId });
   // CHECK IF THE USER EXISTS
@@ -126,12 +132,13 @@ const updateUser: RequestHandler = async (req, res) => {
   if (email) user.email = email;
   if (userType) user.userType = userType;
   // ADDRESS OBJECT UPDATE
-  if (street && city && postalCode && country)
+  if (street && city && postalCode && country && state)
     user.address = {
       street,
       city,
       postalCode,
       country,
+      state,
     };
   // PHONE NUMBER UPDATE
   if (countryCode && phoneNo)
@@ -140,7 +147,9 @@ const updateUser: RequestHandler = async (req, res) => {
       phoneNo,
     };
   // REST OF THE OPTIONAL KEY UPDATES
-  if (cardNumber) user.cardNumber = cardNumber;
+  // CARD INFO BODY KEY AND VALUE SPLIT
+  let cardInfo = {};
+  if (card) cardInfo = cardInfoSplitter({ card });
   if (avatar) user.avatar = avatar;
   // IF EMAIL DID NOT CHANGE THEN SEND THE RESPONSE
   if (oldEmail === user.email) {

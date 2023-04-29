@@ -2,5 +2,12 @@ import CustomError from "./CustomError";
 import ConflictError from "./ConflictError";
 import UnauthorizedError from "./UnauthorizedError";
 import BadRequestError from "./BadRequestError";
+import PaymentRequiredError from "./PaymentRequiredError";
 
-export { CustomError, ConflictError, UnauthorizedError, BadRequestError };
+export {
+  CustomError,
+  ConflictError,
+  UnauthorizedError,
+  BadRequestError,
+  PaymentRequiredError,
+};

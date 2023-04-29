@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 // ALL SUB CATEGORIES
-const categoriesAndSubCategories_1 = require("../utilities/categories/categoriesAndSubCategories");
+const categories_1 = require("../utilities/categories");
 const ProductSchema = new mongoose_1.Schema({
     name: {
         type: String,
@@ -19,6 +19,10 @@ const ProductSchema = new mongoose_1.Schema({
     price: {
         type: Number,
         required: [true, "product price is required"],
+    },
+    tax: {
+        type: Number,
+        required: [true, "product tax percentage is required"],
     },
     image: [
         {
@@ -57,7 +61,7 @@ const ProductSchema = new mongoose_1.Schema({
             "product sub-category can not be more than 25 characters",
         ],
         enum: {
-            values: categoriesAndSubCategories_1.allSubCategories,
+            values: categories_1.allSubCategories,
             message: "product sub-category does not match with an expected value",
         },
     },

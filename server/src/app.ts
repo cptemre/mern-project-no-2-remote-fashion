@@ -19,18 +19,20 @@ import authRouter from "./routes/authRoutes";
 import productRouter from "./routes/productRoutes";
 import reviewRouter from "./routes/reviewRoutes";
 import userRouter from "./routes/userRoutes";
+import orderRouter from "./routes/orderRoutes";
 // ERRORS
 import errorHandler from "./middlewares/errorHandler";
 import notFoundError from "./middlewares/notFoundError";
 
 // MIDDLEWARES
 app.use(express.json());
-app.use(cookieParser(process.env.JWT_SECRET));
+app.use(cookieParser(jwtSecret));
 // PAGES MIDDLEWARE
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/product", productRouter);
 app.use("/api/v1/review", reviewRouter);
 app.use("/api/v1/user", userRouter);
+app.use("/api/v1/order", orderRouter);
 // ERROR MIDDLEWARE
 app.use(errorHandler);
 app.use(notFoundError);

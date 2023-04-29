@@ -1,4 +1,4 @@
-import { UserSchemaInterface } from "..";
+import { UserSchemaInterface } from "../models";
 import { Response } from "express";
 
 interface JwtInterface {

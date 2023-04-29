@@ -11,17 +11,17 @@ import { ConflictError, UnauthorizedError, BadRequestError } from "../errors";
 // SEND EMAIL
 import { registerEmail, forgotPasswordEmail } from "../utilities/email";
 // INTERFACES
-import {
-  UserSchemaInterface,
-  RegisterVerificationInterface,
-  ResetPasswordInterface,
-} from "../utilities/interfaces";
+import { ResetPasswordInterface } from "../utilities/interfaces/controllers";
+// USER MODEL INTERFACE
+import { UserSchemaInterface } from "../utilities/interfaces/models";
 // JWT AND CRYPTO
 import {
   attachJwtToCookie,
   createCrypto,
   createHash,
 } from "../utilities/token";
+// SPLIT CARD INFO
+import { cardInfoSplitter } from "../utilities/controllers";
 // * CREATE A NEW USER
 const registerUser: RequestHandler = async (req, res) => {
   // BODY REQUESTS
@@ -32,9 +32,9 @@ const registerUser: RequestHandler = async (req, res) => {
     password,
     phoneNumber,
     address,
-    cardNumber,
+    card,
     avatar,
-  }: UserSchemaInterface = req.body;
+  }: Omit<UserSchemaInterface, "cardInfo"> & { card: string } = req.body;
   // CHECK IF INFORMATION IS NOT MISSING CREDENTIALS
   if (!name && !surname && !email && !password)
     throw new BadRequestError("name, surname, email and password required");
@@ -57,6 +57,10 @@ const registerUser: RequestHandler = async (req, res) => {
 
   const verificationToken = createCrypto();
 
+  // CARD INFO BODY KEY AND VALUE SPLIT
+  let cardInfo = {};
+  if (card) cardInfo = cardInfoSplitter({ card });
+
   // CREATE USER IF REQUIRED CREDENTIALS EXIST
   if (name && surname && email && password && userType) {
     const user = await User.create({
@@ -67,7 +71,7 @@ const registerUser: RequestHandler = async (req, res) => {
       userType,
       phoneNumber,
       address,
-      cardNumber,
+      cardInfo,
       avatar,
       verificationToken,
     });

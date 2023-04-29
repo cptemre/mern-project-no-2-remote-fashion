@@ -38,9 +38,9 @@ const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         query.isVerified = isVerified;
     // GET USERS
     const result = models_1.User.find({ query }).select("-password");
-    // SET LIMIT AND SKIP
-    const limit = 10;
-    const skip = 10 * (userPage || 0);
+    // LIMIT AND SKIP VALUES
+    const myLimit = 20;
+    const { limit, skip } = (0, controllers_1.limitAndSkip)({ limit: myLimit, page: userPage });
     const users = yield result.skip(skip).limit(limit);
     // SEND BACK FETCHED USERS
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "users fetched", users });
@@ -92,7 +92,9 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     // GET USER ID FROM PARAMS
     const { id: userId } = req.params;
     // GET UPDATED VALUES FROM THE CLIENT
-    const { name, surname, email, userType, street, city, postalCode, country, countryCode, phoneNo, cardNumber, avatar, } = req.body;
+    const { name, surname, email, userType, street, city, postalCode, country, countryCode, phoneNo, state, 
+    // ! CHANGE THIS TO OBJECT
+    card, avatar, } = req.body;
     // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
     if ((_b = req.user) === null || _b === void 0 ? void 0 : _b._id)
         (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId });
@@ -115,12 +117,13 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     if (userType)
         user.userType = userType;
     // ADDRESS OBJECT UPDATE
-    if (street && city && postalCode && country)
+    if (street && city && postalCode && country && state)
         user.address = {
             street,
             city,
             postalCode,
             country,
+            state,
         };
     // PHONE NUMBER UPDATE
     if (countryCode && phoneNo)
@@ -129,8 +132,10 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             phoneNo,
         };
     // REST OF THE OPTIONAL KEY UPDATES
-    if (cardNumber)
-        user.cardNumber = cardNumber;
+    // CARD INFO BODY KEY AND VALUE SPLIT
+    let cardInfo = {};
+    if (card)
+        cardInfo = (0, controllers_1.cardInfoSplitter)({ card });
     if (avatar)
         user.avatar = avatar;
     // IF EMAIL DID NOT CHANGE THEN SEND THE RESPONSE

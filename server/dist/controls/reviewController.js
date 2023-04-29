@@ -132,9 +132,9 @@ const getAllReviews = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     query.product = productId;
     if (myReviews === "true")
         query.user = (_h = req.user) === null || _h === void 0 ? void 0 : _h._id;
-    // SKIP NECESSARY PART AND LIMIT IT TO 10
-    const limit = 10;
-    const skip = limit * reviewPage ? reviewPage - 1 : 0;
+    // LIMIT AND SKIP VALUES
+    const myLimit = 5;
+    const { limit, skip } = (0, controllers_1.limitAndSkip)({ limit: myLimit, page: reviewPage });
     const result = models_1.Review.find(query);
     const reviews = yield result.skip(skip).limit(limit);
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "reviews fetched", product, reviews });

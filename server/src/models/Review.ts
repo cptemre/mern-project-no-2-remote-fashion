@@ -4,7 +4,7 @@ import { Schema, model, Types, Model, ObjectId } from "mongoose";
 import {
   ReviewSchemaInterface,
   ReviewModelInterface,
-} from "../utilities/interfaces";
+} from "../utilities/interfaces/models";
 // OTHER MODELS
 import Product from "./Product";
 import findDocumentByIdAndModel from "../utilities/controllers/findDocumentByIdAndModel";
@@ -66,7 +66,6 @@ ReviewSchema.statics.calculateAverageRating = async function (
         },
       },
     ]);
-    console.log(result);
     // QUERY OBJECT
     const findAndUpdateQuery: {
       averageRating: number;
