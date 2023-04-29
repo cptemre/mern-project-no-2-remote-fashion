@@ -7,6 +7,7 @@ import {
   UserSchemaInterface,
   AddressInterface,
   PhoneNumberInterface,
+  CartItemsInterface,
 } from "../utilities/interfaces/models";
 // STATUS CODES
 import { StatusCodes } from "http-status-codes";
@@ -112,9 +113,10 @@ const updateUser: RequestHandler = async (req, res) => {
     // ! CHANGE THIS TO OBJECT
     card,
     avatar,
+    cartItems,
   }: UserSchemaInterface &
     AddressInterface &
-    PhoneNumberInterface & { card: string } = req.body;
+    PhoneNumberInterface & { card: string } & CartItemsInterface = req.body;
   // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
   if (req.user?._id) userIdAndModelUserIdMatchCheck({ user: req.user, userId });
   // CHECK IF THE USER EXISTS
@@ -152,7 +154,7 @@ const updateUser: RequestHandler = async (req, res) => {
   if (card) cardInfo = cardInfoSplitter({ card });
   if (avatar) user.avatar = avatar;
   // IF EMAIL DID NOT CHANGE THEN SEND THE RESPONSE
-  if (oldEmail === user.email) {
+  if (oldEmail !== user.email) {
     isEmailChanged = true;
     // RESET THE VERIFICATION
     user.verificationToken = createCrypto();
@@ -160,6 +162,9 @@ const updateUser: RequestHandler = async (req, res) => {
     user.isVerified = false;
     // ! CLIENT SHOULD CALL LOGOUT AFTER THIS EVENT
   }
+  // CART ITEMS UPDATE
+  if (cartItems) user.cartItems = cartItems;
+
   // SAVE THE USER
   await user.save();
   // HIDE USER PASSWORD BEFORE SENDING IT TO THE CLIENT

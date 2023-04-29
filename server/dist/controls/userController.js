@@ -94,7 +94,7 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     // GET UPDATED VALUES FROM THE CLIENT
     const { name, surname, email, userType, street, city, postalCode, country, countryCode, phoneNo, state, 
     // ! CHANGE THIS TO OBJECT
-    card, avatar, } = req.body;
+    card, avatar, cartItems, } = req.body;
     // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
     if ((_b = req.user) === null || _b === void 0 ? void 0 : _b._id)
         (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId });
@@ -139,7 +139,7 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     if (avatar)
         user.avatar = avatar;
     // IF EMAIL DID NOT CHANGE THEN SEND THE RESPONSE
-    if (oldEmail === user.email) {
+    if (oldEmail !== user.email) {
         isEmailChanged = true;
         // RESET THE VERIFICATION
         user.verificationToken = (0, token_1.createCrypto)();
@@ -147,6 +147,9 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         user.isVerified = false;
         // ! CLIENT SHOULD CALL LOGOUT AFTER THIS EVENT
     }
+    // CART ITEMS UPDATE
+    if (cartItems)
+        user.cartItems = cartItems;
     // SAVE THE USER
     yield user.save();
     // HIDE USER PASSWORD BEFORE SENDING IT TO THE CLIENT

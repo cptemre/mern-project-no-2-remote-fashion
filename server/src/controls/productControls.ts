@@ -1,5 +1,5 @@
 // MODELS
-import { Product } from "../models";
+import { Product, Review, User } from "../models";
 // EXPRESS
 import { RequestHandler } from "express";
 // INTERFACES
@@ -8,7 +8,10 @@ import {
   GetAllProductsReqBodyInterface,
 } from "../utilities/interfaces/controllers";
 // MODEL INTERFACES
-import { ProductSchemaInterface } from "../utilities/interfaces/models";
+import {
+  ProductSchemaInterface,
+  UserSchemaInterface,
+} from "../utilities/interfaces/models";
 // ARRAYS
 import { categoriesAndSubCategories } from "../utilities/categories/categoriesAndSubCategories";
 // HTTP CODES
@@ -138,15 +141,11 @@ const getAllProducts: RequestHandler = async (req, res) => {
 const deleteProduct: RequestHandler = async (req, res) => {
   // GET PRODUCT ID FROM BODY
   const { id: productId } = req.params;
-  // FIND THE PRODUCT
-  const product = await findDocumentByIdAndModel({
-    id: productId,
-    MyModel: Product,
-  });
   // DELETE THE PRODUCT
-  await Product.findOneAndDelete({ _id: productId });
-  // ! AFTER DELETING PRODUCT DELETE ALL REVIEWS IN THE FUTURE
-  res.status(StatusCodes.OK).json({ msg: "product deleted" });
+  const product = await Product.findOneAndDelete({ _id: productId });
+  res
+    .status(StatusCodes.OK)
+    .json({ msg: "product, related reviews and cart items are deleted" });
 };
 
 const getSingleProduct: RequestHandler = async (req, res) => {

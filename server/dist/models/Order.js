@@ -114,20 +114,24 @@ SingleOrderSchema.statics.updateProductStock = function ({ productId, amount, op
 // SAVE SINGLE ORDER FUNCTION CALL TO DECREASE STOCK VALUES OF THE PRODUCT
 SingleOrderSchema.pre("save", function () {
     return __awaiter(this, void 0, void 0, function* () {
-        // IF STATUS IS SAVED AS CANCELED THEN ADD IT BACK TO STOCK, ELSE IF IT IS NOT FAILED DECREASE THE STOCK
-        let operation = this.isModified(this.status) && this.status === "canceled"
-            ? "+"
-            : this.status !== "failed"
-                ? "-"
-                : "";
-        // RETURN BACK IF IT IS FAILED
-        if (operation === "")
-            return;
-        yield SingleOrder.updateProductStock({
-            productId: this.product,
-            amount: this.amount,
-            operation,
-        });
+        if (this.isModified(this.status)) {
+            // IF STATUS IS SAVED AS REPAYED THEN ADD IT BACK TO STOCK, ELSE IF IT IS NOT FAILED DECREASE THE STOCK
+            let operation = this.status === "repayed" ||
+                this.status === "canceled" ||
+                this.status === "failed"
+                ? "+"
+                : this.status === "pending"
+                    ? "-"
+                    : "";
+            // RETURN BACK IF IT IS FAILED
+            if (operation === "")
+                return;
+            yield SingleOrder.updateProductStock({
+                productId: this.product,
+                amount: this.amount,
+                operation,
+            });
+        }
     });
 });
 // DELETE SINGLE ORDER FUNCTION CALL TO INCREASE STOCK VALUES OF THE PRODUCT

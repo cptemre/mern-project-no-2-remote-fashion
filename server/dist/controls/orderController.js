@@ -25,9 +25,15 @@ const errors_1 = require("../errors");
 const http_status_codes_1 = require("http-status-codes");
 const currencyExchangeRates_1 = __importDefault(require("../utilities/payment/currencyExchangeRates"));
 const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c;
     // CLIENT SIDE REQUESTS
-    const { item: cartItems, currency, cardNumber, expMonth, expYear, cvc, street, city, postalCode, country, state, } = req.body;
+    const { currency, cardNumber, expMonth, expYear, cvc, street, city, postalCode, country, state, } = req.body;
+    // GET CART ITEMS FROM THE USER DOCUMENT
+    const user = yield (0, controllers_1.findDocumentByIdAndModel)({
+        id: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id,
+        MyModel: models_1.User,
+    });
+    const cartItems = user.cartItems;
     // THROW AN ERROR IF THERE IS NO CART ITEMS, CURRENCY, PHONE OR ADDRESS INFO
     if (!cartItems ||
         !currency ||
@@ -76,7 +82,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             amount,
             price: exchangedPrice,
             currency,
-            user: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id,
+            user: (_b = req.user) === null || _b === void 0 ? void 0 : _b._id,
             product,
         });
         // APPEND THIS ORDER TO ORDERITEMS ARRAY
@@ -127,7 +133,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         subTotal,
         totalPrice,
         currency,
-        user: (_b = req.user) === null || _b === void 0 ? void 0 : _b._id,
+        user: (_c = req.user) === null || _c === void 0 ? void 0 : _c._id,
         clientSecret: client_secret,
         paymentIntentID: paymentIntentId,
     });

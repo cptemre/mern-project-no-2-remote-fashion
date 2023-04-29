@@ -18,7 +18,7 @@ import {
   StripePaymentArgumentsSchema,
 } from "../utilities/interfaces/payment";
 // MODELS
-import { Product, Order, SingleOrder } from "../models";
+import { Product, Order, SingleOrder, User } from "../models";
 // UTILITIES
 import {
   findDocumentByIdAndModel,
@@ -41,7 +41,6 @@ import currencyExchangeRates from "../utilities/payment/currencyExchangeRates";
 const createOrder: RequestHandler = async (req, res) => {
   // CLIENT SIDE REQUESTS
   const {
-    item: cartItems,
     currency,
     cardNumber,
     expMonth,
@@ -52,7 +51,13 @@ const createOrder: RequestHandler = async (req, res) => {
     postalCode,
     country,
     state,
-  }: StripePaymentArgumentsSchema & { item: CartItemsInterface } = req.body;
+  }: StripePaymentArgumentsSchema = req.body;
+  // GET CART ITEMS FROM THE USER DOCUMENT
+  const user = await findDocumentByIdAndModel({
+    id: req.user?._id,
+    MyModel: User,
+  });
+  const cartItems = user.cartItems;
   // THROW AN ERROR IF THERE IS NO CART ITEMS, CURRENCY, PHONE OR ADDRESS INFO
   if (
     !cartItems ||
@@ -80,7 +85,7 @@ const createOrder: RequestHandler = async (req, res) => {
     let exchangedPrice = price;
     // FIND THE DOCUMENT OF PRODUCT
     const product = await findDocumentByIdAndModel({
-      id: productId,
+      id: productId as string,
       MyModel: Product,
     });
     // IF CURRENCY IS ANOTHER THAN gbp GET EXCHANGE VALUE

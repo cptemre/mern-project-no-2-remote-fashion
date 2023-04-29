@@ -3,6 +3,8 @@ import { Schema, model } from "mongoose";
 import { ProductSchemaInterface } from "../utilities/interfaces/models";
 // ALL SUB CATEGORIES
 import { allSubCategories } from "../utilities/categories";
+// MODELS
+import { Review, User } from "../models";
 const ProductSchema = new Schema<ProductSchemaInterface>(
   {
     name: {
@@ -81,6 +83,21 @@ const ProductSchema = new Schema<ProductSchemaInterface>(
   },
   { timestamps: true }
 );
+
+ProductSchema.post("findOneAndDelete", async function (doc) {
+  const productId = doc._id;
+  // FIND ALL REVIEWS WITH THE PRODUCT ID MATCH
+  const reviews = await Review.find({ product: productId });
+  // FIND AND DELETE EVERY DOCUMENT FROM REVIEWS ARRAY WITH A LOOP
+  for (let i = 0; i < reviews.length; i++) {
+    await Review.findOneAndDelete({ _id: reviews[i]._id });
+  }
+  // FIND ALL USERS WHOSE cartItems ARRAY CONTAINS AN ITEM WITH THE SPECIFIED _id, AND REMOVE THAT ITEM FROM THE ARRAY.
+  await User.updateMany(
+    { "cartItems._id": productId },
+    { $pull: { cartItems: { _id: productId } } }
+  );
+});
 
 const Product = model<ProductSchemaInterface>("Product", ProductSchema);
 

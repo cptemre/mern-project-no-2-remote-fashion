@@ -8,12 +8,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const validator = require("validator");
 const token_1 = require("../utilities/token");
 // * SCHEMA
@@ -83,7 +79,6 @@ UserSchema.pre("save", function () {
             this.name = this.name.toUpperCase();
         if (this.isModified("surname"))
             this.surname = this.surname.toUpperCase();
-        const salt = yield bcryptjs_1.default.genSalt(10);
         const hash = yield (0, token_1.createHash)(this.password);
         this.password = hash;
     });

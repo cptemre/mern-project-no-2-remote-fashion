@@ -1,5 +1,5 @@
 import { Document } from "mongoose";
-
+import { CartItemsInterface } from "./";
 interface AddressInterface {
   street: string;
   city: string;
@@ -33,6 +33,7 @@ interface UserSchemaInterface extends Document {
   verified: Date | undefined;
   passwordToken: string;
   passwordTokenExpDate: Date;
+  cartItems?: CartItemsInterface[];
 }
 
 export {

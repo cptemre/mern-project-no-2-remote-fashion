@@ -72,7 +72,6 @@ UserSchema.pre("save", async function () {
   if (this.isModified("name")) this.name = this.name.toUpperCase();
   if (this.isModified("surname")) this.surname = this.surname.toUpperCase();
 
-  const salt = await bcrypt.genSalt(10);
   const hash = await createHash(this.password);
 
   this.password = hash;

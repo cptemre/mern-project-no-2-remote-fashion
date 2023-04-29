@@ -118,15 +118,11 @@ exports.getAllProducts = getAllProducts;
 const deleteProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET PRODUCT ID FROM BODY
     const { id: productId } = req.params;
-    // FIND THE PRODUCT
-    const product = yield (0, controllers_1.findDocumentByIdAndModel)({
-        id: productId,
-        MyModel: models_1.Product,
-    });
     // DELETE THE PRODUCT
-    yield models_1.Product.findOneAndDelete({ _id: productId });
-    // ! AFTER DELETING PRODUCT DELETE ALL REVIEWS IN THE FUTURE
-    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "product deleted" });
+    const product = yield models_1.Product.findOneAndDelete({ _id: productId });
+    res
+        .status(http_status_codes_1.StatusCodes.OK)
+        .json({ msg: "product, related reviews and cart items are deleted" });
 });
 exports.deleteProduct = deleteProduct;
 const getSingleProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
