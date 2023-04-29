@@ -1,14 +1,12 @@
 import axios from "axios";
 
+import { CurrencyExchangeInterface } from "../interfaces/payment";
+
 const currencyExchangeRates = async ({
   from,
   to,
   amount,
-}: {
-  from: string;
-  to: string;
-  amount: number;
-}) => {
+}: CurrencyExchangeInterface) => {
   try {
     const headers = {
       apikey: process.env.FIXER_API_KEY as string,
@@ -16,8 +14,8 @@ const currencyExchangeRates = async ({
     const response = await axios.get("https://api.apilayer.com/fixer/convert", {
       headers,
       params: {
-        to: to.toUpperCase(),
-        from: from.toUpperCase(),
+        to,
+        from,
         amount,
       },
     });

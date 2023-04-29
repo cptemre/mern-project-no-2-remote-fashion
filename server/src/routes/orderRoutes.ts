@@ -8,6 +8,7 @@ import {
   getOrder,
   getSingleOrder,
   updateOrder,
+  currencyExchange,
 } from "../controls/orderController";
 
 import { authRole, authUser } from "../middlewares/authorization";
@@ -29,6 +30,13 @@ router.get(
   authUser,
   authRole("admin", "user"),
   getSingleOrder
+);
+
+router.get(
+  "/currency-exchange",
+  authUser,
+  authRole("admin", "user"),
+  currencyExchange
 );
 
 router

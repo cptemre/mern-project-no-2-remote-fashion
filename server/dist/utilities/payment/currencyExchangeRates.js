@@ -21,8 +21,8 @@ const currencyExchangeRates = ({ from, to, amount, }) => __awaiter(void 0, void 
         const response = yield axios_1.default.get("https://api.apilayer.com/fixer/convert", {
             headers,
             params: {
-                to: to.toUpperCase(),
-                from: from.toUpperCase(),
+                to,
+                from,
                 amount,
             },
         });

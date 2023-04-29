@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateOrder = exports.getSingleOrder = exports.getAllSingleOrders = exports.getOrder = exports.getAllOrders = exports.createOrder = void 0;
+exports.currencyExchange = exports.updateOrder = exports.getSingleOrder = exports.getAllSingleOrders = exports.getOrder = exports.getAllOrders = exports.createOrder = void 0;
 // MODELS
 const models_1 = require("../models");
 // UTILITIES
@@ -61,7 +61,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             // CURRENCY CHANGE TO GBP
             const exchangedValue = yield (0, currencyExchangeRates_1.default)({
                 from: "GBP",
-                to: currency,
+                to: currency.toUpperCase(),
                 amount: product.price,
             });
             // IF THERE IS A NUMBER VALUE THEN SET IT EQUAL TO SUBTOTAL
@@ -299,3 +299,14 @@ const updateOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         .json({ msg: "order updated", result: singleOrder });
 });
 exports.updateOrder = updateOrder;
+// THERE WONT BE A DELETE CONTROLER FOR ORDERS
+const currencyExchange = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { from, to, amount } = req.body;
+    const result = yield (0, currencyExchangeRates_1.default)({
+        from,
+        to,
+        amount,
+    });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "currency exchange fetched", result });
+});
+exports.currencyExchange = currencyExchange;

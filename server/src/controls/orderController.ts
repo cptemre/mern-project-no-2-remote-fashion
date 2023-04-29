@@ -14,7 +14,7 @@ import {
 } from "../utilities/interfaces/controllers";
 // CURRENCY
 import {
-  CurrencyInterface,
+  CurrencyExchangeInterface,
   StripePaymentArgumentsSchema,
 } from "../utilities/interfaces/payment";
 // MODELS
@@ -88,7 +88,7 @@ const createOrder: RequestHandler = async (req, res) => {
       // CURRENCY CHANGE TO GBP
       const exchangedValue = await currencyExchangeRates({
         from: "GBP",
-        to: currency,
+        to: currency.toUpperCase() as CurrencyExchangeInterface["to"],
         amount: product.price,
       });
       // IF THERE IS A NUMBER VALUE THEN SET IT EQUAL TO SUBTOTAL
@@ -345,6 +345,17 @@ const updateOrder: RequestHandler = async (req, res) => {
 
 // THERE WONT BE A DELETE CONTROLER FOR ORDERS
 
+const currencyExchange: RequestHandler = async (req, res) => {
+  const { from, to, amount }: CurrencyExchangeInterface = req.body;
+  const result = await currencyExchangeRates({
+    from,
+    to,
+    amount,
+  });
+
+  res.status(StatusCodes.OK).json({ msg: "currency exchange fetched", result });
+};
+
 export {
   createOrder,
   getAllOrders,
@@ -352,4 +363,5 @@ export {
   getAllSingleOrders,
   getSingleOrder,
   updateOrder,
+  currencyExchange,
 };

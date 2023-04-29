@@ -1,4 +1,8 @@
 import CurrencyInterface from "./CurrencyInterface";
 import StripePaymentArgumentsSchema from "./StripePaymentArgumentsSchema";
-
-export { CurrencyInterface, StripePaymentArgumentsSchema };
+import CurrencyExchangeInterface from "./CurrencyExchangeInterface";
+export {
+  CurrencyInterface,
+  StripePaymentArgumentsSchema,
+  CurrencyExchangeInterface,
+};
