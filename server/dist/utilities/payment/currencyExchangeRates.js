@@ -13,23 +13,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(require("axios"));
-const currencyExchangeRates = () => __awaiter(void 0, void 0, void 0, function* () {
+const currencyExchangeRates = ({ from, to, amount, }) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const baseCurrency = "GBP";
-        const toCurrency = "EUR";
-        const amount = 2000;
         const headers = {
             apikey: process.env.FIXER_API_KEY,
         };
         const response = yield axios_1.default.get("https://api.apilayer.com/fixer/convert", {
-            headers: headers,
+            headers,
             params: {
-                to: toCurrency,
-                from: baseCurrency,
-                amount: amount,
+                to: to.toUpperCase(),
+                from: from.toUpperCase(),
+                amount,
             },
         });
-        console.log(response.data);
+        // THIS RETURNS THE CONVERTED VALUE OF NEW CURRENCY
+        const exchangedValue = response.data.result;
+        console.log(exchangedValue);
+        if (exchangedValue)
+            return exchangedValue;
     }
     catch (error) {
         console.error(error);

@@ -1,7 +1,7 @@
 import { ObjectId, Document, Model } from "mongoose";
 import CurrencyInterface from "../payment/CurrencyInterface";
 
-interface SingleOrderSchemaInterface extends Document {
+interface SingleOrderSchemaInterface extends Document, CurrencyInterface {
   amount: number;
   price: number;
   tax: number;

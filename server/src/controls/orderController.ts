@@ -36,6 +36,7 @@ import {
 } from "../errors";
 // HTTP STATUS CODES
 import { StatusCodes } from "http-status-codes";
+import currencyExchangeRates from "../utilities/payment/currencyExchangeRates";
 
 const createOrder: RequestHandler = async (req, res) => {
   // CLIENT SIDE REQUESTS
@@ -75,24 +76,39 @@ const createOrder: RequestHandler = async (req, res) => {
   for (let i = 0; i < cartItems.length; i++) {
     // SINGLE CART ITEM BY CLIENT
     const { amount, price, tax, product: productId } = cartItems[i];
+    //
+    let exchangedPrice = price;
     // FIND THE DOCUMENT OF PRODUCT
     const product = await findDocumentByIdAndModel({
       id: productId,
       MyModel: Product,
     });
-    if (price !== product.price)
-      throw new BadRequestError("price does not match");
+    // IF CURRENCY IS ANOTHER THAN gbp GET EXCHANGE VALUE
+    if (currency.toUpperCase() !== "GBP") {
+      // CURRENCY CHANGE TO GBP
+      const exchangedValue = await currencyExchangeRates({
+        from: "GBP",
+        to: currency,
+        amount: product.price,
+      });
+      // IF THERE IS A NUMBER VALUE THEN SET IT EQUAL TO SUBTOTAL
+      // FROM NOW ON IN THIS CONTROLLER VALUES ARE IN GBP CURRENCY
+      if (exchangedValue) exchangedPrice = exchangedValue;
+    }
+    if (price !== exchangedPrice)
+      throw new BadRequestError("requested price is not correct");
     // CREATE A SINGLE ORDER
     const singleOrder = await SingleOrder.create({
       amount,
-      price,
+      price: exchangedPrice,
+      currency,
       user: req.user?._id,
       product,
     });
     // APPEND THIS ORDER TO ORDERITEMS ARRAY
     orderItems = [...orderItems, singleOrder];
     // PRODUCT ORDER PRICE AS GBP
-    const productOrderPrice = amount * price;
+    const productOrderPrice = amount * exchangedPrice;
     // TAX VALUE WITHOUT DOT
     const taxValueWithoutDot = Number(
       (tax / 10000).toString().replace(".", "")
@@ -103,7 +119,6 @@ const createOrder: RequestHandler = async (req, res) => {
     subTotal += productOrderPriceWithTax;
   }
   // *LOOP END
-  // CURRENCY CHANGE TO GBP
 
   // SHIPPING FEE AS GBP. IF TOTAL SHOPPING IS ABOVE 75 GBP THEN FREE
   const shippingFee = subTotal >= 7500 ? 0 : 999;
@@ -138,6 +153,7 @@ const createOrder: RequestHandler = async (req, res) => {
     shippingFee,
     subTotal,
     totalPrice,
+    currency,
     user: req.user?._id,
     clientSecret: client_secret,
     paymentIntentID: paymentIntentId,

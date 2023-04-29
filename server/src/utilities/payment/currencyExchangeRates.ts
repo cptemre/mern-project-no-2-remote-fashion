@@ -1,23 +1,31 @@
 import axios from "axios";
 
-const currencyExchangeRates = async () => {
+const currencyExchangeRates = async ({
+  from,
+  to,
+  amount,
+}: {
+  from: string;
+  to: string;
+  amount: number;
+}) => {
   try {
-    const baseCurrency = "GBP";
-    const toCurrency = "EUR";
-    const amount = 2000;
     const headers = {
       apikey: process.env.FIXER_API_KEY as string,
     };
     const response = await axios.get("https://api.apilayer.com/fixer/convert", {
-      headers: headers,
+      headers,
       params: {
-        to: toCurrency,
-        from: baseCurrency,
-        amount: amount,
+        to: to.toUpperCase(),
+        from: from.toUpperCase(),
+        amount,
       },
     });
 
-    console.log(response.data);
+    // THIS RETURNS THE CONVERTED VALUE OF NEW CURRENCY
+    const exchangedValue: number = response.data.result;
+    console.log(exchangedValue);
+    if (exchangedValue) return exchangedValue;
   } catch (error) {
     console.error(error);
   }

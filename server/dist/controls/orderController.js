@@ -8,6 +8,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateOrder = exports.getSingleOrder = exports.getAllSingleOrders = exports.getOrder = exports.getAllOrders = exports.createOrder = void 0;
 // MODELS
@@ -20,6 +23,7 @@ const payment_1 = require("../utilities/payment/payment");
 const errors_1 = require("../errors");
 // HTTP STATUS CODES
 const http_status_codes_1 = require("http-status-codes");
+const currencyExchangeRates_1 = __importDefault(require("../utilities/payment/currencyExchangeRates"));
 const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     // CLIENT SIDE REQUESTS
@@ -45,24 +49,40 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     for (let i = 0; i < cartItems.length; i++) {
         // SINGLE CART ITEM BY CLIENT
         const { amount, price, tax, product: productId } = cartItems[i];
+        //
+        let exchangedPrice = price;
         // FIND THE DOCUMENT OF PRODUCT
         const product = yield (0, controllers_1.findDocumentByIdAndModel)({
             id: productId,
             MyModel: models_1.Product,
         });
-        if (price !== product.price)
-            throw new errors_1.BadRequestError("price does not match");
+        // IF CURRENCY IS ANOTHER THAN gbp GET EXCHANGE VALUE
+        if (currency.toUpperCase() !== "GBP") {
+            // CURRENCY CHANGE TO GBP
+            const exchangedValue = yield (0, currencyExchangeRates_1.default)({
+                from: "GBP",
+                to: currency,
+                amount: product.price,
+            });
+            // IF THERE IS A NUMBER VALUE THEN SET IT EQUAL TO SUBTOTAL
+            // FROM NOW ON IN THIS CONTROLLER VALUES ARE IN GBP CURRENCY
+            if (exchangedValue)
+                exchangedPrice = exchangedValue;
+        }
+        if (price !== exchangedPrice)
+            throw new errors_1.BadRequestError("requested price is not correct");
         // CREATE A SINGLE ORDER
         const singleOrder = yield models_1.SingleOrder.create({
             amount,
-            price,
+            price: exchangedPrice,
+            currency,
             user: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id,
             product,
         });
         // APPEND THIS ORDER TO ORDERITEMS ARRAY
         orderItems = [...orderItems, singleOrder];
         // PRODUCT ORDER PRICE AS GBP
-        const productOrderPrice = amount * price;
+        const productOrderPrice = amount * exchangedPrice;
         // TAX VALUE WITHOUT DOT
         const taxValueWithoutDot = Number((tax / 10000).toString().replace(".", ""));
         // APPEND TAX RATE TO EVERY ITEM DEPENDS ON THEIR TAX VALUE
@@ -71,7 +91,6 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         subTotal += productOrderPriceWithTax;
     }
     // *LOOP END
-    // CURRENCY CHANGE TO GBP
     // SHIPPING FEE AS GBP. IF TOTAL SHOPPING IS ABOVE 75 GBP THEN FREE
     const shippingFee = subTotal >= 7500 ? 0 : 999;
     // APPEND SHIPPING FEE TO FIND TOTAL PRICE
@@ -107,6 +126,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         shippingFee,
         subTotal,
         totalPrice,
+        currency,
         user: (_b = req.user) === null || _b === void 0 ? void 0 : _b._id,
         clientSecret: client_secret,
         paymentIntentID: paymentIntentId,
