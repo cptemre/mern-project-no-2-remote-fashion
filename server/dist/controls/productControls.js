@@ -21,9 +21,10 @@ const errors_1 = require("../errors");
 // UTILITY FUNCTIONS
 const controllers_1 = require("../utilities/controllers");
 const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     // GET CLIENT SIDE BODY REQUEST TO CREATE A PRODUCT
-    const { name, brand, price, tax, image, description, size, gender, category, subCategory, } = req.body;
-    const stock = Number(req.body.stock) || 0;
+    const { name, brand, price, tax, image, description, size, gender, category, subCategory, stock, } = req.body;
+    const stockVal = Number(stock) || 0;
     // CHECK IF ALL NECESSARY CREDENTIALS ARE PROVIDED
     if (!name ||
         !brand ||
@@ -54,6 +55,8 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     const product = yield models_1.Product.findOne({ name, brand });
     if (product)
         throw new errors_1.UnauthorizedError("product already exists");
+    // USER WHICH CREATED THE PRODUCT TO SELL
+    const sellerId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     // CREATE A UNIQUE NEW PRODUCT
     const newProduct = yield models_1.Product.create({
         name,
@@ -66,7 +69,8 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         gender,
         category,
         subCategory,
-        stock,
+        stock: stockVal,
+        seller: sellerId,
     });
     res
         .status(http_status_codes_1.StatusCodes.CREATED)
@@ -74,10 +78,9 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.createProduct = createProduct;
 const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _b;
     // QUERY FROM THE CLIENT
-    // !DONT FORGET TO SET ISREVIEW BOOL LATER
-    const { name, brand, color, size, price, isReview, isStock, rating, gender, page, myProducts, } = req.body;
+    const { name, brand, color, size, price, isReview, isStock, rating, gender, page, seller, } = req.body;
     // EMPTY QUERY IN SERVER TO SET VALUES
     const query = {};
     if (name)
@@ -90,9 +93,9 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
         query.size = size;
     if (price)
         query.price = (0, controllers_1.gteAndLteQueryForDb)(price);
-    // ! CHECK HERE AFTER REVIEW MODEL CREATED
-    // if (isReview) query.isReview = isReview === "true";
-    if (isStock === "true")
+    if (isReview)
+        query.numberOfReviews = { $gt: 0 };
+    if (isStock)
         query.stock = { $gt: 0 };
     if (rating)
         query.rating = Number(rating);
@@ -102,8 +105,8 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
         query.page = Number(page);
     else
         query.page = 1;
-    if (myProducts === "true")
-        query.userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+    if (seller)
+        query.seller = (_b = req.user) === null || _b === void 0 ? void 0 : _b._id;
     // LIMIT AND SKIP VALUES
     const myLimit = 20;
     const { limit, skip } = (0, controllers_1.limitAndSkip)({ limit: myLimit, page: Number(page) });
@@ -118,8 +121,19 @@ exports.getAllProducts = getAllProducts;
 const deleteProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET PRODUCT ID FROM BODY
     const { id: productId } = req.params;
+    // FIND PRODUCT
+    const checkProduct = yield (0, controllers_1.findDocumentByIdAndModel)({
+        id: productId,
+        MyModel: models_1.Product,
+    });
+    // GET SELLER ID
+    const sellerId = checkProduct.seller.toString();
+    // COMPARE USER AND SELLER ID
+    if (req.user)
+        (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId: sellerId });
     // DELETE THE PRODUCT
     const product = yield models_1.Product.findOneAndDelete({ _id: productId });
+    //
     res
         .status(http_status_codes_1.StatusCodes.OK)
         .json({ msg: "product, related reviews and cart items are deleted" });

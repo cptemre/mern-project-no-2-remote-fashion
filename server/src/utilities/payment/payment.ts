@@ -14,6 +14,7 @@ import { UserSchemaInterface } from "../interfaces/models";
 
 // MONGOOSE
 import { ObjectId } from "mongoose";
+import { BadRequestError } from "../../errors";
 const createPayment = async ({
   totalPrice,
   currency,
@@ -31,6 +32,20 @@ const createPayment = async ({
   user: UserSchemaInterface & { _id: ObjectId };
 }) => {
   try {
+    if (
+      !totalPrice ||
+      !currency ||
+      !expMonth ||
+      !expYear ||
+      !cvc ||
+      !street ||
+      !city ||
+      !postalCode ||
+      !country ||
+      !state ||
+      !user
+    )
+      throw new BadRequestError("invalid credentials");
     // NAME OF THE CUSTOMER
     const name = user.name + " " + user.surname;
     // EMAIL OF THE USER
@@ -50,6 +65,7 @@ const createPayment = async ({
     // * CUSTOMER
     const customer = await createOrGetCustomer({ name, email, phone, address });
     // * PAYMENT METHOD
+
     const paymentMethod: Stripe.PaymentMethod =
       await stripe.paymentMethods.create({
         card: {

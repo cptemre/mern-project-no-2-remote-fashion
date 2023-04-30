@@ -4,12 +4,12 @@ interface GetAllProductsQueryInterface {
   color: string;
   size: string;
   price: { $gte: number | undefined; $lte: number | undefined };
-  isReview: boolean;
+  numberOfReviews: { $gt: number };
   stock: { $gt: number };
   rating: number;
   gender: "M" | "F" | "B";
   page: number;
-  userId: string;
+  seller: string;
 }
 
 export default GetAllProductsQueryInterface;

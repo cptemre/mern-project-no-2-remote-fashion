@@ -14,16 +14,18 @@ interface PhoneNumberInterface {
 
 interface CreditCardInformationInterface {
   cardNumber: string;
-  expMonth: number;
-  expYear: number;
+  expMonth: number | undefined;
+  expYear: number | undefined;
   cvc: string;
+  [key: string]: string | number | undefined | UserSchemaInterface;
 }
+
 interface UserSchemaInterface extends Document {
   name: string;
   surname: string;
   email: string;
   password: string;
-  userType: string;
+  userType: "admin" | "user" | "seller" | "courier";
   phoneNumber?: PhoneNumberInterface;
   address?: AddressInterface;
   cardInfo?: CreditCardInformationInterface;
@@ -34,6 +36,8 @@ interface UserSchemaInterface extends Document {
   passwordToken: string;
   passwordTokenExpDate: Date;
   cartItems?: CartItemsInterface[];
+  company?: string;
+  accountNo?: string;
 }
 
 export {

@@ -36,7 +36,7 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   }
 
   // SHOW ERROR IN CONSOLE FOR DETAILS
-  // console.log(err);
+  console.log(err);
   res.status(customError.statusCode).json({ msg: customError.msg });
 };
 

@@ -1,5 +1,5 @@
 import { Document } from "mongoose";
-
+import { ObjectId } from "mongoose";
 interface ProductSchemaInterface extends Document {
   name: string;
   brand: string;
@@ -14,6 +14,7 @@ interface ProductSchemaInterface extends Document {
   numberOfReviews: number;
   averageRating: number;
   stock: number;
+  seller: ObjectId;
 }
 
 export default ProductSchemaInterface;

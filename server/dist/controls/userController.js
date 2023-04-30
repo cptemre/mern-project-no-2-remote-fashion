@@ -133,9 +133,16 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         };
     // REST OF THE OPTIONAL KEY UPDATES
     // CARD INFO BODY KEY AND VALUE SPLIT
-    let cardInfo = {};
-    if (card)
+    if (card) {
+        let cardInfo = {
+            cardNumber: "",
+            expMonth: undefined,
+            expYear: undefined,
+            cvc: "",
+        };
         cardInfo = (0, controllers_1.cardInfoSplitter)({ card });
+        user.cardInfo = cardInfo;
+    }
     if (avatar)
         user.avatar = avatar;
     // IF EMAIL DID NOT CHANGE THEN SEND THE RESPONSE
@@ -148,6 +155,7 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         // ! CLIENT SHOULD CALL LOGOUT AFTER THIS EVENT
     }
     // CART ITEMS UPDATE
+    // ! CONTINUE FROM HERE
     if (cartItems)
         user.cartItems = cartItems;
     // SAVE THE USER

@@ -14,6 +14,7 @@ const userIdAndModelUserIdMatchCheck = ({
 }) => {
   if (user?.userType !== "admin" && userId !== user?._id)
     throw new UnauthorizedError("authorization failed");
+  else return;
 };
 
 export default userIdAndModelUserIdMatchCheck;

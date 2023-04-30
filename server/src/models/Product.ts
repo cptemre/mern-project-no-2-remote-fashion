@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Types } from "mongoose";
 // INTERFACE
 import { ProductSchemaInterface } from "../utilities/interfaces/models";
 // ALL SUB CATEGORIES
@@ -80,6 +80,7 @@ const ProductSchema = new Schema<ProductSchemaInterface>(
       type: Number,
       default: 0,
     },
+    seller: Types.ObjectId,
   },
   { timestamps: true }
 );

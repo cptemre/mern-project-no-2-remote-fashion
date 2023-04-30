@@ -88,6 +88,7 @@ const ProductSchema = new mongoose_1.Schema({
         type: Number,
         default: 0,
     },
+    seller: mongoose_1.Types.ObjectId,
 }, { timestamps: true });
 ProductSchema.post("findOneAndDelete", function (doc) {
     return __awaiter(this, void 0, void 0, function* () {

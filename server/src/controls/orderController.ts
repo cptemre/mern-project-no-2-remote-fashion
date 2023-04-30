@@ -115,9 +115,7 @@ const createOrder: RequestHandler = async (req, res) => {
     // PRODUCT ORDER PRICE AS GBP
     const productOrderPrice = amount * exchangedPrice;
     // TAX VALUE WITHOUT DOT
-    const taxValueWithoutDot = Number(
-      (tax / 10000).toString().replace(".", "")
-    );
+    const taxValueWithoutDot = Number((tax / 100).toString().replace(".", ""));
     // APPEND TAX RATE TO EVERY ITEM DEPENDS ON THEIR TAX VALUE
     const productOrderPriceWithTax = productOrderPrice * taxValueWithoutDot;
     // APPEND PRODUCT ORDER PRICE TO SUBTOTAL

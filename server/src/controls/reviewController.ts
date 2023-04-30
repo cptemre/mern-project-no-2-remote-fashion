@@ -7,11 +7,12 @@ import {
   limitAndSkip,
 } from "../utilities/controllers";
 // MODELS
-import { Review, Product } from "../models";
+import { Review, Product, SingleOrder } from "../models";
 // HTTP CODES
 import { StatusCodes } from "http-status-codes";
 // INTERFACES
 import { ReviewSchemaInterface } from "../utilities/interfaces/models";
+import { UnauthorizedError } from "../errors";
 
 const createReview: RequestHandler = async (req, res) => {
   // REVIEW KEYS FROM THE CLIENT TO CREATE A NEW REVIEW
@@ -30,6 +31,12 @@ const createReview: RequestHandler = async (req, res) => {
     id: productId,
     MyModel: Product,
   });
+
+  // CHECK IF THE USER ORDERED THIS PRODUCT
+  const singleOrder = await SingleOrder.findOne({ user: req.user?._id });
+  if (!singleOrder)
+    throw new UnauthorizedError("you did not purchase this item");
+
   // CREATE THE REVIEW
   const review = await Review.create({
     title,
@@ -120,10 +127,10 @@ const getAllReviews: RequestHandler = async (req, res) => {
   // GET PRODUCT ID
   const { productId } = req.body;
   // GET REVIEW PAGE
-  const { reviewPage, myReviews }: { reviewPage: number; myReviews: string } =
+  const { reviewPage, myReviews }: { reviewPage: number; myReviews: boolean } =
     req.body;
   // USER AUTH ID
-  const userId: string = myReviews === "true" ? req.user?._id : null;
+  const userId: string = myReviews ? req.user?._id : null;
   // FIND THE REVIEW
   const product = await findDocumentByIdAndModel({
     id: productId,
@@ -133,7 +140,7 @@ const getAllReviews: RequestHandler = async (req, res) => {
   // FIND THE REVIEWS BY PRODUCT ID AND USER ID IF REQUIRED
   const query: { product: string; user?: string } = { product: "" };
   query.product = productId;
-  if (myReviews === "true") query.user = req.user?._id;
+  if (myReviews) query.user = req.user?._id;
   // LIMIT AND SKIP VALUES
   const myLimit = 5;
   const { limit, skip } = limitAndSkip({ limit: myLimit, page: reviewPage });

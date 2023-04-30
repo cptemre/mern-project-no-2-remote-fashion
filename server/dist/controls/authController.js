@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgotPassword = exports.login = exports.verifyEmail = exports.registerUser = void 0;
+exports.logout = exports.resetPassword = exports.forgotPassword = exports.login = exports.verifyEmail = exports.registerUser = void 0;
 // MODEL
 const models_1 = require("../models");
 // HTTP CODES
@@ -83,29 +83,24 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.registerUser = registerUser;
 const verifyEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        // GET TOKEN AND EMAIL FROM THE CLIENT
-        const { verificationToken, email, } = req.body;
-        // CHECK IF INFORMATION IS NOT MISSING EMAIL AND PASSWORD
-        if (!verificationToken || !email)
-            throw new errors_1.BadRequestError("verificationToken and email required");
-        // CHECK IF USER EXISTS IN OUR DB
-        const user = yield models_1.User.findOne({ email });
-        if (!user)
-            throw new errors_1.UnauthorizedError("invalid credentials");
-        // CHECK IF USER'S DB VERIFICATION TOKEN MATCHES WITH THE PROVIDED CLIENT VALUE
-        if (user.verificationToken !== verificationToken)
-            throw new errors_1.UnauthorizedError("invalid credentials");
-        // UPDATE USER AND SAVE
-        user.verificationToken = "";
-        user.isVerified = true;
-        user.verified = new Date(Date.now());
-        yield user.save();
-        res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "user verified" });
-    }
-    catch (error) {
-        console.log(error);
-    }
+    // GET TOKEN AND EMAIL FROM THE CLIENT
+    const { verificationToken, email, } = req.body;
+    // CHECK IF INFORMATION IS NOT MISSING EMAIL AND PASSWORD
+    if (!verificationToken || !email)
+        throw new errors_1.BadRequestError("verificationToken and email required");
+    // CHECK IF USER EXISTS IN OUR DB
+    const user = yield models_1.User.findOne({ email });
+    if (!user)
+        throw new errors_1.UnauthorizedError("invalid credentials");
+    // CHECK IF USER'S DB VERIFICATION TOKEN MATCHES WITH THE PROVIDED CLIENT VALUE
+    if (user.verificationToken !== verificationToken || user.email !== email)
+        throw new errors_1.UnauthorizedError("invalid credentials");
+    // UPDATE USER AND SAVE
+    user.verificationToken = "";
+    user.isVerified = true;
+    user.verified = new Date(Date.now());
+    yield user.save();
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "user verified" });
 });
 exports.verifyEmail = verifyEmail;
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -118,11 +113,11 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield models_1.User.findOne({ email });
     // CHECK IF USER EXISTS
     if (!user)
-        throw new errors_1.UnauthorizedError("invalid credentials");
+        throw new errors_1.UnauthorizedError("email is wrong");
     // COMPARE PASSWORDS
     const isPassword = yield bcryptjs_1.default.compare(password, user.password);
     if (!isPassword)
-        throw new errors_1.UnauthorizedError("invalid credentials");
+        throw new errors_1.UnauthorizedError("password is wrong");
     // IF USER IS VERIFIED
     if (!user.isVerified)
         throw new errors_1.UnauthorizedError("invalid credentials");
@@ -165,9 +160,9 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "login success" });
 });
 exports.login = login;
-// ! DELETE TOKEN
 const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // ! await Token.findOneAndDelete({user:req.user.userId})
+    const userId = req.user ? req.user._id : null;
+    yield models_1.Token.findOneAndDelete({ user: userId });
     res.cookie("access_token", "", {
         httpOnly: true,
         expires: new Date(Date.now()),
@@ -178,6 +173,7 @@ const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     });
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "logout success" });
 });
+exports.logout = logout;
 const forgotPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET EMAIL ADDRESS FROM CLIENT
     const { email } = req.body;
@@ -187,7 +183,7 @@ const forgotPassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
     // FIND THE USER IN DB
     const user = yield models_1.User.findOne({ email });
     if (!user)
-        throw new errors_1.UnauthorizedError("invalid credentials");
+        throw new errors_1.UnauthorizedError("email is wrong");
     // CREATE A TOKEN FOR THE CLIENT
     const passwordToken = (0, token_1.createCrypto)();
     // SEND THE EMAIL TO THE USER
@@ -216,7 +212,7 @@ const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     // CHECK IF USER EXISTS
     const user = yield models_1.User.findOne({ email });
     if (!user)
-        throw new errors_1.UnauthorizedError("invalid credentials");
+        throw new errors_1.UnauthorizedError("email is wrong");
     // COMPARE TOKEN VALIDATION
     const currentDate = new Date(Date.now());
     // COMPARE HASHED USER TOKEN AND REQUEST TOKEN AND EXP DATE

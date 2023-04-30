@@ -89,31 +89,27 @@ const registerUser: RequestHandler = async (req, res) => {
 };
 
 const verifyEmail: RequestHandler = async (req, res) => {
-  try {
-    // GET TOKEN AND EMAIL FROM THE CLIENT
-    const {
-      verificationToken,
-      email,
-    }: { verificationToken: string; email: string } = req.body;
-    // CHECK IF INFORMATION IS NOT MISSING EMAIL AND PASSWORD
-    if (!verificationToken || !email)
-      throw new BadRequestError("verificationToken and email required");
-    // CHECK IF USER EXISTS IN OUR DB
-    const user = await User.findOne({ email });
-    if (!user) throw new UnauthorizedError("invalid credentials");
-    // CHECK IF USER'S DB VERIFICATION TOKEN MATCHES WITH THE PROVIDED CLIENT VALUE
-    if (user.verificationToken !== verificationToken)
-      throw new UnauthorizedError("invalid credentials");
-    // UPDATE USER AND SAVE
-    user.verificationToken = "";
-    user.isVerified = true;
-    user.verified = new Date(Date.now());
-    await user.save();
+  // GET TOKEN AND EMAIL FROM THE CLIENT
+  const {
+    verificationToken,
+    email,
+  }: { verificationToken: string; email: string } = req.body;
+  // CHECK IF INFORMATION IS NOT MISSING EMAIL AND PASSWORD
+  if (!verificationToken || !email)
+    throw new BadRequestError("verificationToken and email required");
+  // CHECK IF USER EXISTS IN OUR DB
+  const user = await User.findOne({ email });
+  if (!user) throw new UnauthorizedError("invalid credentials");
+  // CHECK IF USER'S DB VERIFICATION TOKEN MATCHES WITH THE PROVIDED CLIENT VALUE
+  if (user.verificationToken !== verificationToken || user.email !== email)
+    throw new UnauthorizedError("invalid credentials");
+  // UPDATE USER AND SAVE
+  user.verificationToken = "";
+  user.isVerified = true;
+  user.verified = new Date(Date.now());
+  await user.save();
 
-    res.status(StatusCodes.OK).json({ msg: "user verified" });
-  } catch (error) {
-    console.log(error);
-  }
+  res.status(StatusCodes.OK).json({ msg: "user verified" });
 };
 
 const login: RequestHandler = async (req, res) => {
@@ -125,11 +121,11 @@ const login: RequestHandler = async (req, res) => {
   // FIND THE USER
   const user = await User.findOne({ email });
   // CHECK IF USER EXISTS
-  if (!user) throw new UnauthorizedError("invalid credentials");
+  if (!user) throw new UnauthorizedError("email is wrong");
   // COMPARE PASSWORDS
   const isPassword = await bcrypt.compare(password, user.password);
 
-  if (!isPassword) throw new UnauthorizedError("invalid credentials");
+  if (!isPassword) throw new UnauthorizedError("password is wrong");
   // IF USER IS VERIFIED
   if (!user.isVerified) throw new UnauthorizedError("invalid credentials");
 
@@ -174,9 +170,9 @@ const login: RequestHandler = async (req, res) => {
   res.status(StatusCodes.OK).json({ msg: "login success" });
 };
 
-// ! DELETE TOKEN
 const logout: RequestHandler = async (req, res) => {
-  // ! await Token.findOneAndDelete({user:req.user.userId})
+  const userId = req.user ? req.user._id : null;
+  await Token.findOneAndDelete({ user: userId });
   res.cookie("access_token", "", {
     httpOnly: true,
     expires: new Date(Date.now()),
@@ -195,7 +191,7 @@ const forgotPassword: RequestHandler = async (req, res) => {
   if (!email) throw new BadRequestError("email required");
   // FIND THE USER IN DB
   const user = await User.findOne({ email });
-  if (!user) throw new UnauthorizedError("invalid credentials");
+  if (!user) throw new UnauthorizedError("email is wrong");
   // CREATE A TOKEN FOR THE CLIENT
   const passwordToken = createCrypto();
   // SEND THE EMAIL TO THE USER
@@ -224,7 +220,7 @@ const resetPassword: RequestHandler = async (req, res) => {
     throw new BadRequestError("passwordToken, email and password required");
   // CHECK IF USER EXISTS
   const user = await User.findOne({ email });
-  if (!user) throw new UnauthorizedError("invalid credentials");
+  if (!user) throw new UnauthorizedError("email is wrong");
   // COMPARE TOKEN VALIDATION
   const currentDate = new Date(Date.now());
 
@@ -243,4 +239,11 @@ const resetPassword: RequestHandler = async (req, res) => {
   } else throw new UnauthorizedError("invalid credentials");
 };
 
-export { registerUser, verifyEmail, login, forgotPassword, resetPassword };
+export {
+  registerUser,
+  verifyEmail,
+  login,
+  forgotPassword,
+  resetPassword,
+  logout,
+};

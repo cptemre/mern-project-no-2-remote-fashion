@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const validator = require("validator");
 const token_1 = require("../utilities/token");
+const _1 = require("./");
 // * SCHEMA
 const UserSchema = new mongoose_1.Schema({
     name: {
@@ -46,7 +47,7 @@ const UserSchema = new mongoose_1.Schema({
     userType: {
         type: String,
         enum: {
-            values: ["admin", "user"],
+            values: ["admin", "user", "seller", "courier"],
             message: "user type is not accepted",
         },
     },
@@ -64,9 +65,22 @@ const UserSchema = new mongoose_1.Schema({
         default: false,
     },
     verified: Date,
-    // ! ADD HERE VERTOKEN EXP DATE
     passwordToken: String,
     passwordTokenExpDate: Date,
+    cartItems: {
+        type: [_1.SingleOrder],
+        default: [],
+    },
+    company: {
+        type: String,
+        minlength: [2, "company name must be at least 2 characters"],
+        maxlength: [25, "company name can not be more than 25 characters"],
+    },
+    accountNo: {
+        type: String,
+        minlength: [15, "account no must be at least 15 characters"],
+        maxlength: [32, "account no can not be more than 32 characters"],
+    },
 }, { timestamps: true });
 // * HASH PASSWORD BEFORE SAVING THE USER
 UserSchema.pre("save", function () {

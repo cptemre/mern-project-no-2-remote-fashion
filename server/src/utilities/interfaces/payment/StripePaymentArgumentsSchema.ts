@@ -3,6 +3,7 @@ import { ObjectId } from "mongoose";
 import {
   AddressInterface,
   CreditCardInformationInterface,
+  UserSchemaInterface,
 } from "../models/UserSchemaInterface";
 import CurrencyInterface from "./CurrencyInterface";
 

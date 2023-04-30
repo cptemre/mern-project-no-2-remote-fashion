@@ -13,13 +13,13 @@ import { authUser, authRole } from "../middlewares/authorization";
 
 router
   .route("/")
-  .post(authUser, authRole("admin"), createProduct)
+  .post(authUser, authRole("admin", "seller"), createProduct)
   .get(getAllProducts);
 
 router
   .route("/:id")
   .get(getSingleProduct)
-  .delete(authUser, authRole("admin"), deleteProduct)
-  .patch(authUser, authRole("admin"), updateProduct);
+  .delete(authUser, authRole("admin", "seller"), deleteProduct)
+  .patch(authUser, authRole("admin", "seller"), updateProduct);
 
 export default router;

@@ -1,8 +1,8 @@
 import { Schema, model } from "mongoose";
-import bcrypt from "bcryptjs";
 import { UserSchemaInterface } from "../utilities/interfaces/models";
 const validator = require("validator");
 import { createHash } from "../utilities/token";
+import { SingleOrder } from "./";
 
 // * SCHEMA
 const UserSchema = new Schema<UserSchemaInterface>(
@@ -39,7 +39,7 @@ const UserSchema = new Schema<UserSchemaInterface>(
     userType: {
       type: String,
       enum: {
-        values: ["admin", "user"],
+        values: ["admin", "user", "seller", "courier"],
         message: "user type is not accepted",
       },
     },
@@ -57,9 +57,22 @@ const UserSchema = new Schema<UserSchemaInterface>(
       default: false,
     },
     verified: Date,
-    // ! ADD HERE VERTOKEN EXP DATE
     passwordToken: String,
     passwordTokenExpDate: Date,
+    cartItems: {
+      type: [SingleOrder],
+      default: [],
+    },
+    company: {
+      type: String,
+      minlength: [2, "company name must be at least 2 characters"],
+      maxlength: [25, "company name can not be more than 25 characters"],
+    },
+    accountNo: {
+      type: String,
+      minlength: [15, "account no must be at least 15 characters"],
+      maxlength: [32, "account no can not be more than 32 characters"],
+    },
   },
   { timestamps: true }
 );

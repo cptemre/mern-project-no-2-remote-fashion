@@ -18,9 +18,22 @@ const stripe_1 = __importDefault(require("stripe"));
 const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY, {
     apiVersion: "2022-11-15",
 });
+const errors_1 = require("../../errors");
 const createPayment = ({ totalPrice, currency, cardNumber, expMonth, expYear, cvc, street, city, postalCode, country, state, user, }) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     try {
+        if (!totalPrice ||
+            !currency ||
+            !expMonth ||
+            !expYear ||
+            !cvc ||
+            !street ||
+            !city ||
+            !postalCode ||
+            !country ||
+            !state ||
+            !user)
+            throw new errors_1.BadRequestError("invalid credentials");
         // NAME OF THE CUSTOMER
         const name = user.name + " " + user.surname;
         // EMAIL OF THE USER

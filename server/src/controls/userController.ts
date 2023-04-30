@@ -8,6 +8,7 @@ import {
   AddressInterface,
   PhoneNumberInterface,
   CartItemsInterface,
+  CreditCardInformationInterface,
 } from "../utilities/interfaces/models";
 // STATUS CODES
 import { StatusCodes } from "http-status-codes";
@@ -150,8 +151,16 @@ const updateUser: RequestHandler = async (req, res) => {
     };
   // REST OF THE OPTIONAL KEY UPDATES
   // CARD INFO BODY KEY AND VALUE SPLIT
-  let cardInfo = {};
-  if (card) cardInfo = cardInfoSplitter({ card });
+  if (card) {
+    let cardInfo: CreditCardInformationInterface = {
+      cardNumber: "",
+      expMonth: undefined,
+      expYear: undefined,
+      cvc: "",
+    };
+    cardInfo = cardInfoSplitter({ card });
+    user.cardInfo = cardInfo;
+  }
   if (avatar) user.avatar = avatar;
   // IF EMAIL DID NOT CHANGE THEN SEND THE RESPONSE
   if (oldEmail !== user.email) {
@@ -163,6 +172,7 @@ const updateUser: RequestHandler = async (req, res) => {
     // ! CLIENT SHOULD CALL LOGOUT AFTER THIS EVENT
   }
   // CART ITEMS UPDATE
+  // ! CONTINUE FROM HERE
   if (cartItems) user.cartItems = cartItems;
 
   // SAVE THE USER
