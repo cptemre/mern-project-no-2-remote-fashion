@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const validator = require("validator");
 const token_1 = require("../utilities/token");
-const _1 = require("./");
 // * SCHEMA
 const UserSchema = new mongoose_1.Schema({
     name: {
@@ -68,7 +67,7 @@ const UserSchema = new mongoose_1.Schema({
     passwordToken: String,
     passwordTokenExpDate: Date,
     cartItems: {
-        type: [_1.SingleOrder],
+        type: [Object],
         default: [],
     },
     company: {

@@ -25,6 +25,7 @@ import {
   gteAndLteQueryForDb,
   limitAndSkip,
   userIdAndModelUserIdMatchCheck,
+  priceAndExchangedPriceCompare,
 } from "../utilities/controllers";
 // PAYMENT
 import { createPayment, transferMoney } from "../utilities/payment/payment";
@@ -80,32 +81,20 @@ const createOrder: RequestHandler = async (req, res) => {
   // *LOOP THROUGH CLIENT CART ITEMS OBJECT
   for (let i = 0; i < cartItems.length; i++) {
     // SINGLE CART ITEM BY CLIENT
-    const { amount, price, tax, product: productId } = cartItems[i];
+    const { amount, price, tax, product } = cartItems[i];
     //
-    let exchangedPrice = price;
-    // FIND THE DOCUMENT OF PRODUCT
-    const product = await findDocumentByIdAndModel({
-      id: productId as string,
-      MyModel: Product,
+    const productId = product.toString();
+    await priceAndExchangedPriceCompare({
+      price,
+      tax,
+      productId,
+      currency,
+      Product,
     });
-    // IF CURRENCY IS ANOTHER THAN gbp GET EXCHANGE VALUE
-    if (currency.toUpperCase() !== "GBP") {
-      // CURRENCY CHANGE TO GBP
-      const exchangedValue = await currencyExchangeRates({
-        from: "GBP",
-        to: currency.toUpperCase() as CurrencyExchangeInterface["to"],
-        amount: product.price,
-      });
-      // IF THERE IS A NUMBER VALUE THEN SET IT EQUAL TO SUBTOTAL
-      // FROM NOW ON IN THIS CONTROLLER VALUES ARE IN GBP CURRENCY
-      if (exchangedValue) exchangedPrice = exchangedValue;
-    }
-    if (price !== exchangedPrice)
-      throw new BadRequestError("requested price is not correct");
     // CREATE A SINGLE ORDER
     const singleOrder = await SingleOrder.create({
       amount,
-      price: exchangedPrice,
+      price,
       currency,
       user: req.user?._id,
       product,
@@ -113,7 +102,7 @@ const createOrder: RequestHandler = async (req, res) => {
     // APPEND THIS ORDER TO ORDERITEMS ARRAY
     orderItems = [...orderItems, singleOrder];
     // PRODUCT ORDER PRICE AS GBP
-    const productOrderPrice = amount * exchangedPrice;
+    const productOrderPrice = amount * price;
     // TAX VALUE WITHOUT DOT
     const taxValueWithoutDot = Number((tax / 100).toString().replace(".", ""));
     // APPEND TAX RATE TO EVERY ITEM DEPENDS ON THEIR TAX VALUE

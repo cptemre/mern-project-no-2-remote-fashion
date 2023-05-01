@@ -24,11 +24,10 @@ const errors_1 = require("../errors");
 // JWT AND CRYPTO
 const token_1 = require("../utilities/token");
 // SPLIT CARD INFO
-const controllers_1 = require("../utilities/controllers");
 // * CREATE A NEW USER
 const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // BODY REQUESTS
-    const { name, surname, email, password, phoneNumber, address, card, avatar, } = req.body;
+    const { name, surname, email, password, phoneNumber, address, cardInfo, avatar, accountNo, } = req.body;
     // CHECK IF INFORMATION IS NOT MISSING CREDENTIALS
     if (!name && !surname && !email && !password)
         throw new errors_1.BadRequestError("name, surname, email and password required");
@@ -50,10 +49,6 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             userType = "user";
     }
     const verificationToken = (0, token_1.createCrypto)();
-    // CARD INFO BODY KEY AND VALUE SPLIT
-    let cardInfo = {};
-    if (card)
-        cardInfo = (0, controllers_1.cardInfoSplitter)({ card });
     // CREATE USER IF REQUIRED CREDENTIALS EXIST
     if (name && surname && email && password && userType) {
         const user = yield models_1.User.create({
@@ -67,6 +62,7 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             cardInfo,
             avatar,
             verificationToken,
+            accountNo,
         });
         // await registerEmail(<RegisterVerificationInterface>{
         //   userEmail: user.email,

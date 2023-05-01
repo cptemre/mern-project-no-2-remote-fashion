@@ -21,7 +21,6 @@ import {
   createHash,
 } from "../utilities/token";
 // SPLIT CARD INFO
-import { cardInfoSplitter } from "../utilities/controllers";
 // * CREATE A NEW USER
 const registerUser: RequestHandler = async (req, res) => {
   // BODY REQUESTS
@@ -32,9 +31,10 @@ const registerUser: RequestHandler = async (req, res) => {
     password,
     phoneNumber,
     address,
-    card,
+    cardInfo,
     avatar,
-  }: Omit<UserSchemaInterface, "cardInfo"> & { card: string } = req.body;
+    accountNo,
+  }: UserSchemaInterface = req.body;
   // CHECK IF INFORMATION IS NOT MISSING CREDENTIALS
   if (!name && !surname && !email && !password)
     throw new BadRequestError("name, surname, email and password required");
@@ -57,10 +57,6 @@ const registerUser: RequestHandler = async (req, res) => {
 
   const verificationToken = createCrypto();
 
-  // CARD INFO BODY KEY AND VALUE SPLIT
-  let cardInfo = {};
-  if (card) cardInfo = cardInfoSplitter({ card });
-
   // CREATE USER IF REQUIRED CREDENTIALS EXIST
   if (name && surname && email && password && userType) {
     const user = await User.create({
@@ -74,6 +70,7 @@ const registerUser: RequestHandler = async (req, res) => {
       cardInfo,
       avatar,
       verificationToken,
+      accountNo,
     });
 
     // await registerEmail(<RegisterVerificationInterface>{

@@ -54,33 +54,20 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // *LOOP THROUGH CLIENT CART ITEMS OBJECT
     for (let i = 0; i < cartItems.length; i++) {
         // SINGLE CART ITEM BY CLIENT
-        const { amount, price, tax, product: productId } = cartItems[i];
+        const { amount, price, tax, product } = cartItems[i];
         //
-        let exchangedPrice = price;
-        // FIND THE DOCUMENT OF PRODUCT
-        const product = yield (0, controllers_1.findDocumentByIdAndModel)({
-            id: productId,
-            MyModel: models_1.Product,
+        const productId = product.toString();
+        yield (0, controllers_1.priceAndExchangedPriceCompare)({
+            price,
+            tax,
+            productId,
+            currency,
+            Product: models_1.Product,
         });
-        // IF CURRENCY IS ANOTHER THAN gbp GET EXCHANGE VALUE
-        if (currency.toUpperCase() !== "GBP") {
-            // CURRENCY CHANGE TO GBP
-            const exchangedValue = yield (0, currencyExchangeRates_1.default)({
-                from: "GBP",
-                to: currency.toUpperCase(),
-                amount: product.price,
-            });
-            // IF THERE IS A NUMBER VALUE THEN SET IT EQUAL TO SUBTOTAL
-            // FROM NOW ON IN THIS CONTROLLER VALUES ARE IN GBP CURRENCY
-            if (exchangedValue)
-                exchangedPrice = exchangedValue;
-        }
-        if (price !== exchangedPrice)
-            throw new errors_1.BadRequestError("requested price is not correct");
         // CREATE A SINGLE ORDER
         const singleOrder = yield models_1.SingleOrder.create({
             amount,
-            price: exchangedPrice,
+            price,
             currency,
             user: (_b = req.user) === null || _b === void 0 ? void 0 : _b._id,
             product,
@@ -88,7 +75,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         // APPEND THIS ORDER TO ORDERITEMS ARRAY
         orderItems = [...orderItems, singleOrder];
         // PRODUCT ORDER PRICE AS GBP
-        const productOrderPrice = amount * exchangedPrice;
+        const productOrderPrice = amount * price;
         // TAX VALUE WITHOUT DOT
         const taxValueWithoutDot = Number((tax / 100).toString().replace(".", ""));
         // APPEND TAX RATE TO EVERY ITEM DEPENDS ON THEIR TAX VALUE

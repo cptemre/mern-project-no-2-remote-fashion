@@ -2,7 +2,6 @@ import { Schema, model } from "mongoose";
 import { UserSchemaInterface } from "../utilities/interfaces/models";
 const validator = require("validator");
 import { createHash } from "../utilities/token";
-import { SingleOrder } from "./";
 
 // * SCHEMA
 const UserSchema = new Schema<UserSchemaInterface>(
@@ -60,7 +59,7 @@ const UserSchema = new Schema<UserSchemaInterface>(
     passwordToken: String,
     passwordTokenExpDate: Date,
     cartItems: {
-      type: [SingleOrder],
+      type: [Object],
       default: [],
     },
     company: {

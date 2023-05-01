@@ -18,6 +18,7 @@ const http_status_codes_1 = require("http-status-codes");
 const controllers_1 = require("../utilities/controllers");
 // CRYPTO
 const token_1 = require("../utilities/token");
+const errors_1 = require("../errors");
 const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // BODY FROM THE CLIENT
     const { name, surname, email, userType, country, isVerified, userPage, } = req.body;
@@ -88,13 +89,13 @@ const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.deleteUser = deleteUser;
 // ! BEFORE UPDATE CLIENT SHOULD ASK FOR PASSWORD CHECK
 const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b;
+    var _b, _c;
     // GET USER ID FROM PARAMS
     const { id: userId } = req.params;
     // GET UPDATED VALUES FROM THE CLIENT
-    const { name, surname, email, userType, street, city, postalCode, country, countryCode, phoneNo, state, 
+    const { name, surname, email, userType, phoneNumber, address, 
     // ! CHANGE THIS TO OBJECT
-    card, avatar, cartItems, } = req.body;
+    cardInfo, avatar, cartItems, accountNo, } = req.body;
     // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
     if ((_b = req.user) === null || _b === void 0 ? void 0 : _b._id)
         (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId });
@@ -116,35 +117,16 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         user.email = email;
     if (userType)
         user.userType = userType;
-    // ADDRESS OBJECT UPDATE
-    if (street && city && postalCode && country && state)
-        user.address = {
-            street,
-            city,
-            postalCode,
-            country,
-            state,
-        };
-    // PHONE NUMBER UPDATE
-    if (countryCode && phoneNo)
-        user.phoneNumber = {
-            countryCode,
-            phoneNo,
-        };
-    // REST OF THE OPTIONAL KEY UPDATES
-    // CARD INFO BODY KEY AND VALUE SPLIT
-    if (card) {
-        let cardInfo = {
-            cardNumber: "",
-            expMonth: undefined,
-            expYear: undefined,
-            cvc: "",
-        };
-        cardInfo = (0, controllers_1.cardInfoSplitter)({ card });
+    if (address)
+        user.address = address;
+    if (phoneNumber)
+        user.phoneNumber = phoneNumber;
+    if (cardInfo)
         user.cardInfo = cardInfo;
-    }
     if (avatar)
         user.avatar = avatar;
+    if (accountNo)
+        user.accountNo = accountNo;
     // IF EMAIL DID NOT CHANGE THEN SEND THE RESPONSE
     if (oldEmail !== user.email) {
         isEmailChanged = true;
@@ -155,9 +137,29 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         // ! CLIENT SHOULD CALL LOGOUT AFTER THIS EVENT
     }
     // CART ITEMS UPDATE
-    // ! CONTINUE FROM HERE
-    if (cartItems)
+    // CHECK IF PRICE, TAX AND USER MATCHES WITH THE ACTUAL PRODUCT VALUES
+    if (cartItems && ((_c = req.user) === null || _c === void 0 ? void 0 : _c.userType) !== "seller") {
+        for (let i = 0; i < cartItems.length; i++) {
+            const { price, tax, product, currency, status, user } = cartItems[i];
+            // IF USER IS NOT CART ITEM'S USER THEN THROW AN ERROR
+            if (req.user && user !== req.user._id)
+                throw new errors_1.UnauthorizedError("user does not match");
+            if (status !== "pending")
+                throw new errors_1.UnauthorizedError("status of the cart item is not correct");
+            const productId = product.toString();
+            // CHECK IF PRICE AND TAX FROM CLIENT MATCHES WITH DATABASE
+            yield (0, controllers_1.priceAndExchangedPriceCompare)({
+                price,
+                tax,
+                productId,
+                currency,
+                Product: models_1.Product,
+            });
+        }
+        // IF NO ERROR THROWN FROM FOR LOOP THEN ADD CART ITEMS TO THE USER
+        console.log(cartItems);
         user.cartItems = cartItems;
+    }
     // SAVE THE USER
     yield user.save();
     // HIDE USER PASSWORD BEFORE SENDING IT TO THE CLIENT
