@@ -54,6 +54,7 @@ const createPayment = ({ totalPrice, currency, cardNumber, expMonth, expYear, cv
         const customer = yield createOrGetCustomer({ name, email, phone, address });
         // * PAYMENT METHOD
         const paymentMethod = yield stripe.paymentMethods.create({
+            type: "card",
             card: {
                 number: cardNumber,
                 exp_month: expMonth,
@@ -64,6 +65,7 @@ const createPayment = ({ totalPrice, currency, cardNumber, expMonth, expYear, cv
                 name,
                 email,
                 address,
+                phone,
             },
         });
         // * PAYMENT INTENT TO GET ID & SECRET IN CONTROLLER TO ADD IT TO THE ORDER MODEL
@@ -73,6 +75,8 @@ const createPayment = ({ totalPrice, currency, cardNumber, expMonth, expYear, cv
             paymentMethodId: paymentMethod.id,
             customerId: customer.id,
         });
+        if (!paymentIntent)
+            throw new errors_1.PaymentRequiredError("payment required");
         return paymentIntent;
     }
     catch (error) {
@@ -89,7 +93,6 @@ const createPaymentIntent = ({ totalPrice, currency, paymentMethodId, customerId
         automatic_payment_methods: {
             enabled: true,
         },
-        payment_method_types: ["card"],
         payment_method: paymentMethodId,
         return_url: process.env.CLIENT_ADDRESS + "/payment-verified",
         customer: customerId,

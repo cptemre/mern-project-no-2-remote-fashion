@@ -157,7 +157,6 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             });
         }
         // IF NO ERROR THROWN FROM FOR LOOP THEN ADD CART ITEMS TO THE USER
-        console.log(cartItems);
         user.cartItems = cartItems;
     }
     // SAVE THE USER

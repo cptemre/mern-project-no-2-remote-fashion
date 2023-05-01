@@ -53,15 +53,22 @@
 <!-- ! -->
 - Later check if delete effects reviews and cart items
 
-# UPDATE PRODUCT
+## UPDATE PRODUCT
 
 - Only admin and sellers are able to update a product.
 - Sellers can only update their own products.
 
-# GET ALL PRODUCTS
+## GET ALL PRODUCTS
 
 - All users are able to see all products.
 
-# GET SINGLE PRODUCT
+## GET SINGLE PRODUCT
 
 - All users are able to see a product.
+
+# ORDER CONTROLLERS
+
+## CREATE ORDER
+
+- Only admin and user are able to create orders.
+- Payment is accepted in test mode.

@@ -26,6 +26,7 @@ const http_status_codes_1 = require("http-status-codes");
 const currencyExchangeRates_1 = __importDefault(require("../utilities/payment/currencyExchangeRates"));
 const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
+    // TODO COUNTRY MUST BE CAPITAL SHORT NAME SUCH AS US. CREATE AN INTERFACE FOR IT
     // CLIENT SIDE REQUESTS
     const { currency, cardNumber, expMonth, expYear, cvc, street, city, postalCode, country, state, } = req.body;
     // GET CART ITEMS FROM THE USER DOCUMENT
@@ -68,6 +69,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const singleOrder = yield models_1.SingleOrder.create({
             amount,
             price,
+            tax,
             currency,
             user: (_b = req.user) === null || _b === void 0 ? void 0 : _b._id,
             product,
@@ -111,7 +113,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         throw new errors_1.PaymentRequiredError("payment required");
     // IF PAYMENT INTENT PROPERTIES DO NOT EXIST THAN THROW AN ERROR
     const { amount, client_secret, id: paymentIntentId } = paymentIntent;
-    if (!amount || client_secret || paymentIntentId)
+    if (!amount || !client_secret || !paymentIntentId)
         throw new errors_1.PaymentRequiredError("payment required");
     // CREATE ACTUAL ORDER HERE
     const result = yield models_1.Order.create({

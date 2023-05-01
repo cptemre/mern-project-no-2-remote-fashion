@@ -31,6 +31,15 @@ const ProductSchema = new mongoose_1.Schema({
         type: Number,
         required: [true, "product price is required"],
     },
+    currency: {
+        type: String,
+        enum: {
+            values: categories_1.currencyList,
+            message: `currency must be one of these: ${categories_1.currencyList}`,
+        },
+        required: false,
+        default: "gbp",
+    },
     tax: {
         type: Number,
         required: [true, "product tax percentage is required"],

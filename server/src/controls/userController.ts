@@ -160,7 +160,6 @@ const updateUser: RequestHandler = async (req, res) => {
       });
     }
     // IF NO ERROR THROWN FROM FOR LOOP THEN ADD CART ITEMS TO THE USER
-    console.log(cartItems);
     user.cartItems = cartItems;
   }
 

@@ -1,6 +1,8 @@
 import { Document } from "mongoose";
 import { ObjectId } from "mongoose";
-interface ProductSchemaInterface extends Document {
+import { CurrencyInterface } from "../payment";
+
+interface ProductSchemaInterface extends Document, CurrencyInterface {
   name: string;
   brand: string;
   price: number;

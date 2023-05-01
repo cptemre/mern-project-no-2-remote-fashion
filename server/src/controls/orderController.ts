@@ -40,6 +40,7 @@ import { StatusCodes } from "http-status-codes";
 import currencyExchangeRates from "../utilities/payment/currencyExchangeRates";
 
 const createOrder: RequestHandler = async (req, res) => {
+  // TODO COUNTRY MUST BE CAPITAL SHORT NAME SUCH AS US. CREATE AN INTERFACE FOR IT
   // CLIENT SIDE REQUESTS
   const {
     currency,
@@ -95,6 +96,7 @@ const createOrder: RequestHandler = async (req, res) => {
     const singleOrder = await SingleOrder.create({
       amount,
       price,
+      tax,
       currency,
       user: req.user?._id,
       product,
@@ -137,7 +139,7 @@ const createOrder: RequestHandler = async (req, res) => {
   if (!paymentIntent) throw new PaymentRequiredError("payment required");
   // IF PAYMENT INTENT PROPERTIES DO NOT EXIST THAN THROW AN ERROR
   const { amount, client_secret, id: paymentIntentId } = paymentIntent;
-  if (!amount || client_secret || paymentIntentId)
+  if (!amount || !client_secret || !paymentIntentId)
     throw new PaymentRequiredError("payment required");
   // CREATE ACTUAL ORDER HERE
   const result = await Order.create({

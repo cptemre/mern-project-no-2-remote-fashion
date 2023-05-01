@@ -2,7 +2,7 @@ import { Schema, model, Types } from "mongoose";
 // INTERFACE
 import { ProductSchemaInterface } from "../utilities/interfaces/models";
 // ALL SUB CATEGORIES
-import { allSubCategories } from "../utilities/categories";
+import { allSubCategories, currencyList } from "../utilities/categories";
 // MODELS
 import { Review, User } from "../models";
 const ProductSchema = new Schema<ProductSchemaInterface>(
@@ -22,6 +22,15 @@ const ProductSchema = new Schema<ProductSchemaInterface>(
     price: {
       type: Number,
       required: [true, "product price is required"],
+    },
+    currency: {
+      type: String,
+      enum: {
+        values: currencyList,
+        message: `currency must be one of these: ${currencyList}`,
+      },
+      required: false,
+      default: "gbp",
     },
     tax: {
       type: Number,
