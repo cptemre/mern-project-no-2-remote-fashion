@@ -15,6 +15,7 @@ import {
 // CURRENCY
 import {
   CurrencyExchangeInterface,
+  CurrencyUpperCaseInterface,
   StripePaymentArgumentsSchema,
 } from "../utilities/interfaces/payment";
 // MODELS
@@ -60,6 +61,10 @@ const createOrder: RequestHandler = async (req, res) => {
     id: req.user?._id,
     MyModel: User,
   });
+  //
+  const to = currency.toUpperCase() as CurrencyExchangeInterface["to"];
+
+  // TODO CLIENT MUST CHECK CART ITEM PRODUCT PRICE AND REST OF THE PARAMATERS FOR ANY CHANGE BEFORE SENDING A CREATE ORDER REQUEST
   const cartItems = user.cartItems;
   if (cartItems && cartItems.length < 1)
     throw new BadRequestError(
@@ -89,11 +94,26 @@ const createOrder: RequestHandler = async (req, res) => {
   for (let i = 0; i < cartItems.length; i++) {
     // SINGLE CART ITEM BY CLIENT
     const { amount, price, tax, product } = cartItems[i];
+    // THIS VARIABLE WILL BE EQUAL TO PRICE FROM CART.
+    // IF CURRENCY IS NOT GBP THEN PRICE WILL BE RECALCULATED AND WILL BE SET TO THIS VARIABLE
+    let priceVal: number = price;
+
+    if (currency !== "gbp") {
+      const exchangedPriceVal = await currencyExchangeRates({
+        from: "GBP",
+        to,
+        amount: price,
+      });
+      if (!exchangedPriceVal)
+        throw new BadRequestError("price exchange failed");
+      priceVal = exchangedPriceVal;
+    }
+
     // EXCHANGED PRICE COMPARATION
     const productId = product.toString();
     await priceAndExchangedPriceCompare({
       amount,
-      price,
+      price: priceVal,
       tax,
       productId,
       currency,
@@ -108,7 +128,7 @@ const createOrder: RequestHandler = async (req, res) => {
     // CREATE A SINGLE ORDER
     const singleOrder = await SingleOrder.create({
       amount,
-      price,
+      price: priceVal,
       tax,
       currency,
       user: req.user?._id,
@@ -120,18 +140,28 @@ const createOrder: RequestHandler = async (req, res) => {
     // APPEND THIS ORDER TO ORDERITEMS ARRAY
     orderItems = [...orderItems, singleOrder];
     // PRODUCT ORDER PRICE AS GBP
-    const productOrderPrice = amount * price;
+    const productOrderPrice = amount * priceVal;
     // TAX VALUE WITHOUT DOT
-    const taxValueWithoutDot = Number((tax / 100).toString().replace(".", ""));
+    const taxValueWithoutDot = Number((tax / 100).toFixed(2)) * 100;
     // APPEND TAX RATE TO EVERY ITEM DEPENDS ON THEIR TAX VALUE
-    const productOrderPriceWithTax = productOrderPrice * taxValueWithoutDot;
+    const productOrderPriceWithTax = productOrderPrice + taxValueWithoutDot;
     // APPEND PRODUCT ORDER PRICE TO SUBTOTAL
     subTotal += productOrderPriceWithTax;
   }
   // *LOOP END
 
   // SHIPPING FEE AS GBP. IF TOTAL SHOPPING IS ABOVE 75 GBP THEN FREE
-  const shippingFee = subTotal >= 7500 ? 0 : 999;
+  // THIS WILL BE RECALCULATED IF CURRENCY IS NOT GBP
+  let shippingFee = subTotal >= 7500 ? 0 : 999;
+  if (currency !== "gbp") {
+    const exchangedPriceVal = await currencyExchangeRates({
+      from: "GBP",
+      to,
+      amount: shippingFee,
+    });
+    if (!exchangedPriceVal) throw new BadRequestError("price exchange failed");
+    shippingFee = exchangedPriceVal;
+  }
   // APPEND SHIPPING FEE TO FIND TOTAL PRICE
   const totalPrice = subTotal + shippingFee;
   //
@@ -157,15 +187,11 @@ const createOrder: RequestHandler = async (req, res) => {
   const { amount, client_secret, id: paymentIntentId } = paymentIntent;
   if (!amount || !client_secret || !paymentIntentId)
     throw new PaymentRequiredError("payment required");
-  // CHANGE ALL SINGLE ORDERS STATUS TO PAID AND SAVE THEM TO THE DATABASE
-  for (let i = 0; i < createdSingleOrders.length; i++) {
-    createdSingleOrders[i].status = "paid";
-    await createdSingleOrders[i].save();
-  }
+
   // CLEAR USER CART BECAUSE ORDER IS SUCCESFUL
   user.cartItems = [];
   // CREATE ACTUAL ORDER HERE
-  const result = await Order.create({
+  const order = await Order.create({
     orderItems,
     shippingFee,
     subTotal,
@@ -176,12 +202,17 @@ const createOrder: RequestHandler = async (req, res) => {
     clientSecret: client_secret,
     paymentIntentID: paymentIntentId,
   });
-
+  // CHANGE ALL SINGLE ORDERS STATUS TO PAID AND SAVE THEM TO THE DATABASE
+  for (let i = 0; i < createdSingleOrders.length; i++) {
+    createdSingleOrders[i].status = "paid";
+    createdSingleOrders[i].order = order._id;
+    await createdSingleOrders[i].save();
+  }
   await user.save();
   // SENT CLIENT SECRET TO THE CLIENT
   res
     .status(StatusCodes.CREATED)
-    .json({ msg: "order created", result, client_secret });
+    .json({ msg: "order created", result: order, client_secret });
 };
 
 const getAllSingleOrders: RequestHandler = async (req, res) => {
@@ -193,6 +224,7 @@ const getAllSingleOrders: RequestHandler = async (req, res) => {
     currency,
     product: productId,
     seller: sellerId,
+    order: orderId,
     orderPage,
   }: SingleOrderSchemaInterface & {
     orderPage: number;
@@ -207,6 +239,7 @@ const getAllSingleOrders: RequestHandler = async (req, res) => {
   if (currency) query.currency = currency;
   if (productId) query.product = productId;
   if (sellerId) query.seller = sellerId;
+  if (orderId) query.order = orderId;
   // IF USER IS A REGULAR USER THEN ADD TO QUERY OF THE USERS ID TO FIND ONLY RELATED SINGLE ORDERS
   if (req.user && req.user.userType === "user") query.user = req.user._id;
 
@@ -277,7 +310,6 @@ const getAllOrders: RequestHandler = async (req, res) => {
   if (req.user && req.user.userType !== "admin") query.user = req.user._id;
   if (priceVal) query.price = gteAndLteQueryForDb(priceVal);
   if (currency) query.currency = currency;
-  // ! HERE CALCULATE THE PRICE TO GBP
   // LIMIT AND SKIP
   const myLimit = 10;
   const { limit, skip } = limitAndSkip({ limit: myLimit, page: orderPage });
@@ -315,17 +347,15 @@ const getOrder: RequestHandler = async (req, res) => {
 
 const updateOrder: RequestHandler = async (req, res) => {
   // GET ORDER ID FROM THE CLIENT
-  const { id: orderId } = req.params;
+  const { id: singleOrderId } = req.params;
   // CHECK IF SINGLE ORDER ID IS PROVIDED
-  if (!orderId) throw new BadRequestError("order id is required");
+  if (!singleOrderId) throw new BadRequestError("single order id is required");
   // GET USER ID
   const {
     status,
-    singleOrderId,
     destination,
   }: {
     userId: string;
-    singleOrderId: string;
     destination: string;
   } & OrderStatusInterface = req.body;
 
@@ -334,30 +364,37 @@ const updateOrder: RequestHandler = async (req, res) => {
   if (!status || !singleOrderId)
     throw new BadRequestError("status and single order id are required");
 
-  // GET ORDER
-  const order = await findDocumentByIdAndModel({
-    id: orderId,
-    MyModel: Order,
-  });
-  // CHECK IF CURRENT USER IS NOT ADMIN AND ORDER USER ID IS NOT EQUAL TO USER ID
-  if (req.user)
-    userIdAndModelUserIdMatchCheck({
-      user: req.user,
-      userId: order.user.toString(),
-    });
   // FIND THIS SINGLE ORDER IN DOCUMENTS
   const singleOrder = await findDocumentByIdAndModel({
     id: singleOrderId,
     MyModel: SingleOrder,
   });
+  // CHECK IF CURRENT USER IS NOT ADMIN AND ORDER USER ID IS NOT EQUAL TO USER ID
+  if (req.user) {
+    let userOrSellerId =
+      req.user.userType === "user" ? singleOrder.user : singleOrder.seller;
+    userIdAndModelUserIdMatchCheck({
+      user: req.user,
+      userId: userOrSellerId.toString(),
+    });
+  }
+
   // IF IT IS A CANCELATION THEN PAY BACK THE MONEY
+  // TODO IF USER THEN CHECK DELIVED STATUS AND DELIVERY DATE. IF IT IS DELIVERED NOT MORE THAN 2 WEEKS AGO THEN ACCEPT CANCELATION
+  // TODO IF SELLER THEN CHECK IF IT IS PAID
+  // TODO IF COURIER THEN CHECK IF IT IS PAID
   if (status === "canceled") {
     if (!destination)
       throw new BadRequestError("destination account no is required");
     const amount = singleOrder.amount;
-    const currency = order.currency;
+    const currency = singleOrder.currency;
     const transfer = await transferMoney({ amount, currency, destination });
     singleOrder.cancelTransferId = transfer.id;
+    // FIND ORDER
+    const order = await findDocumentByIdAndModel({
+      id: singleOrder.order.toString(),
+      MyModel: Order,
+    });
     // ORDER PAYMENT DECREASE CHANGE DUE TO CANCELATION
     order.subTotal -= singleOrder.amount;
     order.totalPrice -= singleOrder.amount;
@@ -367,6 +404,10 @@ const updateOrder: RequestHandler = async (req, res) => {
         orderItem.cancelTransferId = singleOrder.cancelTransferId;
       }
     });
+    const everySingleOrderCanceled = order.orderItems.every(
+      (orderItem) => orderItem.cancelTransferId
+    );
+    if (everySingleOrderCanceled) order.status = "canceled";
   }
   // UPDATE THE STATUS OF SINGLE ORDER
   singleOrder.status = status;

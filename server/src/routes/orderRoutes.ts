@@ -42,6 +42,6 @@ router.get(
 router
   .route("/:id")
   .get(authUser, authRole("admin", "user"), getOrder)
-  .patch(authUser, authRole("admin"), updateOrder);
+  .patch(authUser, authRole("admin", "user", "seller"), updateOrder);
 
 export default router;

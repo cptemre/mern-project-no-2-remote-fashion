@@ -34,6 +34,9 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         id: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id,
         MyModel: models_1.User,
     });
+    //
+    const to = currency.toUpperCase();
+    // TODO CLIENT MUST CHECK CART ITEM PRODUCT PRICE AND REST OF THE PARAMATERS FOR ANY CHANGE BEFORE SENDING A CREATE ORDER REQUEST
     const cartItems = user.cartItems;
     if (cartItems && cartItems.length < 1)
         throw new errors_1.BadRequestError("there must be at least one product to order from your cart");
@@ -59,11 +62,24 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     for (let i = 0; i < cartItems.length; i++) {
         // SINGLE CART ITEM BY CLIENT
         const { amount, price, tax, product } = cartItems[i];
+        // THIS VARIABLE WILL BE EQUAL TO PRICE FROM CART.
+        // IF CURRENCY IS NOT GBP THEN PRICE WILL BE RECALCULATED AND WILL BE SET TO THIS VARIABLE
+        let priceVal = price;
+        if (currency !== "gbp") {
+            const exchangedPriceVal = yield (0, currencyExchangeRates_1.default)({
+                from: "GBP",
+                to,
+                amount: price,
+            });
+            if (!exchangedPriceVal)
+                throw new errors_1.BadRequestError("price exchange failed");
+            priceVal = exchangedPriceVal;
+        }
         // EXCHANGED PRICE COMPARATION
         const productId = product.toString();
         yield (0, controllers_1.priceAndExchangedPriceCompare)({
             amount,
-            price,
+            price: priceVal,
             tax,
             productId,
             currency,
@@ -78,7 +94,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         // CREATE A SINGLE ORDER
         const singleOrder = yield models_1.SingleOrder.create({
             amount,
-            price,
+            price: priceVal,
             tax,
             currency,
             user: (_b = req.user) === null || _b === void 0 ? void 0 : _b._id,
@@ -90,17 +106,28 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         // APPEND THIS ORDER TO ORDERITEMS ARRAY
         orderItems = [...orderItems, singleOrder];
         // PRODUCT ORDER PRICE AS GBP
-        const productOrderPrice = amount * price;
+        const productOrderPrice = amount * priceVal;
         // TAX VALUE WITHOUT DOT
-        const taxValueWithoutDot = Number((tax / 100).toString().replace(".", ""));
+        const taxValueWithoutDot = Number((tax / 100).toFixed(2)) * 100;
         // APPEND TAX RATE TO EVERY ITEM DEPENDS ON THEIR TAX VALUE
-        const productOrderPriceWithTax = productOrderPrice * taxValueWithoutDot;
+        const productOrderPriceWithTax = productOrderPrice + taxValueWithoutDot;
         // APPEND PRODUCT ORDER PRICE TO SUBTOTAL
         subTotal += productOrderPriceWithTax;
     }
     // *LOOP END
     // SHIPPING FEE AS GBP. IF TOTAL SHOPPING IS ABOVE 75 GBP THEN FREE
-    const shippingFee = subTotal >= 7500 ? 0 : 999;
+    // THIS WILL BE RECALCULATED IF CURRENCY IS NOT GBP
+    let shippingFee = subTotal >= 7500 ? 0 : 999;
+    if (currency !== "gbp") {
+        const exchangedPriceVal = yield (0, currencyExchangeRates_1.default)({
+            from: "GBP",
+            to,
+            amount: shippingFee,
+        });
+        if (!exchangedPriceVal)
+            throw new errors_1.BadRequestError("price exchange failed");
+        shippingFee = exchangedPriceVal;
+    }
     // APPEND SHIPPING FEE TO FIND TOTAL PRICE
     const totalPrice = subTotal + shippingFee;
     //
@@ -128,15 +155,10 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const { amount, client_secret, id: paymentIntentId } = paymentIntent;
     if (!amount || !client_secret || !paymentIntentId)
         throw new errors_1.PaymentRequiredError("payment required");
-    // CHANGE ALL SINGLE ORDERS STATUS TO PAID AND SAVE THEM TO THE DATABASE
-    for (let i = 0; i < createdSingleOrders.length; i++) {
-        createdSingleOrders[i].status = "paid";
-        yield createdSingleOrders[i].save();
-    }
     // CLEAR USER CART BECAUSE ORDER IS SUCCESFUL
     user.cartItems = [];
     // CREATE ACTUAL ORDER HERE
-    const result = yield models_1.Order.create({
+    const order = yield models_1.Order.create({
         orderItems,
         shippingFee,
         subTotal,
@@ -147,16 +169,22 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         clientSecret: client_secret,
         paymentIntentID: paymentIntentId,
     });
+    // CHANGE ALL SINGLE ORDERS STATUS TO PAID AND SAVE THEM TO THE DATABASE
+    for (let i = 0; i < createdSingleOrders.length; i++) {
+        createdSingleOrders[i].status = "paid";
+        createdSingleOrders[i].order = order._id;
+        yield createdSingleOrders[i].save();
+    }
     yield user.save();
     // SENT CLIENT SECRET TO THE CLIENT
     res
         .status(http_status_codes_1.StatusCodes.CREATED)
-        .json({ msg: "order created", result, client_secret });
+        .json({ msg: "order created", result: order, client_secret });
 });
 exports.createOrder = createOrder;
 const getAllSingleOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET CLIENT SIDE QUERIES
-    const { amount, priceVal, tax, currency, product: productId, seller: sellerId, orderPage, } = req.body;
+    const { amount, priceVal, tax, currency, product: productId, seller: sellerId, order: orderId, orderPage, } = req.body;
     // EMPTY QUERY
     const query = {};
     // SET QUERY KEYS AND VALUES
@@ -172,6 +200,8 @@ const getAllSingleOrders = (req, res) => __awaiter(void 0, void 0, void 0, funct
         query.product = productId;
     if (sellerId)
         query.seller = sellerId;
+    if (orderId)
+        query.order = orderId;
     // IF USER IS A REGULAR USER THEN ADD TO QUERY OF THE USERS ID TO FIND ONLY RELATED SINGLE ORDERS
     if (req.user && req.user.userType === "user")
         query.user = req.user._id;
@@ -240,7 +270,6 @@ const getAllOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         query.price = (0, controllers_1.gteAndLteQueryForDb)(priceVal);
     if (currency)
         query.currency = currency;
-    // ! HERE CALCULATE THE PRICE TO GBP
     // LIMIT AND SKIP
     const myLimit = 10;
     const { limit, skip } = (0, controllers_1.limitAndSkip)({ limit: myLimit, page: orderPage });
@@ -279,39 +308,44 @@ const getOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getOrder = getOrder;
 const updateOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET ORDER ID FROM THE CLIENT
-    const { id: orderId } = req.params;
+    const { id: singleOrderId } = req.params;
     // CHECK IF SINGLE ORDER ID IS PROVIDED
-    if (!orderId)
-        throw new errors_1.BadRequestError("order id is required");
+    if (!singleOrderId)
+        throw new errors_1.BadRequestError("single order id is required");
     // GET USER ID
-    const { status, singleOrderId, destination, } = req.body;
+    const { status, destination, } = req.body;
     // CHECK IF BODY VARIABLES ARE PROVIDED
     if (!status || !singleOrderId)
         throw new errors_1.BadRequestError("status and single order id are required");
-    // GET ORDER
-    const order = yield (0, controllers_1.findDocumentByIdAndModel)({
-        id: orderId,
-        MyModel: models_1.Order,
-    });
-    // CHECK IF CURRENT USER IS NOT ADMIN AND ORDER USER ID IS NOT EQUAL TO USER ID
-    if (req.user)
-        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
-            user: req.user,
-            userId: order.user.toString(),
-        });
     // FIND THIS SINGLE ORDER IN DOCUMENTS
     const singleOrder = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: singleOrderId,
         MyModel: models_1.SingleOrder,
     });
+    // CHECK IF CURRENT USER IS NOT ADMIN AND ORDER USER ID IS NOT EQUAL TO USER ID
+    if (req.user) {
+        let userOrSellerId = req.user.userType === "user" ? singleOrder.user : singleOrder.seller;
+        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+            user: req.user,
+            userId: userOrSellerId.toString(),
+        });
+    }
     // IF IT IS A CANCELATION THEN PAY BACK THE MONEY
+    // TODO IF USER THEN CHECK DELIVED STATUS AND DELIVERY DATE. IF IT IS DELIVERED NOT MORE THAN 2 WEEKS AGO THEN ACCEPT CANCELATION
+    // TODO IF SELLER THEN CHECK IF IT IS PAID
+    // TODO IF COURIER THEN CHECK IF IT IS PAID
     if (status === "canceled") {
         if (!destination)
             throw new errors_1.BadRequestError("destination account no is required");
         const amount = singleOrder.amount;
-        const currency = order.currency;
+        const currency = singleOrder.currency;
         const transfer = yield (0, payment_1.transferMoney)({ amount, currency, destination });
         singleOrder.cancelTransferId = transfer.id;
+        // FIND ORDER
+        const order = yield (0, controllers_1.findDocumentByIdAndModel)({
+            id: singleOrder.order.toString(),
+            MyModel: models_1.Order,
+        });
         // ORDER PAYMENT DECREASE CHANGE DUE TO CANCELATION
         order.subTotal -= singleOrder.amount;
         order.totalPrice -= singleOrder.amount;
@@ -321,6 +355,9 @@ const updateOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 orderItem.cancelTransferId = singleOrder.cancelTransferId;
             }
         });
+        const everySingleOrderCanceled = order.orderItems.every((orderItem) => orderItem.cancelTransferId);
+        if (everySingleOrderCanceled)
+            order.status = "canceled";
     }
     // UPDATE THE STATUS OF SINGLE ORDER
     singleOrder.status = status;

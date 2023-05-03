@@ -17,5 +17,5 @@ router.get("/currency-exchange", authorization_1.authUser, (0, authorization_1.a
 router
     .route("/:id")
     .get(authorization_1.authUser, (0, authorization_1.authRole)("admin", "user"), orderController_1.getOrder)
-    .patch(authorization_1.authUser, (0, authorization_1.authRole)("admin"), orderController_1.updateOrder);
+    .patch(authorization_1.authUser, (0, authorization_1.authRole)("admin", "user", "seller"), orderController_1.updateOrder);
 exports.default = router;

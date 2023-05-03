@@ -1,5 +1,5 @@
 // CURRENCY INTERFACE
-import CurrencyInterface from "../../payment/CurrencyInterface";
+import { CurrencyInterface } from "../../payment/CurrencyInterface";
 // SINGLE ORDER SCHEMA INTERFACE
 import { SingleOrderSchemaInterface } from "../../models";
 // STATUS SCHEMA
@@ -16,6 +16,7 @@ interface SingleOrderQuery extends CurrencyInterface {
   user: ObjectId | string;
   product: ObjectId | string;
   seller: ObjectId | string;
+  order: ObjectId | string;
   orderPage: number;
 }
 // TO GET REQ FROM CLIENT SIDE

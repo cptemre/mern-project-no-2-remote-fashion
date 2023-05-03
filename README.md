@@ -89,3 +89,7 @@
 - User and seller gets only his/her single orders with id param.
 - Admin can see any single order.
 - isShipping query is tested as well.
+
+## UPDATE ORDER
+
+- Will be tested after courier functionalities are ready.

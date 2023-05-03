@@ -88,7 +88,7 @@ exports.createPayment = createPayment;
 const createPaymentIntent = ({ totalPrice, currency, paymentMethodId, customerId, }) => __awaiter(void 0, void 0, void 0, function* () {
     // PAYMENT IS CONFIRMED DIRECTLY FOR TESTING
     const paymentIntent = yield stripe.paymentIntents.create({
-        amount: totalPrice,
+        amount: Math.round(totalPrice * 100),
         currency,
         automatic_payment_methods: {
             enabled: true,

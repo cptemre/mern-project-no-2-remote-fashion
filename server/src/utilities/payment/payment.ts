@@ -113,7 +113,7 @@ const createPaymentIntent = async ({
   // PAYMENT IS CONFIRMED DIRECTLY FOR TESTING
   const paymentIntent: Stripe.PaymentIntent =
     await stripe.paymentIntents.create({
-      amount: totalPrice,
+      amount: Math.round(totalPrice * 100),
       currency,
       automatic_payment_methods: {
         enabled: true,

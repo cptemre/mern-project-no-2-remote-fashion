@@ -79,6 +79,14 @@ const OrderSchema = new Schema<OrderSchemaInterface>(
       type: Number,
       required: [true, "order total price is required"],
     },
+    currency: {
+      type: String,
+      enum: {
+        values: currencyList,
+        message: `currency must be one of the following: ${currencyList}`,
+      },
+      default: "gbp",
+    },
     status: {
       type: String,
       default: "pending",

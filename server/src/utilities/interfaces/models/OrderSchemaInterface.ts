@@ -1,5 +1,5 @@
 import { ObjectId, Document, Model } from "mongoose";
-import CurrencyInterface from "../payment/CurrencyInterface";
+import { CurrencyInterface } from "../payment/CurrencyInterface";
 
 interface OrderStatusInterface {
   status: "pending" | "failed" | "paid" | "delivered" | "canceled" | "repayed";
@@ -15,6 +15,7 @@ interface SingleOrderSchemaInterface
   user: ObjectId | string;
   product: ObjectId | string;
   seller: ObjectId | string;
+  order: ObjectId | string;
   cancelTransferId?: string;
 }
 interface SingleOrderModelInterface extends Model<SingleOrderSchemaInterface> {

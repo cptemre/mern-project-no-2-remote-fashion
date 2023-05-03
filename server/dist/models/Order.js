@@ -81,6 +81,14 @@ const OrderSchema = new mongoose_1.Schema({
         type: Number,
         required: [true, "order total price is required"],
     },
+    currency: {
+        type: String,
+        enum: {
+            values: categories_1.currencyList,
+            message: `currency must be one of the following: ${categories_1.currencyList}`,
+        },
+        default: "gbp",
+    },
     status: {
         type: String,
         default: "pending",
