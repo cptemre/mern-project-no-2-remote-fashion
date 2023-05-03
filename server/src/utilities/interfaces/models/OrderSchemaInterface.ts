@@ -14,6 +14,7 @@ interface SingleOrderSchemaInterface
   tax: number;
   user: ObjectId | string;
   product: ObjectId | string;
+  seller: ObjectId | string;
   cancelTransferId?: string;
 }
 interface SingleOrderModelInterface extends Model<SingleOrderSchemaInterface> {

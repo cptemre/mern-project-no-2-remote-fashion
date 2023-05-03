@@ -21,14 +21,14 @@ router
 router.get(
   "/single-order",
   authUser,
-  authRole("admin", "user"),
+  authRole("admin", "user", "seller"),
   getAllSingleOrders
 );
 
 router.get(
   "/single-order/:id",
   authUser,
-  authRole("admin", "user"),
+  authRole("admin", "user", "seller"),
   getSingleOrder
 );
 

@@ -72,3 +72,20 @@
 
 - Only admin and user are able to create orders.
 - Payment is accepted in test mode.
+- User cart is emptied after successful payment.
+- Stock changes after creating an order succesfuly.
+- Not possible to order more than stocks.
+
+## GET ALL SINGLE ORDERS - GET ALL ORDERS
+
+- User and seller gets only his/her single orders with req.body properties.
+- Admin can see all.
+- priceVal has to be calculated from client side.
+- Page value works.
+- Currency exchange is not tested yet.
+
+## GET SINGLE ORDER - GET ORDER
+
+- User and seller gets only his/her single orders with id param.
+- Admin can see any single order.
+- isShipping query is tested as well.

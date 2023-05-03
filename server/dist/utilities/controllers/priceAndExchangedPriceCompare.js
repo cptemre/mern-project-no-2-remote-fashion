@@ -15,8 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const errors_1 = require("../../errors");
 const currencyExchangeRates_1 = __importDefault(require("../payment/currencyExchangeRates"));
 const findDocumentByIdAndModel_1 = __importDefault(require("./findDocumentByIdAndModel"));
-const priceAndExchangedPriceCompare = ({ price, tax, productId, currency, Product, }) => __awaiter(void 0, void 0, void 0, function* () {
-    if (!price || !tax || !productId || !currency || !Product)
+const priceAndExchangedPriceCompare = ({ amount, price, tax, productId, currency, Product, }) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!amount || !price || !tax || !productId || !currency || !Product)
         throw new errors_1.BadRequestError("invalid credientals");
     let exchangedPrice = price;
     // FIND THE DOCUMENT OF PRODUCT
@@ -24,6 +24,8 @@ const priceAndExchangedPriceCompare = ({ price, tax, productId, currency, Produc
         id: productId,
         MyModel: Product,
     });
+    if (amount > product.stock)
+        throw new errors_1.BadRequestError("order amount can not be more than product stock");
     // IF CURRENCY IS ANOTHER THAN gbp GET EXCHANGE VALUE
     if (currency.toUpperCase() !== "GBP") {
         // CURRENCY CHANGE TO GBP

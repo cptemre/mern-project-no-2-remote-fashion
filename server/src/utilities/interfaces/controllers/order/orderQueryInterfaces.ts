@@ -9,20 +9,21 @@ import { priceQueryInterface } from "../";
 // MONGOOSE
 import { ObjectId } from "mongoose";
 
-interface SingleOrderQuery {
+interface SingleOrderQuery extends CurrencyInterface {
   amount: number;
   price: { $gte: number | undefined; $lte: number | undefined };
   tax: number;
-  product: ObjectId | string;
-  orderPage: number;
   user: ObjectId | string;
+  product: ObjectId | string;
+  seller: ObjectId | string;
+  orderPage: number;
 }
 // TO GET REQ FROM CLIENT SIDE
 interface OrderClientReqInterface
   extends CurrencyInterface,
     priceQueryInterface,
     OrderStatusInterface {
-  isShipping: boolean;
+  shippingFee: { $gt: number } | 0;
   user: ObjectId | string;
   orderPage: number;
   priceVal: string;

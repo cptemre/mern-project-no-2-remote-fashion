@@ -7,19 +7,21 @@ import { Model } from "mongoose";
 import { ProductSchemaInterface } from "../interfaces/models";
 
 const priceAndExchangedPriceCompare = async ({
+  amount,
   price,
   tax,
   productId,
   currency,
   Product,
 }: {
+  amount: number;
   price: number;
   tax: number;
   productId: string;
   currency: string;
   Product: Model<ProductSchemaInterface>;
 }) => {
-  if (!price || !tax || !productId || !currency || !Product)
+  if (!amount || !price || !tax || !productId || !currency || !Product)
     throw new BadRequestError("invalid credientals");
 
   let exchangedPrice = price;
@@ -28,6 +30,11 @@ const priceAndExchangedPriceCompare = async ({
     id: productId as string,
     MyModel: Product,
   });
+
+  if (amount > product.stock)
+    throw new BadRequestError(
+      "order amount can not be more than product stock"
+    );
   // IF CURRENCY IS ANOTHER THAN gbp GET EXCHANGE VALUE
   if (currency.toUpperCase() !== "GBP") {
     // CURRENCY CHANGE TO GBP

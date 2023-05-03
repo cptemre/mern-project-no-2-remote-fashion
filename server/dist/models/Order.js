@@ -50,6 +50,18 @@ const SingleOrderSchema = new mongoose_1.Schema({
         type: mongoose_1.Types.ObjectId,
         required: [true, "product id is required"],
     },
+    seller: {
+        type: mongoose_1.Types.ObjectId,
+        required: [true, "seller id is required"],
+    },
+    currency: {
+        type: String,
+        enum: {
+            values: categories_1.currencyList,
+            message: `currency must be one of the following: ${categories_1.currencyList}`,
+        },
+        default: "gbp",
+    },
     cancelTransferId: String,
 }, { timestamps: true });
 const OrderSchema = new mongoose_1.Schema({
@@ -115,12 +127,13 @@ SingleOrderSchema.statics.updateProductStock = function ({ productId, amount, op
 SingleOrderSchema.pre("save", function () {
     return __awaiter(this, void 0, void 0, function* () {
         if (this.isModified(this.status)) {
+            console.log(this.status);
             // IF STATUS IS SAVED AS REPAYED THEN ADD IT BACK TO STOCK, ELSE IF IT IS NOT FAILED DECREASE THE STOCK
             let operation = this.status === "repayed" ||
                 this.status === "canceled" ||
                 this.status === "failed"
                 ? "+"
-                : this.status === "pending"
+                : this.status === "paid"
                     ? "-"
                     : "";
             // RETURN BACK IF IT IS FAILED

@@ -103,7 +103,6 @@ const updateUser: RequestHandler = async (req, res) => {
     userType,
     phoneNumber,
     address,
-    // ! CHANGE THIS TO OBJECT
     cardInfo,
     avatar,
     cartItems,
@@ -143,7 +142,8 @@ const updateUser: RequestHandler = async (req, res) => {
   // CHECK IF PRICE, TAX AND USER MATCHES WITH THE ACTUAL PRODUCT VALUES
   if (cartItems && req.user?.userType !== "seller") {
     for (let i = 0; i < cartItems.length; i++) {
-      const { price, tax, product, currency, status, user } = cartItems[i];
+      const { amount, price, tax, product, currency, status, user } =
+        cartItems[i];
       // IF USER IS NOT CART ITEM'S USER THEN THROW AN ERROR
       if (req.user && user !== req.user._id)
         throw new UnauthorizedError("user does not match");
@@ -152,6 +152,7 @@ const updateUser: RequestHandler = async (req, res) => {
       const productId = product.toString();
       // CHECK IF PRICE AND TAX FROM CLIENT MATCHES WITH DATABASE
       await priceAndExchangedPriceCompare({
+        amount,
         price,
         tax,
         productId,
@@ -165,9 +166,10 @@ const updateUser: RequestHandler = async (req, res) => {
 
   // SAVE THE USER
   await user.save();
-  // HIDE USER PASSWORD BEFORE SENDING IT TO THE CLIENT
+  // HIDE USER PASSWORD AND TOKENS BEFORE SENDING IT TO THE CLIENT
   user.password = "";
-
+  user.verificationToken = "";
+  user.passwordToken = "";
   res
     .status(StatusCodes.OK)
     .json({ msg: "user updated", user, isEmailChanged });

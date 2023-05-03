@@ -93,9 +93,7 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     // GET USER ID FROM PARAMS
     const { id: userId } = req.params;
     // GET UPDATED VALUES FROM THE CLIENT
-    const { name, surname, email, userType, phoneNumber, address, 
-    // ! CHANGE THIS TO OBJECT
-    cardInfo, avatar, cartItems, accountNo, } = req.body;
+    const { name, surname, email, userType, phoneNumber, address, cardInfo, avatar, cartItems, accountNo, } = req.body;
     // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
     if ((_b = req.user) === null || _b === void 0 ? void 0 : _b._id)
         (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId });
@@ -140,7 +138,7 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     // CHECK IF PRICE, TAX AND USER MATCHES WITH THE ACTUAL PRODUCT VALUES
     if (cartItems && ((_c = req.user) === null || _c === void 0 ? void 0 : _c.userType) !== "seller") {
         for (let i = 0; i < cartItems.length; i++) {
-            const { price, tax, product, currency, status, user } = cartItems[i];
+            const { amount, price, tax, product, currency, status, user } = cartItems[i];
             // IF USER IS NOT CART ITEM'S USER THEN THROW AN ERROR
             if (req.user && user !== req.user._id)
                 throw new errors_1.UnauthorizedError("user does not match");
@@ -149,6 +147,7 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             const productId = product.toString();
             // CHECK IF PRICE AND TAX FROM CLIENT MATCHES WITH DATABASE
             yield (0, controllers_1.priceAndExchangedPriceCompare)({
+                amount,
                 price,
                 tax,
                 productId,
@@ -161,8 +160,10 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     // SAVE THE USER
     yield user.save();
-    // HIDE USER PASSWORD BEFORE SENDING IT TO THE CLIENT
+    // HIDE USER PASSWORD AND TOKENS BEFORE SENDING IT TO THE CLIENT
     user.password = "";
+    user.verificationToken = "";
+    user.passwordToken = "";
     res
         .status(http_status_codes_1.StatusCodes.OK)
         .json({ msg: "user updated", user, isEmailChanged });

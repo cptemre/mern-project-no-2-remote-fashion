@@ -5,18 +5,27 @@ import { BadRequestError } from "../../errors";
 const findDocumentByIdAndModel = async <T extends Document>({
   id,
   user,
+  seller,
   MyModel,
 }: {
   id: string;
   user?: string;
+  seller?: string;
   MyModel: Model<T>;
 }) => {
-  // FIND THE PRODUCT
-  const product = await MyModel.findOne({ _id: id, user });
-  // IF PRODUCT DOES NOT EXIST SEND AN ERROR
-  if (!product) throw new BadRequestError("document does not exist");
+  // ! QUERY IS ADDED LATER.
+  // QUERY FOR FINDING THE DOCUMENT
+  const query: { _id?: string; user?: string; seller?: string } = {};
+  if (id) query._id = id;
+  if (user) query.user = user;
+  if (seller) query.seller = seller;
 
-  return product;
+  // FIND THE DOCUMENT
+  const document = await MyModel.findOne(query);
+  // IF DOCUMENT DOES NOT EXIST SEND AN ERROR
+  if (!document) throw new BadRequestError("document does not exist");
+
+  return document;
 };
 
 export default findDocumentByIdAndModel;

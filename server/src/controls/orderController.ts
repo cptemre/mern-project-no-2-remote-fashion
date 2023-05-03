@@ -38,6 +38,7 @@ import {
 // HTTP STATUS CODES
 import { StatusCodes } from "http-status-codes";
 import currencyExchangeRates from "../utilities/payment/currencyExchangeRates";
+import { Model } from "mongoose";
 
 const createOrder: RequestHandler = async (req, res) => {
   // TODO COUNTRY MUST BE CAPITAL SHORT NAME SUCH AS US. CREATE AN INTERFACE FOR IT
@@ -60,6 +61,10 @@ const createOrder: RequestHandler = async (req, res) => {
     MyModel: User,
   });
   const cartItems = user.cartItems;
+  if (cartItems && cartItems.length < 1)
+    throw new BadRequestError(
+      "there must be at least one product to order from your cart"
+    );
   // THROW AN ERROR IF THERE IS NO CART ITEMS, CURRENCY, PHONE OR ADDRESS INFO
   if (
     !cartItems ||
@@ -79,19 +84,27 @@ const createOrder: RequestHandler = async (req, res) => {
   let orderItems: SingleOrderSchemaInterface[] = [];
   // TOTAL PRICE OF SINGLE ORDERS
   let subTotal: number = 0;
+  let createdSingleOrders: SingleOrderSchemaInterface[] = [];
   // *LOOP THROUGH CLIENT CART ITEMS OBJECT
   for (let i = 0; i < cartItems.length; i++) {
     // SINGLE CART ITEM BY CLIENT
     const { amount, price, tax, product } = cartItems[i];
-    //
+    // EXCHANGED PRICE COMPARATION
     const productId = product.toString();
     await priceAndExchangedPriceCompare({
+      amount,
       price,
       tax,
       productId,
       currency,
       Product,
     });
+    // FIND PRODUCT SELLER
+    const productDocument = await findDocumentByIdAndModel({
+      id: productId,
+      MyModel: Product,
+    });
+    const seller = productDocument.seller;
     // CREATE A SINGLE ORDER
     const singleOrder = await SingleOrder.create({
       amount,
@@ -99,8 +112,11 @@ const createOrder: RequestHandler = async (req, res) => {
       tax,
       currency,
       user: req.user?._id,
+      seller,
       product,
     });
+    // SEND CREATED SINGLE ORDER TO CREATED SINGLE ORDERS ARRAY FOR CHANGING STATUS LATER
+    createdSingleOrders = [...createdSingleOrders, singleOrder];
     // APPEND THIS ORDER TO ORDERITEMS ARRAY
     orderItems = [...orderItems, singleOrder];
     // PRODUCT ORDER PRICE AS GBP
@@ -141,6 +157,13 @@ const createOrder: RequestHandler = async (req, res) => {
   const { amount, client_secret, id: paymentIntentId } = paymentIntent;
   if (!amount || !client_secret || !paymentIntentId)
     throw new PaymentRequiredError("payment required");
+  // CHANGE ALL SINGLE ORDERS STATUS TO PAID AND SAVE THEM TO THE DATABASE
+  for (let i = 0; i < createdSingleOrders.length; i++) {
+    createdSingleOrders[i].status = "paid";
+    await createdSingleOrders[i].save();
+  }
+  // CLEAR USER CART BECAUSE ORDER IS SUCCESFUL
+  user.cartItems = [];
   // CREATE ACTUAL ORDER HERE
   const result = await Order.create({
     orderItems,
@@ -148,10 +171,13 @@ const createOrder: RequestHandler = async (req, res) => {
     subTotal,
     totalPrice,
     currency,
+    status: "paid",
     user: req.user?._id,
     clientSecret: client_secret,
     paymentIntentID: paymentIntentId,
   });
+
+  await user.save();
   // SENT CLIENT SECRET TO THE CLIENT
   res
     .status(StatusCodes.CREATED)
@@ -164,7 +190,9 @@ const getAllSingleOrders: RequestHandler = async (req, res) => {
     amount,
     priceVal,
     tax,
+    currency,
     product: productId,
+    seller: sellerId,
     orderPage,
   }: SingleOrderSchemaInterface & {
     orderPage: number;
@@ -176,40 +204,53 @@ const getAllSingleOrders: RequestHandler = async (req, res) => {
   if (amount) query.amount = amount;
   if (priceVal) query.price = gteAndLteQueryForDb(priceVal);
   if (tax) query.tax = tax;
+  if (currency) query.currency = currency;
   if (productId) query.product = productId;
-  // IF USER IS NOT ADMIN THEN ADD TO QUERY OF THE USERS ID TO FIND ONLY RELATED SINGLE ORDERS
-  if (req.user && req.user.userType !== "admin") query.user = req.user._id;
-  // FIND DOCUMENTS OF SINGLE ORDERS
-  const singleOrder = SingleOrder.find(query);
-  // COUNT THE DOCUMENTS
-  const singleOrderLength = singleOrder.countDocuments();
+  if (sellerId) query.seller = sellerId;
+  // IF USER IS A REGULAR USER THEN ADD TO QUERY OF THE USERS ID TO FIND ONLY RELATED SINGLE ORDERS
+  if (req.user && req.user.userType === "user") query.user = req.user._id;
+
   // LIMIT AND SKIP VALUES
   const myLimit = 10;
   const { limit, skip } = limitAndSkip({ limit: myLimit, page: orderPage });
-
-  const result = await singleOrder.skip(skip).limit(limit);
+  // FIND DOCUMENTS OF SINGLE ORDERS
+  const result = await SingleOrder.find(query).skip(skip).limit(limit);
+  // GET THE TOTAL COUNT OF DOCUMENTS
+  const length = await SingleOrder.countDocuments(query);
   // RESPONSE
   res
     .status(StatusCodes.OK)
-    .json({ msg: "single orders fetched", result, lenght: singleOrderLength });
+    .json({ msg: "single orders fetched", result, length });
 };
 
 const getSingleOrder: RequestHandler = async (req, res) => {
   // GET CLIENT SIDE QUERIES
-  const { product: productId } = req.params;
+  const { id: singleOrderId } = req.params;
   // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
-  if (!productId) throw new BadRequestError("product id is required");
+  if (!singleOrderId) throw new BadRequestError("single order id is required");
   // FIND THE SINGLE ORDER
+  const userId = req.user?.userType === "user" && req.user?._id;
+  const sellerId = req.user?.userType === "seller" && req.user?._id;
+
   const singleOrder = await findDocumentByIdAndModel({
-    id: productId,
+    id: singleOrderId,
+    user: userId,
+    seller: sellerId,
     MyModel: SingleOrder,
   });
   // CHECK USER MATCHES WITH THE SINGLE ORDER USER
-  if (req.user)
+  if (req.user) {
+    // SET USER OR SELLER ID TO COMPARE WITH ACTUAL ACCOUNT USER
+    let userOrSellerId: string = "";
+    if (req.user.userType === "user")
+      userOrSellerId = singleOrder.user.toString();
+    if (req.user.userType === "seller")
+      userOrSellerId = singleOrder.seller.toString();
     userIdAndModelUserIdMatchCheck({
       user: req.user,
-      userId: singleOrder.user.toString(),
+      userId: userOrSellerId,
     });
+  }
   // RESPONSE
   res
     .status(StatusCodes.OK)
@@ -224,52 +265,52 @@ const getAllOrders: RequestHandler = async (req, res) => {
     orderPage,
     priceVal,
     currency,
-  }: Omit<OrderClientReqInterface, "price | user"> = req.body;
+  }: Omit<OrderClientReqInterface, "price | user"> & { isShipping: 1 } =
+    req.body;
   // EMPTY QUERY
   const query: Partial<Omit<OrderClientReqInterface, "priceVal">> = {};
   // SET QUERY KEY AND VALUES
-  isShipping
-    ? (query.isShipping = isShipping)
-    : (query.isShipping = !isShipping);
+  const sortByShippingFee = isShipping === 1 ? { $gt: 0 } : 0;
+  query.shippingFee = sortByShippingFee;
   if (status) query.status = status;
   // IF USER IS NOT ADMIN THEN ADD TO QUERY OF THE USERS ID TO FIND ONLY RELATED SINGLE ORDERS
   if (req.user && req.user.userType !== "admin") query.user = req.user._id;
   if (priceVal) query.price = gteAndLteQueryForDb(priceVal);
+  if (currency) query.currency = currency;
   // ! HERE CALCULATE THE PRICE TO GBP
-  // FIND ALL ORDERS WITH QUERY
-  const order = Order.find(query);
-  // COUNT THE DOCUMENTS
-  const orderLength = order.countDocuments();
   // LIMIT AND SKIP
   const myLimit = 10;
   const { limit, skip } = limitAndSkip({ limit: myLimit, page: orderPage });
-  const result = await order.skip(skip).limit(limit);
+
+  // FIND DOCUMENTS OF SINGLE ORDERS
+  const result = await Order.find(query).skip(skip).limit(limit);
+  // GET THE TOTAL COUNT OF DOCUMENTS
+  const length = await Order.countDocuments(query);
   // RESPONSE
-  res
-    .status(StatusCodes.OK)
-    .json({ msg: "orders fetched", result, length: orderLength });
+  res.status(StatusCodes.OK).json({ msg: "orders fetched", result, length });
 };
 
 const getOrder: RequestHandler = async (req, res) => {
   // GET CLIENT SIDE QUERY
-  const { order: orderId } = req.params;
+  const { id: orderId } = req.params;
   // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
   if (!orderId) throw new BadRequestError("order id is required");
   // FIND THE SINGLE ORDER
+  const userId = req.user?.userType === "user" && req.user?._id;
+  // FIND THE SINGLE ORDER
   const order = await findDocumentByIdAndModel({
     id: orderId,
+    user: userId,
     MyModel: Order,
   });
-  // CHECK USER MATCHES WITH THE ORDER USER
+  // CHECK USER MATCHES WITH THE ORDER USER OR IT IS ADMIN
   if (req.user)
     userIdAndModelUserIdMatchCheck({
       user: req.user,
-      userId: order._id.toString(),
+      userId: order.user.toString(),
     });
   // RESPONSE
-  res
-    .status(StatusCodes.OK)
-    .json({ msg: "single order fetched", result: order });
+  res.status(StatusCodes.OK).json({ msg: "order fetched", result: order });
 };
 
 const updateOrder: RequestHandler = async (req, res) => {
