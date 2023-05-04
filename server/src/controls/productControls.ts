@@ -1,5 +1,5 @@
 // MODELS
-import { Product } from "../models";
+import { Product, Review, User } from "../models";
 // EXPRESS
 import { RequestHandler } from "express";
 // INTERFACES
@@ -8,7 +8,10 @@ import {
   GetAllProductsReqBodyInterface,
 } from "../utilities/interfaces/controllers";
 // MODEL INTERFACES
-import { ProductSchemaInterface } from "../utilities/interfaces/models";
+import {
+  ProductSchemaInterface,
+  UserSchemaInterface,
+} from "../utilities/interfaces/models";
 // ARRAYS
 import { categoriesAndSubCategories } from "../utilities/categories/categoriesAndSubCategories";
 // HTTP CODES
@@ -20,6 +23,7 @@ import {
   findDocumentByIdAndModel,
   gteAndLteQueryForDb,
   limitAndSkip,
+  userIdAndModelUserIdMatchCheck,
 } from "../utilities/controllers";
 
 const createProduct: RequestHandler = async (req, res) => {
@@ -35,9 +39,10 @@ const createProduct: RequestHandler = async (req, res) => {
     gender,
     category,
     subCategory,
+    stock,
   }: Omit<ProductSchemaInterface, "numberOfReviews | averateRating | stock"> =
     req.body;
-  const stock = Number(req.body.stock) || 0;
+  const stockVal = Number(stock) || 0;
   // CHECK IF ALL NECESSARY CREDENTIALS ARE PROVIDED
   if (
     !name ||
@@ -74,6 +79,8 @@ const createProduct: RequestHandler = async (req, res) => {
   const product = await Product.findOne({ name, brand });
   if (product) throw new UnauthorizedError("product already exists");
 
+  // USER WHICH CREATED THE PRODUCT TO SELL
+  const sellerId = req.user?._id;
   // CREATE A UNIQUE NEW PRODUCT
   const newProduct = await Product.create({
     name,
@@ -86,7 +93,8 @@ const createProduct: RequestHandler = async (req, res) => {
     gender,
     category,
     subCategory,
-    stock,
+    stock: stockVal,
+    seller: sellerId,
   });
   res
     .status(StatusCodes.CREATED)
@@ -95,7 +103,6 @@ const createProduct: RequestHandler = async (req, res) => {
 
 const getAllProducts: RequestHandler = async (req, res) => {
   // QUERY FROM THE CLIENT
-  // !DONT FORGET TO SET ISREVIEW BOOL LATER
   const {
     name,
     brand,
@@ -107,7 +114,7 @@ const getAllProducts: RequestHandler = async (req, res) => {
     rating,
     gender,
     page,
-    myProducts,
+    seller,
   }: Partial<GetAllProductsReqBodyInterface> = req.body;
   // EMPTY QUERY IN SERVER TO SET VALUES
   const query: Partial<GetAllProductsQueryInterface> = {};
@@ -116,14 +123,17 @@ const getAllProducts: RequestHandler = async (req, res) => {
   if (color) query.color = color;
   if (size) query.size = size;
   if (price) query.price = gteAndLteQueryForDb(price);
-  // ! CHECK HERE AFTER REVIEW MODEL CREATED
-  // if (isReview) query.isReview = isReview === "true";
-  if (isStock === "true") query.stock = { $gt: 0 };
+  if (isReview) query.numberOfReviews = { $gt: 0 };
+  if (isStock) query.stock = { $gt: 0 };
   if (rating) query.rating = Number(rating);
   if (gender) query.gender = gender;
-  if (page) query.page = Number(page);
+  console.log(page);
+
+  if (page) query.page = page;
   else query.page = 1;
-  if (myProducts === "true") query.userId = req.user?._id;
+  if (!req.user) throw new UnauthorizedError("authorization failed");
+  const userId = req.user?._id;
+  if (seller) query.seller = userId.toString();
   // LIMIT AND SKIP VALUES
   const myLimit = 20;
   const { limit, skip } = limitAndSkip({ limit: myLimit, page: Number(page) });
@@ -138,15 +148,24 @@ const getAllProducts: RequestHandler = async (req, res) => {
 const deleteProduct: RequestHandler = async (req, res) => {
   // GET PRODUCT ID FROM BODY
   const { id: productId } = req.params;
-  // FIND THE PRODUCT
-  const product = await findDocumentByIdAndModel({
+  // FIND PRODUCT
+  const checkProduct = await findDocumentByIdAndModel({
     id: productId,
     MyModel: Product,
   });
+  // GET SELLER ID
+  const sellerId = checkProduct.seller.toString();
+  // COMPARE USER AND SELLER ID
+  if (req.user)
+    userIdAndModelUserIdMatchCheck({ user: req.user, userId: sellerId });
   // DELETE THE PRODUCT
-  await Product.findOneAndDelete({ _id: productId });
-  // ! AFTER DELETING PRODUCT DELETE ALL REVIEWS IN THE FUTURE
-  res.status(StatusCodes.OK).json({ msg: "product deleted" });
+  const product = await Product.findOneAndDelete({ _id: productId });
+  // ! TEST IF IT WILL BE DELETED FROM CART ITEMS
+  // ! TEST IF REVIEWS WILL BE DELETED
+
+  res
+    .status(StatusCodes.OK)
+    .json({ msg: "product, related reviews and cart items are deleted" });
 };
 
 const getSingleProduct: RequestHandler = async (req, res) => {

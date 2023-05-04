@@ -1,4 +1,6 @@
 import { Document } from "mongoose";
+import { CartItemsInterface } from "./";
+import { ObjectId } from "mongoose";
 
 interface AddressInterface {
   street: string;
@@ -14,16 +16,19 @@ interface PhoneNumberInterface {
 
 interface CreditCardInformationInterface {
   cardNumber: string;
-  expMonth: number;
-  expYear: number;
+  expMonth: number | undefined;
+  expYear: number | undefined;
   cvc: string;
+  [key: string]: string | number | undefined | UserSchemaInterface;
 }
+
 interface UserSchemaInterface extends Document {
+  _id: ObjectId;
   name: string;
   surname: string;
   email: string;
   password: string;
-  userType: string;
+  userType: "admin" | "user" | "seller" | "courier";
   phoneNumber?: PhoneNumberInterface;
   address?: AddressInterface;
   cardInfo?: CreditCardInformationInterface;
@@ -33,6 +38,9 @@ interface UserSchemaInterface extends Document {
   verified: Date | undefined;
   passwordToken: string;
   passwordTokenExpDate: Date;
+  cartItems?: CartItemsInterface[];
+  company?: string;
+  accountNo?: string;
 }
 
 export {

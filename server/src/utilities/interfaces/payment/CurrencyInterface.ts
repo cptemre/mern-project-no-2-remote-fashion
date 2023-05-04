@@ -6,4 +6,4 @@ interface CurrencyUpperCaseInterface {
   currency: "USD" | "GBP" | "PLN" | "EUR";
 }
 
-export default CurrencyInterface;
+export { CurrencyInterface, CurrencyUpperCaseInterface };

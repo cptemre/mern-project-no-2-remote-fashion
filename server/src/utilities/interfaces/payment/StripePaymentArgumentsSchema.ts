@@ -3,8 +3,9 @@ import { ObjectId } from "mongoose";
 import {
   AddressInterface,
   CreditCardInformationInterface,
+  UserSchemaInterface,
 } from "../models/UserSchemaInterface";
-import CurrencyInterface from "./CurrencyInterface";
+import { CurrencyInterface } from "./CurrencyInterface";
 
 interface StripePaymentArgumentsSchema
   extends CurrencyInterface,

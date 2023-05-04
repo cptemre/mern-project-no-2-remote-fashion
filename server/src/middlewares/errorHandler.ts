@@ -16,7 +16,7 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 
   // DUPLICATE ERROR HANDLE
   if (err.code === 11000) {
-    customError.msg = "product is already in our system";
+    customError.msg = "document is already in our system";
     customError.statusCode = StatusCodes.CONFLICT;
   }
 
@@ -36,7 +36,7 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   }
 
   // SHOW ERROR IN CONSOLE FOR DETAILS
-  // console.log(err);
+  console.log(err);
   res.status(customError.statusCode).json({ msg: customError.msg });
 };
 

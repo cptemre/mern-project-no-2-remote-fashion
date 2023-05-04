@@ -1,5 +1,4 @@
 import { Schema, model } from "mongoose";
-import bcrypt from "bcryptjs";
 import { UserSchemaInterface } from "../utilities/interfaces/models";
 const validator = require("validator");
 import { createHash } from "../utilities/token";
@@ -39,7 +38,7 @@ const UserSchema = new Schema<UserSchemaInterface>(
     userType: {
       type: String,
       enum: {
-        values: ["admin", "user"],
+        values: ["admin", "user", "seller", "courier"],
         message: "user type is not accepted",
       },
     },
@@ -57,9 +56,22 @@ const UserSchema = new Schema<UserSchemaInterface>(
       default: false,
     },
     verified: Date,
-    // ! ADD HERE VERTOKEN EXP DATE
     passwordToken: String,
     passwordTokenExpDate: Date,
+    cartItems: {
+      type: [Object],
+      default: [],
+    },
+    company: {
+      type: String,
+      minlength: [2, "company name must be at least 2 characters"],
+      maxlength: [25, "company name can not be more than 25 characters"],
+    },
+    accountNo: {
+      type: String,
+      minlength: [15, "account no must be at least 15 characters"],
+      maxlength: [32, "account no can not be more than 32 characters"],
+    },
   },
   { timestamps: true }
 );
@@ -72,7 +84,6 @@ UserSchema.pre("save", async function () {
   if (this.isModified("name")) this.name = this.name.toUpperCase();
   if (this.isModified("surname")) this.surname = this.surname.toUpperCase();
 
-  const salt = await bcrypt.genSalt(10);
   const hash = await createHash(this.password);
 
   this.password = hash;

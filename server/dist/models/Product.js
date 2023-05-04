@@ -1,8 +1,19 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 // ALL SUB CATEGORIES
 const categories_1 = require("../utilities/categories");
+// MODELS
+const models_1 = require("../models");
 const ProductSchema = new mongoose_1.Schema({
     name: {
         type: String,
@@ -19,6 +30,15 @@ const ProductSchema = new mongoose_1.Schema({
     price: {
         type: Number,
         required: [true, "product price is required"],
+    },
+    currency: {
+        type: String,
+        enum: {
+            values: categories_1.currencyList,
+            message: `currency must be one of these: ${categories_1.currencyList}`,
+        },
+        required: false,
+        default: "gbp",
     },
     tax: {
         type: Number,
@@ -77,6 +97,20 @@ const ProductSchema = new mongoose_1.Schema({
         type: Number,
         default: 0,
     },
+    seller: mongoose_1.Types.ObjectId,
 }, { timestamps: true });
+ProductSchema.post("findOneAndDelete", function (doc) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const productId = doc._id;
+        // FIND ALL REVIEWS WITH THE PRODUCT ID MATCH
+        const reviews = yield models_1.Review.find({ product: productId });
+        // FIND AND DELETE EVERY DOCUMENT FROM REVIEWS ARRAY WITH A LOOP
+        for (let i = 0; i < reviews.length; i++) {
+            yield models_1.Review.findOneAndDelete({ _id: reviews[i]._id });
+        }
+        // FIND ALL USERS WHOSE cartItems ARRAY CONTAINS AN ITEM WITH THE SPECIFIED _id, AND REMOVE THAT ITEM FROM THE ARRAY.
+        yield models_1.User.updateMany({ "cartItems._id": productId }, { $pull: { cartItems: { _id: productId } } });
+    });
+});
 const Product = (0, mongoose_1.model)("Product", ProductSchema);
 exports.default = Product;

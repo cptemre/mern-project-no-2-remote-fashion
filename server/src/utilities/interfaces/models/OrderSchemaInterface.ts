@@ -1,13 +1,21 @@
 import { ObjectId, Document, Model } from "mongoose";
-import CurrencyInterface from "../payment/CurrencyInterface";
+import { CurrencyInterface } from "../payment/CurrencyInterface";
 
-interface SingleOrderSchemaInterface extends Document, CurrencyInterface {
+interface OrderStatusInterface {
+  status: "pending" | "paid" | "cargo" | "delivered" | "canceled" | "failed";
+}
+
+interface SingleOrderSchemaInterface
+  extends Document,
+    CurrencyInterface,
+    OrderStatusInterface {
   amount: number;
   price: number;
   tax: number;
-  status: "pending" | "failed" | "paid" | "delivered" | "canceled";
   user: ObjectId | string;
   product: ObjectId | string;
+  seller: ObjectId | string;
+  order: ObjectId | string;
   cancelTransferId?: string;
 }
 interface SingleOrderModelInterface extends Model<SingleOrderSchemaInterface> {
@@ -31,10 +39,6 @@ interface CartItemsInterface extends SingleOrderSchemaInterface {
     tax: number;
     product: string;
   };
-}
-
-interface OrderStatusInterface {
-  status: "pending" | "failed" | "paid" | "delivered" | "canceled";
 }
 
 interface OrderSchemaInterface

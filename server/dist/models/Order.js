@@ -39,7 +39,7 @@ const SingleOrderSchema = new mongoose_1.Schema({
         default: "pending",
         enum: {
             values: categories_1.orderStatusValues,
-            message: 'acceptable values: "pending" ,"failed" ,"paid" ,"delivered", "canceled"',
+            message: `status must be one of the followin: ${categories_1.orderStatusValues}`,
         },
     },
     user: {
@@ -49,6 +49,18 @@ const SingleOrderSchema = new mongoose_1.Schema({
     product: {
         type: mongoose_1.Types.ObjectId,
         required: [true, "product id is required"],
+    },
+    seller: {
+        type: mongoose_1.Types.ObjectId,
+        required: [true, "seller id is required"],
+    },
+    currency: {
+        type: String,
+        enum: {
+            values: categories_1.currencyList,
+            message: `currency must be one of the following: ${categories_1.currencyList}`,
+        },
+        default: "gbp",
     },
     cancelTransferId: String,
 }, { timestamps: true });
@@ -69,12 +81,20 @@ const OrderSchema = new mongoose_1.Schema({
         type: Number,
         required: [true, "order total price is required"],
     },
+    currency: {
+        type: String,
+        enum: {
+            values: categories_1.currencyList,
+            message: `currency must be one of the following: ${categories_1.currencyList}`,
+        },
+        default: "gbp",
+    },
     status: {
         type: String,
         default: "pending",
         enum: {
             values: categories_1.orderStatusValues,
-            message: 'acceptable values: "pending" ,"failed" ,"paid" ,"delivered", "canceled"',
+            message: `status must be one of the followin: ${categories_1.orderStatusValues}`,
         },
     },
     user: {
@@ -114,20 +134,23 @@ SingleOrderSchema.statics.updateProductStock = function ({ productId, amount, op
 // SAVE SINGLE ORDER FUNCTION CALL TO DECREASE STOCK VALUES OF THE PRODUCT
 SingleOrderSchema.pre("save", function () {
     return __awaiter(this, void 0, void 0, function* () {
-        // IF STATUS IS SAVED AS CANCELED THEN ADD IT BACK TO STOCK, ELSE IF IT IS NOT FAILED DECREASE THE STOCK
-        let operation = this.isModified(this.status) && this.status === "canceled"
-            ? "+"
-            : this.status !== "failed"
-                ? "-"
-                : "";
-        // RETURN BACK IF IT IS FAILED
-        if (operation === "")
-            return;
-        yield SingleOrder.updateProductStock({
-            productId: this.product,
-            amount: this.amount,
-            operation,
-        });
+        if (this.isModified(this.status)) {
+            console.log(this.status);
+            // IF STATUS IS SAVED AS REPAYED THEN ADD IT BACK TO STOCK, ELSE IF IT IS NOT FAILED DECREASE THE STOCK
+            let operation = this.status === "canceled" || this.status === "failed"
+                ? "+"
+                : this.status === "paid"
+                    ? "-"
+                    : "";
+            // RETURN BACK IF IT IS FAILED
+            if (operation === "")
+                return;
+            yield SingleOrder.updateProductStock({
+                productId: this.product,
+                amount: this.amount,
+                operation,
+            });
+        }
     });
 });
 // DELETE SINGLE ORDER FUNCTION CALL TO INCREASE STOCK VALUES OF THE PRODUCT

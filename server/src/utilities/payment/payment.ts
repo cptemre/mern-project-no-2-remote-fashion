@@ -14,6 +14,7 @@ import { UserSchemaInterface } from "../interfaces/models";
 
 // MONGOOSE
 import { ObjectId } from "mongoose";
+import { BadRequestError, PaymentRequiredError } from "../../errors";
 const createPayment = async ({
   totalPrice,
   currency,
@@ -31,6 +32,20 @@ const createPayment = async ({
   user: UserSchemaInterface & { _id: ObjectId };
 }) => {
   try {
+    if (
+      !totalPrice ||
+      !currency ||
+      !expMonth ||
+      !expYear ||
+      !cvc ||
+      !street ||
+      !city ||
+      !postalCode ||
+      !country ||
+      !state ||
+      !user
+    )
+      throw new BadRequestError("invalid credentials");
     // NAME OF THE CUSTOMER
     const name = user.name + " " + user.surname;
     // EMAIL OF THE USER
@@ -50,8 +65,10 @@ const createPayment = async ({
     // * CUSTOMER
     const customer = await createOrGetCustomer({ name, email, phone, address });
     // * PAYMENT METHOD
+
     const paymentMethod: Stripe.PaymentMethod =
       await stripe.paymentMethods.create({
+        type: "card",
         card: {
           number: cardNumber,
           exp_month: expMonth,
@@ -62,8 +79,10 @@ const createPayment = async ({
           name,
           email,
           address,
+          phone,
         },
       });
+
     // * PAYMENT INTENT TO GET ID & SECRET IN CONTROLLER TO ADD IT TO THE ORDER MODEL
     const paymentIntent = createPaymentIntent({
       totalPrice,
@@ -71,6 +90,8 @@ const createPayment = async ({
       paymentMethodId: paymentMethod.id,
       customerId: customer.id,
     });
+    if (!paymentIntent) throw new PaymentRequiredError("payment required");
+
     return paymentIntent;
   } catch (error) {
     console.error(error);
@@ -92,12 +113,11 @@ const createPaymentIntent = async ({
   // PAYMENT IS CONFIRMED DIRECTLY FOR TESTING
   const paymentIntent: Stripe.PaymentIntent =
     await stripe.paymentIntents.create({
-      amount: totalPrice,
+      amount: Math.round(totalPrice * 100),
       currency,
       automatic_payment_methods: {
         enabled: true,
       },
-      payment_method_types: ["card"],
       payment_method: paymentMethodId,
       return_url: process.env.CLIENT_ADDRESS + "/payment-verified",
       customer: customerId,

@@ -16,14 +16,14 @@ const currencyExchangeRates = async ({
       params: {
         to,
         from,
-        amount,
+        amount: (amount / 100).toFixed(2),
       },
     });
 
     // THIS RETURNS THE CONVERTED VALUE OF NEW CURRENCY
     const exchangedValue: number = response.data.result;
-    console.log(exchangedValue);
-    if (exchangedValue) return exchangedValue;
+    console.log("exchangedValue", exchangedValue);
+    if (exchangedValue) return Number(exchangedValue.toFixed(2)) * 100;
   } catch (error) {
     console.error(error);
   }

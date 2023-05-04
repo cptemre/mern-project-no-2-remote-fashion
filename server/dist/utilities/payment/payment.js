@@ -18,9 +18,22 @@ const stripe_1 = __importDefault(require("stripe"));
 const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY, {
     apiVersion: "2022-11-15",
 });
+const errors_1 = require("../../errors");
 const createPayment = ({ totalPrice, currency, cardNumber, expMonth, expYear, cvc, street, city, postalCode, country, state, user, }) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     try {
+        if (!totalPrice ||
+            !currency ||
+            !expMonth ||
+            !expYear ||
+            !cvc ||
+            !street ||
+            !city ||
+            !postalCode ||
+            !country ||
+            !state ||
+            !user)
+            throw new errors_1.BadRequestError("invalid credentials");
         // NAME OF THE CUSTOMER
         const name = user.name + " " + user.surname;
         // EMAIL OF THE USER
@@ -41,6 +54,7 @@ const createPayment = ({ totalPrice, currency, cardNumber, expMonth, expYear, cv
         const customer = yield createOrGetCustomer({ name, email, phone, address });
         // * PAYMENT METHOD
         const paymentMethod = yield stripe.paymentMethods.create({
+            type: "card",
             card: {
                 number: cardNumber,
                 exp_month: expMonth,
@@ -51,6 +65,7 @@ const createPayment = ({ totalPrice, currency, cardNumber, expMonth, expYear, cv
                 name,
                 email,
                 address,
+                phone,
             },
         });
         // * PAYMENT INTENT TO GET ID & SECRET IN CONTROLLER TO ADD IT TO THE ORDER MODEL
@@ -60,6 +75,8 @@ const createPayment = ({ totalPrice, currency, cardNumber, expMonth, expYear, cv
             paymentMethodId: paymentMethod.id,
             customerId: customer.id,
         });
+        if (!paymentIntent)
+            throw new errors_1.PaymentRequiredError("payment required");
         return paymentIntent;
     }
     catch (error) {
@@ -71,12 +88,11 @@ exports.createPayment = createPayment;
 const createPaymentIntent = ({ totalPrice, currency, paymentMethodId, customerId, }) => __awaiter(void 0, void 0, void 0, function* () {
     // PAYMENT IS CONFIRMED DIRECTLY FOR TESTING
     const paymentIntent = yield stripe.paymentIntents.create({
-        amount: totalPrice,
+        amount: Math.round(totalPrice * 100),
         currency,
         automatic_payment_methods: {
             enabled: true,
         },
-        payment_method_types: ["card"],
         payment_method: paymentMethodId,
         return_url: process.env.CLIENT_ADDRESS + "/payment-verified",
         customer: customerId,

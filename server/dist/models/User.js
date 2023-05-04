@@ -8,12 +8,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const validator = require("validator");
 const token_1 = require("../utilities/token");
 // * SCHEMA
@@ -50,7 +46,7 @@ const UserSchema = new mongoose_1.Schema({
     userType: {
         type: String,
         enum: {
-            values: ["admin", "user"],
+            values: ["admin", "user", "seller", "courier"],
             message: "user type is not accepted",
         },
     },
@@ -68,9 +64,22 @@ const UserSchema = new mongoose_1.Schema({
         default: false,
     },
     verified: Date,
-    // ! ADD HERE VERTOKEN EXP DATE
     passwordToken: String,
     passwordTokenExpDate: Date,
+    cartItems: {
+        type: [Object],
+        default: [],
+    },
+    company: {
+        type: String,
+        minlength: [2, "company name must be at least 2 characters"],
+        maxlength: [25, "company name can not be more than 25 characters"],
+    },
+    accountNo: {
+        type: String,
+        minlength: [15, "account no must be at least 15 characters"],
+        maxlength: [32, "account no can not be more than 32 characters"],
+    },
 }, { timestamps: true });
 // * HASH PASSWORD BEFORE SAVING THE USER
 UserSchema.pre("save", function () {
@@ -83,7 +92,6 @@ UserSchema.pre("save", function () {
             this.name = this.name.toUpperCase();
         if (this.isModified("surname"))
             this.surname = this.surname.toUpperCase();
-        const salt = yield bcryptjs_1.default.genSalt(10);
         const hash = yield (0, token_1.createHash)(this.password);
         this.password = hash;
     });

@@ -7,7 +7,7 @@ import {
   OrderSchemaInterface,
 } from "../utilities/interfaces/models";
 // VALUES ARRAY
-import { orderStatusValues } from "../utilities/categories";
+import { currencyList, orderStatusValues } from "../utilities/categories";
 // MODELS
 import Product from "./Product";
 // UTILITIES
@@ -32,8 +32,7 @@ const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>(
       default: "pending",
       enum: {
         values: orderStatusValues,
-        message:
-          'acceptable values: "pending" ,"failed" ,"paid" ,"delivered", "canceled"',
+        message: `status must be one of the followin: ${orderStatusValues}`,
       },
     },
     user: {
@@ -43,6 +42,18 @@ const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>(
     product: {
       type: Types.ObjectId,
       required: [true, "product id is required"],
+    },
+    seller: {
+      type: Types.ObjectId,
+      required: [true, "seller id is required"],
+    },
+    currency: {
+      type: String,
+      enum: {
+        values: currencyList,
+        message: `currency must be one of the following: ${currencyList}`,
+      },
+      default: "gbp",
     },
     cancelTransferId: String,
   },
@@ -67,13 +78,20 @@ const OrderSchema = new Schema<OrderSchemaInterface>(
       type: Number,
       required: [true, "order total price is required"],
     },
+    currency: {
+      type: String,
+      enum: {
+        values: currencyList,
+        message: `currency must be one of the following: ${currencyList}`,
+      },
+      default: "gbp",
+    },
     status: {
       type: String,
       default: "pending",
       enum: {
         values: orderStatusValues,
-        message:
-          'acceptable values: "pending" ,"failed" ,"paid" ,"delivered", "canceled"',
+        message: `status must be one of the followin: ${orderStatusValues}`,
       },
     },
     user: {
@@ -118,21 +136,25 @@ SingleOrderSchema.statics.updateProductStock = async function ({
 };
 // SAVE SINGLE ORDER FUNCTION CALL TO DECREASE STOCK VALUES OF THE PRODUCT
 SingleOrderSchema.pre("save", async function () {
-  // IF STATUS IS SAVED AS CANCELED THEN ADD IT BACK TO STOCK, ELSE IF IT IS NOT FAILED DECREASE THE STOCK
-  let operation: "+" | "-" | "" =
-    this.isModified(this.status) && this.status === "canceled"
-      ? "+"
-      : this.status !== "failed"
-      ? "-"
-      : "";
-  // RETURN BACK IF IT IS FAILED
-  if (operation === "") return;
+  if (this.isModified(this.status)) {
+    console.log(this.status);
 
-  await SingleOrder.updateProductStock({
-    productId: this.product as string,
-    amount: this.amount,
-    operation,
-  });
+    // IF STATUS IS SAVED AS REPAYED THEN ADD IT BACK TO STOCK, ELSE IF IT IS NOT FAILED DECREASE THE STOCK
+    let operation: "+" | "-" | "" =
+      this.status === "canceled" || this.status === "failed"
+        ? "+"
+        : this.status === "paid"
+        ? "-"
+        : "";
+    // RETURN BACK IF IT IS FAILED
+    if (operation === "") return;
+
+    await SingleOrder.updateProductStock({
+      productId: this.product as string,
+      amount: this.amount,
+      operation,
+    });
+  }
 });
 // DELETE SINGLE ORDER FUNCTION CALL TO INCREASE STOCK VALUES OF THE PRODUCT
 SingleOrderSchema.post("findOneAndDelete", async function (doc) {

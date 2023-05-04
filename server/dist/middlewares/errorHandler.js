@@ -9,7 +9,7 @@ const errorHandler = (err, req, res, next) => {
     };
     // DUPLICATE ERROR HANDLE
     if (err.code === 11000) {
-        customError.msg = "product is already in our system";
+        customError.msg = "document is already in our system";
         customError.statusCode = http_status_codes_1.StatusCodes.CONFLICT;
     }
     // CAST ERROR HANDLE
@@ -24,7 +24,7 @@ const errorHandler = (err, req, res, next) => {
         customError.statusCode = http_status_codes_1.StatusCodes.UNPROCESSABLE_ENTITY;
     }
     // SHOW ERROR IN CONSOLE FOR DETAILS
-    // console.log(err);
+    console.log(err);
     res.status(customError.statusCode).json({ msg: customError.msg });
 };
 exports.default = errorHandler;

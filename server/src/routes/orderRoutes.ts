@@ -21,14 +21,14 @@ router
 router.get(
   "/single-order",
   authUser,
-  authRole("admin", "user"),
+  authRole("admin", "user", "seller"),
   getAllSingleOrders
 );
 
 router.get(
   "/single-order/:id",
   authUser,
-  authRole("admin", "user"),
+  authRole("admin", "user", "seller"),
   getSingleOrder
 );
 
@@ -42,6 +42,6 @@ router.get(
 router
   .route("/:id")
   .get(authUser, authRole("admin", "user"), getOrder)
-  .patch(authUser, authRole("admin"), updateOrder);
+  .patch(authUser, authRole("admin", "user", "seller"), updateOrder);
 
 export default router;

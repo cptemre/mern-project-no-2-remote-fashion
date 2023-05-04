@@ -23,14 +23,14 @@ const currencyExchangeRates = ({ from, to, amount, }) => __awaiter(void 0, void 
             params: {
                 to,
                 from,
-                amount,
+                amount: (amount / 100).toFixed(2),
             },
         });
         // THIS RETURNS THE CONVERTED VALUE OF NEW CURRENCY
         const exchangedValue = response.data.result;
-        console.log(exchangedValue);
+        console.log("exchangedValue", exchangedValue);
         if (exchangedValue)
-            return exchangedValue;
+            return Number(exchangedValue.toFixed(2)) * 100;
     }
     catch (error) {
         console.error(error);

@@ -1,6 +1,8 @@
 import { Document } from "mongoose";
+import { ObjectId } from "mongoose";
+import { CurrencyInterface } from "../payment";
 
-interface ProductSchemaInterface extends Document {
+interface ProductSchemaInterface extends Document, CurrencyInterface {
   name: string;
   brand: string;
   price: number;
@@ -14,6 +16,7 @@ interface ProductSchemaInterface extends Document {
   numberOfReviews: number;
   averageRating: number;
   stock: number;
+  seller: ObjectId;
 }
 
 export default ProductSchemaInterface;
