@@ -2,7 +2,7 @@ import { ObjectId, Document, Model } from "mongoose";
 import { CurrencyInterface } from "../payment/CurrencyInterface";
 
 interface OrderStatusInterface {
-  status: "pending" | "failed" | "paid" | "delivered" | "canceled" | "repayed";
+  status: "pending" | "paid" | "cargo" | "delivered" | "canceled" | "failed";
 }
 
 interface SingleOrderSchemaInterface

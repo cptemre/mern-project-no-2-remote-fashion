@@ -10,7 +10,7 @@ interface GetAllProductsReqBodyInterface {
   isStock: boolean;
   rating: string;
   gender: "M" | "F" | "B";
-  page: string;
+  page: number;
   myProducts: boolean;
   seller: ObjectId;
 }

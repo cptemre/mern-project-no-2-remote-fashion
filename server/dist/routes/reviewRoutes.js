@@ -12,6 +12,9 @@ router
     .get(reviewController_1.getAllReviews)
     .post(authorization_1.authUser, (0, authorization_1.authRole)("admin", "user"), reviewController_1.createReview);
 router
+    .route("/my-reviews")
+    .get(authorization_1.authUser, (0, authorization_1.authRole)("admin", "user"), reviewController_1.getMyAllReviews);
+router
     .route("/:id")
     .get(reviewController_1.getSingleReview)
     .delete(authorization_1.authUser, (0, authorization_1.authRole)("admin", "user"), reviewController_1.deleteReview)

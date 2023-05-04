@@ -101,12 +101,16 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
         query.rating = Number(rating);
     if (gender)
         query.gender = gender;
+    console.log(page);
     if (page)
-        query.page = Number(page);
+        query.page = page;
     else
         query.page = 1;
+    if (!req.user)
+        throw new errors_1.UnauthorizedError("authorization failed");
+    const userId = (_b = req.user) === null || _b === void 0 ? void 0 : _b._id;
     if (seller)
-        query.seller = (_b = req.user) === null || _b === void 0 ? void 0 : _b._id;
+        query.seller = userId.toString();
     // LIMIT AND SKIP VALUES
     const myLimit = 20;
     const { limit, skip } = (0, controllers_1.limitAndSkip)({ limit: myLimit, page: Number(page) });
@@ -133,7 +137,8 @@ const deleteProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId: sellerId });
     // DELETE THE PRODUCT
     const product = yield models_1.Product.findOneAndDelete({ _id: productId });
-    //
+    // ! TEST IF IT WILL BE DELETED FROM CART ITEMS
+    // ! TEST IF REVIEWS WILL BE DELETED
     res
         .status(http_status_codes_1.StatusCodes.OK)
         .json({ msg: "product, related reviews and cart items are deleted" });

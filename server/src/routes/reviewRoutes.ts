@@ -3,6 +3,7 @@ const router = express();
 
 import {
   getAllReviews,
+  getMyAllReviews,
   getSingleReview,
   createReview,
   deleteReview,
@@ -15,6 +16,9 @@ router
   .route("/")
   .get(getAllReviews)
   .post(authUser, authRole("admin", "user"), createReview);
+router
+  .route("/my-reviews")
+  .get(authUser, authRole("admin", "user"), getMyAllReviews);
 router
   .route("/:id")
   .get(getSingleReview)

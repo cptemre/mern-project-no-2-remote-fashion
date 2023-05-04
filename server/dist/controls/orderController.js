@@ -25,13 +25,16 @@ const errors_1 = require("../errors");
 const http_status_codes_1 = require("http-status-codes");
 const currencyExchangeRates_1 = __importDefault(require("../utilities/payment/currencyExchangeRates"));
 const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c;
+    var _a, _b;
     // TODO COUNTRY MUST BE CAPITAL SHORT NAME SUCH AS US. CREATE AN INTERFACE FOR IT
     // CLIENT SIDE REQUESTS
     const { currency, cardNumber, expMonth, expYear, cvc, street, city, postalCode, country, state, } = req.body;
     // GET CART ITEMS FROM THE USER DOCUMENT
+    if (!req.user)
+        throw new errors_1.UnauthorizedError("authorization failed");
+    const userId = req.user._id;
     const user = yield (0, controllers_1.findDocumentByIdAndModel)({
-        id: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id,
+        id: userId.toString(),
         MyModel: models_1.User,
     });
     //
@@ -97,7 +100,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             price: priceVal,
             tax,
             currency,
-            user: (_b = req.user) === null || _b === void 0 ? void 0 : _b._id,
+            user: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id,
             seller,
             product,
         });
@@ -165,7 +168,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         totalPrice,
         currency,
         status: "paid",
-        user: (_c = req.user) === null || _c === void 0 ? void 0 : _c._id,
+        user: (_b = req.user) === null || _b === void 0 ? void 0 : _b._id,
         clientSecret: client_secret,
         paymentIntentID: paymentIntentId,
     });
@@ -219,19 +222,19 @@ const getAllSingleOrders = (req, res) => __awaiter(void 0, void 0, void 0, funct
 });
 exports.getAllSingleOrders = getAllSingleOrders;
 const getSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _d, _e, _f, _g;
+    var _c, _d, _e, _f;
     // GET CLIENT SIDE QUERIES
     const { id: singleOrderId } = req.params;
     // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
     if (!singleOrderId)
         throw new errors_1.BadRequestError("single order id is required");
     // FIND THE SINGLE ORDER
-    const userId = ((_d = req.user) === null || _d === void 0 ? void 0 : _d.userType) === "user" && ((_e = req.user) === null || _e === void 0 ? void 0 : _e._id);
-    const sellerId = ((_f = req.user) === null || _f === void 0 ? void 0 : _f.userType) === "seller" && ((_g = req.user) === null || _g === void 0 ? void 0 : _g._id);
+    const userId = ((_c = req.user) === null || _c === void 0 ? void 0 : _c.userType) === "user" && ((_d = req.user) === null || _d === void 0 ? void 0 : _d._id);
+    const sellerId = ((_e = req.user) === null || _e === void 0 ? void 0 : _e.userType) === "seller" && ((_f = req.user) === null || _f === void 0 ? void 0 : _f._id);
     const singleOrder = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: singleOrderId,
-        user: userId,
-        seller: sellerId,
+        user: userId.toString(),
+        seller: sellerId.toString(),
         MyModel: models_1.SingleOrder,
     });
     // CHECK USER MATCHES WITH THE SINGLE ORDER USER
@@ -282,18 +285,18 @@ const getAllOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.getAllOrders = getAllOrders;
 const getOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _h, _j;
+    var _g, _h;
     // GET CLIENT SIDE QUERY
     const { id: orderId } = req.params;
     // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
     if (!orderId)
         throw new errors_1.BadRequestError("order id is required");
     // FIND THE SINGLE ORDER
-    const userId = ((_h = req.user) === null || _h === void 0 ? void 0 : _h.userType) === "user" && ((_j = req.user) === null || _j === void 0 ? void 0 : _j._id);
+    const userId = ((_g = req.user) === null || _g === void 0 ? void 0 : _g.userType) === "user" && ((_h = req.user) === null || _h === void 0 ? void 0 : _h._id);
     // FIND THE SINGLE ORDER
     const order = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: orderId,
-        user: userId,
+        user: userId.toString(),
         MyModel: models_1.Order,
     });
     // CHECK USER MATCHES WITH THE ORDER USER OR IT IS ADMIN

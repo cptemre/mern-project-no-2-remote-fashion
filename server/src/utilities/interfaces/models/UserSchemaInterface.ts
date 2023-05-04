@@ -1,5 +1,7 @@
 import { Document } from "mongoose";
 import { CartItemsInterface } from "./";
+import { ObjectId } from "mongoose";
+
 interface AddressInterface {
   street: string;
   city: string;
@@ -21,6 +23,7 @@ interface CreditCardInformationInterface {
 }
 
 interface UserSchemaInterface extends Document {
+  _id: ObjectId;
   name: string;
   surname: string;
   email: string;

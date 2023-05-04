@@ -39,7 +39,7 @@ const SingleOrderSchema = new mongoose_1.Schema({
         default: "pending",
         enum: {
             values: categories_1.orderStatusValues,
-            message: 'acceptable values: "pending" ,"failed" ,"paid" ,"delivered", "canceled"',
+            message: `status must be one of the followin: ${categories_1.orderStatusValues}`,
         },
     },
     user: {
@@ -94,7 +94,7 @@ const OrderSchema = new mongoose_1.Schema({
         default: "pending",
         enum: {
             values: categories_1.orderStatusValues,
-            message: 'acceptable values: "pending" ,"failed" ,"paid" ,"delivered", "canceled"',
+            message: `status must be one of the followin: ${categories_1.orderStatusValues}`,
         },
     },
     user: {
@@ -137,9 +137,7 @@ SingleOrderSchema.pre("save", function () {
         if (this.isModified(this.status)) {
             console.log(this.status);
             // IF STATUS IS SAVED AS REPAYED THEN ADD IT BACK TO STOCK, ELSE IF IT IS NOT FAILED DECREASE THE STOCK
-            let operation = this.status === "repayed" ||
-                this.status === "canceled" ||
-                this.status === "failed"
+            let operation = this.status === "canceled" || this.status === "failed"
                 ? "+"
                 : this.status === "paid"
                     ? "-"

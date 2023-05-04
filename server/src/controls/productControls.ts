@@ -127,9 +127,13 @@ const getAllProducts: RequestHandler = async (req, res) => {
   if (isStock) query.stock = { $gt: 0 };
   if (rating) query.rating = Number(rating);
   if (gender) query.gender = gender;
-  if (page) query.page = Number(page);
+  console.log(page);
+
+  if (page) query.page = page;
   else query.page = 1;
-  if (seller) query.seller = req.user?._id;
+  if (!req.user) throw new UnauthorizedError("authorization failed");
+  const userId = req.user?._id;
+  if (seller) query.seller = userId.toString();
   // LIMIT AND SKIP VALUES
   const myLimit = 20;
   const { limit, skip } = limitAndSkip({ limit: myLimit, page: Number(page) });
@@ -156,7 +160,8 @@ const deleteProduct: RequestHandler = async (req, res) => {
     userIdAndModelUserIdMatchCheck({ user: req.user, userId: sellerId });
   // DELETE THE PRODUCT
   const product = await Product.findOneAndDelete({ _id: productId });
-  //
+  // ! TEST IF IT WILL BE DELETED FROM CART ITEMS
+  // ! TEST IF REVIEWS WILL BE DELETED
 
   res
     .status(StatusCodes.OK)

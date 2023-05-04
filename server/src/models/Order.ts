@@ -32,8 +32,7 @@ const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>(
       default: "pending",
       enum: {
         values: orderStatusValues,
-        message:
-          'acceptable values: "pending" ,"failed" ,"paid" ,"delivered", "canceled"',
+        message: `status must be one of the followin: ${orderStatusValues}`,
       },
     },
     user: {
@@ -92,8 +91,7 @@ const OrderSchema = new Schema<OrderSchemaInterface>(
       default: "pending",
       enum: {
         values: orderStatusValues,
-        message:
-          'acceptable values: "pending" ,"failed" ,"paid" ,"delivered", "canceled"',
+        message: `status must be one of the followin: ${orderStatusValues}`,
       },
     },
     user: {
@@ -143,9 +141,7 @@ SingleOrderSchema.pre("save", async function () {
 
     // IF STATUS IS SAVED AS REPAYED THEN ADD IT BACK TO STOCK, ELSE IF IT IS NOT FAILED DECREASE THE STOCK
     let operation: "+" | "-" | "" =
-      this.status === "repayed" ||
-      this.status === "canceled" ||
-      this.status === "failed"
+      this.status === "canceled" || this.status === "failed"
         ? "+"
         : this.status === "paid"
         ? "-"

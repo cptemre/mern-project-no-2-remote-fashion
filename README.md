@@ -93,3 +93,28 @@
 ## UPDATE ORDER
 
 - Will be tested after courier functionalities are ready.
+
+# REVIEW CONTROLLERS
+
+## CREATE REVIEW
+
+- Works for user and admin.
+- Only 1 review can be made.
+- Only if they bought the product they can review.
+
+## GET ALL REVIEWS
+
+- Visible to everyone.
+- Sends back the length of reviews as well for pagination.
+
+## GET MY ALL REVIEWS
+
+- Only sends back the reviews which user has.
+
+## UPDATE REVIEW
+
+- Users can update their own products.
+
+## DELETE REVIEW
+
+- Users can delete their own products.

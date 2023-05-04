@@ -24,6 +24,7 @@ const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     const { name, surname, email, userType, country, isVerified, userPage, } = req.body;
     // QUERY OBJECT TO FIND NEEDED USERS
     const query = {};
+    console.log(userType);
     // SET QUERY KEYS
     if (name)
         query.name = name;
@@ -38,7 +39,7 @@ const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     if (isVerified)
         query.isVerified = isVerified;
     // GET USERS
-    const result = models_1.User.find({ query }).select("-password");
+    const result = models_1.User.find(query).select("-password -passwordToken");
     // LIMIT AND SKIP VALUES
     const myLimit = 20;
     const { limit, skip } = (0, controllers_1.limitAndSkip)({ limit: myLimit, page: userPage });

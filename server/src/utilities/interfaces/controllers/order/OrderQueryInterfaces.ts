@@ -5,7 +5,7 @@ import { SingleOrderSchemaInterface } from "../../models";
 // STATUS SCHEMA
 import { OrderStatusInterface } from "../../models";
 // PRICE INTERFACE FOR QUERY GTE & LTE
-import { priceQueryInterface } from "../";
+import { PriceQueryInterface } from "..";
 // MONGOOSE
 import { ObjectId } from "mongoose";
 
@@ -22,7 +22,7 @@ interface SingleOrderQuery extends CurrencyInterface {
 // TO GET REQ FROM CLIENT SIDE
 interface OrderClientReqInterface
   extends CurrencyInterface,
-    priceQueryInterface,
+    PriceQueryInterface,
     OrderStatusInterface {
   shippingFee: { $gt: number } | 0;
   user: ObjectId | string;

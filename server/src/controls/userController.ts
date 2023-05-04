@@ -34,7 +34,16 @@ const getAllUsers: RequestHandler = async (req, res) => {
     "phoneNumber | address | cardNumber | avatar | verificationToken | verified | passwordToken | passwordTokenExpDate"
   > & { country: string; userPage: number } = req.body;
   // QUERY OBJECT TO FIND NEEDED USERS
-  const query: Partial<UserSchemaInterface> & { country?: string } = {};
+  const query: {
+    name?: string;
+    surname?: string;
+    email?: string;
+    userType?: string;
+    country?: string;
+    isVerified?: boolean;
+  } = {};
+  console.log(userType);
+
   // SET QUERY KEYS
   if (name) query.name = name;
   if (surname) query.surname = surname;
@@ -43,7 +52,7 @@ const getAllUsers: RequestHandler = async (req, res) => {
   if (country) query.country = country;
   if (isVerified) query.isVerified = isVerified;
   // GET USERS
-  const result = User.find({ query }).select("-password");
+  const result = User.find(query).select("-password -passwordToken");
   // LIMIT AND SKIP VALUES
   const myLimit = 20;
   const { limit, skip } = limitAndSkip({ limit: myLimit, page: userPage });

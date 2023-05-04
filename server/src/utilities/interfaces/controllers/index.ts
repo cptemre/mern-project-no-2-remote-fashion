@@ -8,9 +8,11 @@ import GetAllProductsReqBodyInterface from "./product/GetAllProductsReqBodyInter
 import {
   OrderClientReqInterface,
   SingleOrderQuery,
-} from "./order/orderQueryInterfaces";
+} from "./order/OrderQueryInterfaces";
 // CUSTOM
-import priceQueryInterface from "./custom/priceQueryInterface";
+import PriceQueryInterface from "./custom/PriceQueryInterface";
+// GET USERS
+import GetAllUsersInterface from "./user/GetAllUsersInterface";
 
 export {
   RegisterVerificationInterface,
@@ -18,6 +20,7 @@ export {
   GetAllProductsQueryInterface,
   GetAllProductsReqBodyInterface,
   OrderClientReqInterface,
-  priceQueryInterface,
+  PriceQueryInterface,
   SingleOrderQuery,
+  GetAllUsersInterface,
 };

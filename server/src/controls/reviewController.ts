@@ -5,6 +5,7 @@ import {
   findDocumentByIdAndModel,
   userIdAndModelUserIdMatchCheck,
   limitAndSkip,
+  getAllReviewsController,
 } from "../utilities/controllers";
 // MODELS
 import { Review, Product, SingleOrder } from "../models";
@@ -12,7 +13,7 @@ import { Review, Product, SingleOrder } from "../models";
 import { StatusCodes } from "http-status-codes";
 // INTERFACES
 import { ReviewSchemaInterface } from "../utilities/interfaces/models";
-import { UnauthorizedError } from "../errors";
+import { BadRequestError, UnauthorizedError } from "../errors";
 
 const createReview: RequestHandler = async (req, res) => {
   // REVIEW KEYS FROM THE CLIENT TO CREATE A NEW REVIEW
@@ -32,8 +33,11 @@ const createReview: RequestHandler = async (req, res) => {
     MyModel: Product,
   });
 
-  // CHECK IF THE USER ORDERED THIS PRODUCT
-  const singleOrder = await SingleOrder.findOne({ user: req.user?._id });
+  // CHECK IF THE USER ORDERED THIS PRODUCT BEFORE
+  const singleOrder = await SingleOrder.findOne({
+    user: req.user?._id,
+    product: productId,
+  });
   if (!singleOrder)
     throw new UnauthorizedError("you did not purchase this item");
 
@@ -55,7 +59,8 @@ const deleteReview: RequestHandler = async (req, res) => {
   // GET REVIEW ID
   const { id: reviewId } = req.params;
   // USER AUTH ID
-  const userId: string = req.user?._id;
+  if (!req.user) throw new UnauthorizedError("authorization failed");
+  const userId: string = req.user?._id.toString();
   // FIND REVIEW FROM DB
   const review = await findDocumentByIdAndModel({
     id: reviewId,
@@ -84,7 +89,8 @@ const updateReview: RequestHandler = async (req, res) => {
     rating,
   }: Omit<ReviewSchemaInterface, "user | product"> = req.body;
   // USER AUTH ID
-  const userId: string = req.user?._id;
+  if (!req.user) throw new UnauthorizedError("authorization failed");
+  const userId: string = req.user?._id.toString();
   // FIND THE REVIEW
   const review = await findDocumentByIdAndModel({
     id: reviewId,
@@ -104,53 +110,50 @@ const updateReview: RequestHandler = async (req, res) => {
   // SAVE THE REVIEW AFTER UPDATE
   await review.save();
   // SEND RES
-  res.status(StatusCodes.OK).json({ msg: "review updated", review });
+  res.status(StatusCodes.OK).json({ msg: "review updated", result: review });
 };
 
 const getSingleReview: RequestHandler = async (req, res) => {
   // GET REVIEW ID
   const { id: reviewId } = req.params;
-  // GET IF YOU REQUIRE YOUR OWN REVIEWS
-  const { myReview }: { myReview: string } = req.body;
-  // USER AUTH ID
-  const userId: string = myReview === "true" ? req.user?._id : null;
   // GET THE REVIEW
-  const review = await findDocumentByIdAndModel({
+  const result = await findDocumentByIdAndModel({
     id: reviewId,
-    user: userId,
     MyModel: Review,
   });
-  res.status(StatusCodes.OK).json({ msg: "review fetched", review });
+  res.status(StatusCodes.OK).json({ msg: "review fetched", result });
 };
 
 const getAllReviews: RequestHandler = async (req, res) => {
-  // GET PRODUCT ID
-  const { productId } = req.body;
   // GET REVIEW PAGE
-  const { reviewPage, myReviews }: { reviewPage: number; myReviews: boolean } =
-    req.body;
-  // USER AUTH ID
-  const userId: string = myReviews ? req.user?._id : null;
-  // FIND THE REVIEW
-  const product = await findDocumentByIdAndModel({
-    id: productId,
-    user: userId,
-    MyModel: Product,
-  });
-  // FIND THE REVIEWS BY PRODUCT ID AND USER ID IF REQUIRED
-  const query: { product: string; user?: string } = { product: "" };
-  query.product = productId;
-  if (myReviews) query.user = req.user?._id;
-  // LIMIT AND SKIP VALUES
-  const myLimit = 5;
-  const { limit, skip } = limitAndSkip({ limit: myLimit, page: reviewPage });
-  const result = Review.find(query);
-  const reviews = await result.skip(skip).limit(limit);
-  res.status(StatusCodes.OK).json({ msg: "reviews fetched", product, reviews });
+  const {
+    reviewPage,
+    product: productId,
+  }: {
+    reviewPage: number;
+    product: string;
+  } = req.body;
+
+  return getAllReviewsController({ reviewPage, productId, res });
 };
 
+const getMyAllReviews: RequestHandler = async (req, res) => {
+  // GET REVIEW PAGE
+  const {
+    reviewPage,
+    product: productId,
+  }: {
+    reviewPage: number;
+    product: string;
+  } = req.body;
+  const userId = req.user?._id.toString();
+  console.log(userId);
+
+  return getAllReviewsController({ userId, reviewPage, productId, res });
+};
 export {
   getAllReviews,
+  getMyAllReviews,
   getSingleReview,
   createReview,
   deleteReview,

@@ -57,8 +57,10 @@ const createOrder: RequestHandler = async (req, res) => {
     state,
   }: StripePaymentArgumentsSchema = req.body;
   // GET CART ITEMS FROM THE USER DOCUMENT
+  if (!req.user) throw new UnauthorizedError("authorization failed");
+  const userId = req.user._id;
   const user = await findDocumentByIdAndModel({
-    id: req.user?._id,
+    id: userId.toString(),
     MyModel: User,
   });
   //
@@ -267,8 +269,8 @@ const getSingleOrder: RequestHandler = async (req, res) => {
 
   const singleOrder = await findDocumentByIdAndModel({
     id: singleOrderId,
-    user: userId,
-    seller: sellerId,
+    user: userId.toString(),
+    seller: sellerId.toString(),
     MyModel: SingleOrder,
   });
   // CHECK USER MATCHES WITH THE SINGLE ORDER USER
@@ -332,7 +334,7 @@ const getOrder: RequestHandler = async (req, res) => {
   // FIND THE SINGLE ORDER
   const order = await findDocumentByIdAndModel({
     id: orderId,
-    user: userId,
+    user: userId.toString(),
     MyModel: Order,
   });
   // CHECK USER MATCHES WITH THE ORDER USER OR IT IS ADMIN

@@ -1,9 +1,10 @@
 const orderStatusValues = [
   "pending",
-  "failed",
   "paid",
+  "cargo",
   "delivered",
   "canceled",
+  "failed",
 ];
 
 export { orderStatusValues };
