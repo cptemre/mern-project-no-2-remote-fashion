@@ -70,6 +70,7 @@ const UserSchema = new mongoose_1.Schema({
         type: [Object],
         default: [],
     },
+    // ! This has to be updated if you change it to seller or courier
     company: {
         type: String,
         minlength: [2, "company name must be at least 2 characters"],

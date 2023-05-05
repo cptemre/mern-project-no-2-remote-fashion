@@ -21,6 +21,8 @@ const categories_1 = require("../utilities/categories");
 const Product_1 = __importDefault(require("./Product"));
 // UTILITIES
 const controllers_1 = require("../utilities/controllers");
+// CATEGORY
+const categories_2 = require("../utilities/categories");
 const SingleOrderSchema = new mongoose_1.Schema({
     amount: {
         type: Number,
@@ -39,8 +41,24 @@ const SingleOrderSchema = new mongoose_1.Schema({
         default: "pending",
         enum: {
             values: categories_1.orderStatusValues,
-            message: `status must be one of the followin: ${categories_1.orderStatusValues}`,
+            message: `status must be one of the following: ${categories_1.orderStatusValues}`,
         },
+    },
+    orderInformation: {
+        type: String,
+        enum: {
+            values: categories_2.orderInformationArray,
+            message: `order information must be one of the following: ${categories_2.orderInformationArray}`,
+        },
+        default: categories_2.recievedMsg,
+    },
+    address: {
+        type: Object,
+        required: [true, "user address is required"],
+    },
+    phoneNumber: {
+        type: Object,
+        required: [true, "user phone number is required"],
     },
     user: {
         type: mongoose_1.Types.ObjectId,
@@ -54,6 +72,8 @@ const SingleOrderSchema = new mongoose_1.Schema({
         type: mongoose_1.Types.ObjectId,
         required: [true, "seller id is required"],
     },
+    order: mongoose_1.Types.ObjectId,
+    courier: mongoose_1.Types.ObjectId,
     currency: {
         type: String,
         enum: {
@@ -62,6 +82,16 @@ const SingleOrderSchema = new mongoose_1.Schema({
         },
         default: "gbp",
     },
+    deliveredToUser: {
+        type: Boolean,
+        default: false,
+    },
+    deliveryDate: Date,
+    canceled: {
+        type: Boolean,
+        default: false,
+    },
+    cancelationDate: Date,
     cancelTransferId: String,
 }, { timestamps: true });
 const OrderSchema = new mongoose_1.Schema({
@@ -89,13 +119,13 @@ const OrderSchema = new mongoose_1.Schema({
         },
         default: "gbp",
     },
-    status: {
-        type: String,
-        default: "pending",
-        enum: {
-            values: categories_1.orderStatusValues,
-            message: `status must be one of the followin: ${categories_1.orderStatusValues}`,
-        },
+    address: {
+        type: Object,
+        required: [true, "user address is required"],
+    },
+    phoneNumber: {
+        type: Object,
+        required: [true, "user phone number is required"],
     },
     user: {
         type: mongoose_1.Types.ObjectId,

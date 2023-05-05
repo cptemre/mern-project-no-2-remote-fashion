@@ -3,6 +3,7 @@ import ConflictError from "./ConflictError";
 import UnauthorizedError from "./UnauthorizedError";
 import BadRequestError from "./BadRequestError";
 import PaymentRequiredError from "./PaymentRequiredError";
+import InternalServerError from "./InternalServerError";
 
 export {
   CustomError,
@@ -10,4 +11,5 @@ export {
   UnauthorizedError,
   BadRequestError,
   PaymentRequiredError,
+  InternalServerError,
 };

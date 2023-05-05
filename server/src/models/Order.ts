@@ -12,6 +12,8 @@ import { currencyList, orderStatusValues } from "../utilities/categories";
 import Product from "./Product";
 // UTILITIES
 import { findDocumentByIdAndModel } from "../utilities/controllers";
+// CATEGORY
+import { recievedMsg, orderInformationArray } from "../utilities/categories";
 
 const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>(
   {
@@ -32,8 +34,24 @@ const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>(
       default: "pending",
       enum: {
         values: orderStatusValues,
-        message: `status must be one of the followin: ${orderStatusValues}`,
+        message: `status must be one of the following: ${orderStatusValues}`,
       },
+    },
+    orderInformation: {
+      type: String,
+      enum: {
+        values: orderInformationArray,
+        message: `order information must be one of the following: ${orderInformationArray}`,
+      },
+      default: recievedMsg,
+    },
+    address: {
+      type: Object,
+      required: [true, "user address is required"],
+    },
+    phoneNumber: {
+      type: Object,
+      required: [true, "user phone number is required"],
     },
     user: {
       type: Types.ObjectId,
@@ -47,6 +65,8 @@ const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>(
       type: Types.ObjectId,
       required: [true, "seller id is required"],
     },
+    order: Types.ObjectId,
+    courier: Types.ObjectId,
     currency: {
       type: String,
       enum: {
@@ -55,6 +75,16 @@ const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>(
       },
       default: "gbp",
     },
+    deliveredToUser: {
+      type: Boolean,
+      default: false,
+    },
+    deliveryDate: Date,
+    canceled: {
+      type: Boolean,
+      default: false,
+    },
+    cancelationDate: Date,
     cancelTransferId: String,
   },
   { timestamps: true }
@@ -86,13 +116,13 @@ const OrderSchema = new Schema<OrderSchemaInterface>(
       },
       default: "gbp",
     },
-    status: {
-      type: String,
-      default: "pending",
-      enum: {
-        values: orderStatusValues,
-        message: `status must be one of the followin: ${orderStatusValues}`,
-      },
+    address: {
+      type: Object,
+      required: [true, "user address is required"],
+    },
+    phoneNumber: {
+      type: Object,
+      required: [true, "user phone number is required"],
     },
     user: {
       type: Types.ObjectId,

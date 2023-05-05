@@ -168,8 +168,6 @@ const login: RequestHandler = async (req, res) => {
 };
 
 const logout: RequestHandler = async (req, res) => {
-  const userId = req.user?._id;
-  await Token.findOneAndDelete({ user: userId });
   res.cookie("access_token", "", {
     httpOnly: true,
     expires: new Date(Date.now()),

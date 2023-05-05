@@ -130,7 +130,6 @@ const getMyAllReviews = (req, res) => __awaiter(void 0, void 0, void 0, function
     // GET REVIEW PAGE
     const { reviewPage, product: productId, } = req.body;
     const userId = (_g = req.user) === null || _g === void 0 ? void 0 : _g._id.toString();
-    console.log(userId);
     return (0, controllers_1.getAllReviewsController)({ userId, reviewPage, productId, res });
 });
 exports.getMyAllReviews = getMyAllReviews;

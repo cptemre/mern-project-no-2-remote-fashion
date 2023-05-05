@@ -92,7 +92,10 @@
 
 ## UPDATE ORDER
 
-- Will be tested after courier functionalities are ready.
+- Able to update order information one by one according to their status and able to change status if order information array is ended.
+- Update from seller is tested.
+- Courier will be tested
+- Cancel must be tested, compare the dates before cancel.
 
 # REVIEW CONTROLLERS
 
@@ -118,3 +121,9 @@
 ## DELETE REVIEW
 
 - Users can delete their own products.
+
+# TODO
+
+- Check user update email change.
+- Check product delete, cart items delete
+- Check cancelation stock change

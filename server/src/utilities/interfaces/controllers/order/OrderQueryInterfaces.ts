@@ -17,6 +17,7 @@ interface SingleOrderQuery extends CurrencyInterface {
   product: ObjectId | string;
   seller: ObjectId | string;
   order: ObjectId | string;
+  courier: ObjectId | string;
   orderPage: number;
 }
 // TO GET REQ FROM CLIENT SIDE
