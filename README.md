@@ -78,21 +78,24 @@
 
 ## GET ALL SINGLE ORDERS - GET ALL ORDERS
 
-- User and seller gets only his/her single orders with req.body properties.
+- User, seller and courier gets only his/her single orders.
 - Admin can see all.
 - priceVal has to be calculated from client side.
 - Page value works.
-- Currency exchange is not tested yet.
+- Currency exchange is tested.
 
 ## GET SINGLE ORDER - GET ORDER
 
-- User and seller gets only his/her single orders with id param.
+- User, seller and courier gets only his/her single orders with id param.
 - Admin can see any single order.
-- isShipping query is tested as well.
+- isShipping query is tested as well for order
 
 ## UPDATE ORDER
 
-- Will be tested after courier functionalities are ready.
+- Able to update order information one by one according to their status and able to change status if order information array is ended.
+- Update from seller is tested.
+- Courier will be tested
+- Cancel must be tested, compare the dates before cancel.
 
 # REVIEW CONTROLLERS
 
@@ -118,3 +121,9 @@
 ## DELETE REVIEW
 
 - Users can delete their own products.
+
+# TODO
+
+- Check user update email change.
+- Check product delete, cart items delete
+- Check cancelation stock change

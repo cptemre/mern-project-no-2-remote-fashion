@@ -27,9 +27,11 @@ const createPayment = async ({
   postalCode,
   country,
   state,
+  countryCode,
+  phoneNo,
   user,
 }: StripePaymentArgumentsSchema & {
-  user: UserSchemaInterface & { _id: ObjectId };
+  user: UserSchemaInterface;
 }) => {
   try {
     if (
@@ -43,6 +45,8 @@ const createPayment = async ({
       !postalCode ||
       !country ||
       !state ||
+      !countryCode ||
+      !phoneNo ||
       !user
     )
       throw new BadRequestError("invalid credentials");
@@ -51,9 +55,7 @@ const createPayment = async ({
     // EMAIL OF THE USER
     const email = user.email;
     // PHONE OF THE USER
-    const phone = user.phoneNumber
-      ? user.phoneNumber?.countryCode + user.phoneNumber?.phoneNo
-      : "";
+    const phone = countryCode + phoneNo;
     // ADDRESS OF THE CUSTOMER
     const address = {
       city,
@@ -159,22 +161,19 @@ const createOrGetCustomer = async ({
 };
 
 // PAY BACK FOR PRODUCT
-const transferMoney = async ({
+const refundPayment = async ({
+  paymentIntentId: payment_intent,
   amount,
-  currency,
-  destination,
 }: {
+  paymentIntentId: string;
   amount: number;
-  currency: string;
-  destination: string;
 }) => {
-  const transfer = await stripe.transfers.create({
+  const refund = await stripe.refunds.create({
+    payment_intent,
     amount,
-    currency,
-    destination,
   });
 
-  return transfer;
+  return refund;
 };
 
-export { createPayment, transferMoney };
+export { createPayment, refundPayment };

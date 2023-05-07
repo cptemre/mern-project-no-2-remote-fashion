@@ -11,8 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 // ERROR
 const errors_1 = require("../../errors");
-const findDocumentByIdAndModel = ({ id, user, seller, MyModel, }) => __awaiter(void 0, void 0, void 0, function* () {
-    // ! QUERY IS ADDED LATER.
+const findDocumentByIdAndModel = ({ id, user, seller, courier, MyModel, }) => __awaiter(void 0, void 0, void 0, function* () {
     // QUERY FOR FINDING THE DOCUMENT
     const query = {};
     if (id)
@@ -21,6 +20,8 @@ const findDocumentByIdAndModel = ({ id, user, seller, MyModel, }) => __awaiter(v
         query.user = user;
     if (seller)
         query.seller = seller;
+    if (courier)
+        query.courier = courier;
     // FIND THE DOCUMENT
     const document = yield MyModel.findOne(query);
     // IF DOCUMENT DOES NOT EXIST SEND AN ERROR

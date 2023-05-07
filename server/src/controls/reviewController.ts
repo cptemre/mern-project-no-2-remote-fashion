@@ -147,8 +147,6 @@ const getMyAllReviews: RequestHandler = async (req, res) => {
     product: string;
   } = req.body;
   const userId = req.user?._id.toString();
-  console.log(userId);
-
   return getAllReviewsController({ userId, reviewPage, productId, res });
 };
 export {

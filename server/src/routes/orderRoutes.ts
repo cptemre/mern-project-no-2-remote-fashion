@@ -7,7 +7,7 @@ import {
   getAllSingleOrders,
   getOrder,
   getSingleOrder,
-  updateOrder,
+  updateSingleOrder,
   currencyExchange,
 } from "../controls/orderController";
 
@@ -21,16 +21,14 @@ router
 router.get(
   "/single-order",
   authUser,
-  authRole("admin", "user", "seller"),
+  authRole("admin", "user", "seller", "courier"),
   getAllSingleOrders
 );
 
-router.get(
-  "/single-order/:id",
-  authUser,
-  authRole("admin", "user", "seller"),
-  getSingleOrder
-);
+router
+  .route("/single-order/:id")
+  .get(authUser, authRole("admin", "user", "seller", "courier"), getSingleOrder)
+  .patch(authUser, authRole("admin", "seller", "courier"), updateSingleOrder);
 
 router.get(
   "/currency-exchange",
@@ -39,9 +37,6 @@ router.get(
   currencyExchange
 );
 
-router
-  .route("/:id")
-  .get(authUser, authRole("admin", "user"), getOrder)
-  .patch(authUser, authRole("admin", "user", "seller"), updateOrder);
+router.route("/:id").get(authUser, authRole("admin", "user"), getOrder);
 
 export default router;

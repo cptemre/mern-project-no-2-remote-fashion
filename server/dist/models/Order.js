@@ -1,26 +1,12 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SingleOrder = exports.Order = void 0;
 // MONGOOSE
 const mongoose_1 = require("mongoose");
 // VALUES ARRAY
 const categories_1 = require("../utilities/categories");
-// MODELS
-const Product_1 = __importDefault(require("./Product"));
-// UTILITIES
-const controllers_1 = require("../utilities/controllers");
+// CATEGORY
+const categories_2 = require("../utilities/categories");
 const SingleOrderSchema = new mongoose_1.Schema({
     amount: {
         type: Number,
@@ -39,8 +25,24 @@ const SingleOrderSchema = new mongoose_1.Schema({
         default: "pending",
         enum: {
             values: categories_1.orderStatusValues,
-            message: `status must be one of the followin: ${categories_1.orderStatusValues}`,
+            message: `status must be one of the following: ${categories_1.orderStatusValues}`,
         },
+    },
+    orderInformation: {
+        type: String,
+        enum: {
+            values: categories_2.orderInformationArray,
+            message: `order information must be one of the following: ${categories_2.orderInformationArray}`,
+        },
+        default: categories_2.recievedMsg,
+    },
+    address: {
+        type: Object,
+        required: [true, "user address is required"],
+    },
+    phoneNumber: {
+        type: Object,
+        required: [true, "user phone number is required"],
     },
     user: {
         type: mongoose_1.Types.ObjectId,
@@ -54,6 +56,8 @@ const SingleOrderSchema = new mongoose_1.Schema({
         type: mongoose_1.Types.ObjectId,
         required: [true, "seller id is required"],
     },
+    order: mongoose_1.Types.ObjectId,
+    courier: mongoose_1.Types.ObjectId,
     currency: {
         type: String,
         enum: {
@@ -62,7 +66,10 @@ const SingleOrderSchema = new mongoose_1.Schema({
         },
         default: "gbp",
     },
-    cancelTransferId: String,
+    deliveryDateToCargo: Date,
+    deliveryDateToUser: Date,
+    cancelationDate: Date,
+    refundId: String,
 }, { timestamps: true });
 const OrderSchema = new mongoose_1.Schema({
     orderItems: {
@@ -89,13 +96,13 @@ const OrderSchema = new mongoose_1.Schema({
         },
         default: "gbp",
     },
-    status: {
-        type: String,
-        default: "pending",
-        enum: {
-            values: categories_1.orderStatusValues,
-            message: `status must be one of the followin: ${categories_1.orderStatusValues}`,
-        },
+    address: {
+        type: Object,
+        required: [true, "user address is required"],
+    },
+    phoneNumber: {
+        type: Object,
+        required: [true, "user phone number is required"],
     },
     user: {
         type: mongoose_1.Types.ObjectId,
@@ -105,64 +112,15 @@ const OrderSchema = new mongoose_1.Schema({
         type: String,
         required: [true, "client secret is required"],
     },
-    paymentIntentID: {
+    paymentIntentId: {
         type: String,
         required: [true, "payment intend id is required"],
     },
+    refunded: {
+        type: Number,
+        default: 0,
+    },
 }, { timestamps: true });
-SingleOrderSchema.statics.updateProductStock = function ({ productId, amount, operation, }) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            // FIND THE PRODUCT
-            const product = yield (0, controllers_1.findDocumentByIdAndModel)({
-                id: productId,
-                MyModel: Product_1.default,
-            });
-            // UPDATE STOCK BY OPERATION
-            if (operation === "+")
-                product.stock += amount;
-            if (operation === "-")
-                product.stock -= amount;
-            // SAVE PRODUCT WITH ITS NEW STOCK VALUE
-            yield product.save();
-        }
-        catch (error) {
-            console.log(error);
-        }
-    });
-};
-// SAVE SINGLE ORDER FUNCTION CALL TO DECREASE STOCK VALUES OF THE PRODUCT
-SingleOrderSchema.pre("save", function () {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (this.isModified(this.status)) {
-            console.log(this.status);
-            // IF STATUS IS SAVED AS REPAYED THEN ADD IT BACK TO STOCK, ELSE IF IT IS NOT FAILED DECREASE THE STOCK
-            let operation = this.status === "canceled" || this.status === "failed"
-                ? "+"
-                : this.status === "paid"
-                    ? "-"
-                    : "";
-            // RETURN BACK IF IT IS FAILED
-            if (operation === "")
-                return;
-            yield SingleOrder.updateProductStock({
-                productId: this.product,
-                amount: this.amount,
-                operation,
-            });
-        }
-    });
-});
-// DELETE SINGLE ORDER FUNCTION CALL TO INCREASE STOCK VALUES OF THE PRODUCT
-SingleOrderSchema.post("findOneAndDelete", function (doc) {
-    return __awaiter(this, void 0, void 0, function* () {
-        yield SingleOrder.updateProductStock({
-            productId: doc.product,
-            amount: doc.amount,
-            operation: "+",
-        });
-    });
-});
 // SINGLE ORDER MODEL
 const SingleOrder = (0, mongoose_1.model)("SingleOrder", SingleOrderSchema);
 exports.SingleOrder = SingleOrder;

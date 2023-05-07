@@ -9,6 +9,7 @@ import {
   OrderClientReqInterface,
   SingleOrderQuery,
 } from "./order/OrderQueryInterfaces";
+import UpdateOrderInformationByUserTypeInterface from "./order/UpdateOrderInformationByUserTypeInterface";
 // CUSTOM
 import PriceQueryInterface from "./custom/PriceQueryInterface";
 // GET USERS
@@ -20,6 +21,7 @@ export {
   GetAllProductsQueryInterface,
   GetAllProductsReqBodyInterface,
   OrderClientReqInterface,
+  UpdateOrderInformationByUserTypeInterface,
   PriceQueryInterface,
   SingleOrderQuery,
   GetAllUsersInterface,

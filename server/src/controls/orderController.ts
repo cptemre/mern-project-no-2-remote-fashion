@@ -6,11 +6,15 @@ import {
   CartItemsInterface,
   SingleOrderSchemaInterface,
   OrderStatusInterface,
+  PhoneNumberInterface,
+  AddressInterface,
+  OrderInformationInterface,
 } from "../utilities/interfaces/models";
 // QUERY MODELS
 import {
   OrderClientReqInterface,
   SingleOrderQuery,
+  UpdateOrderInformationByUserTypeInterface,
 } from "../utilities/interfaces/controllers";
 // CURRENCY
 import {
@@ -27,19 +31,31 @@ import {
   limitAndSkip,
   userIdAndModelUserIdMatchCheck,
   priceAndExchangedPriceCompare,
+  getUserTypeQuery,
+  updateOrderInformationByUserType,
 } from "../utilities/controllers";
 // PAYMENT
-import { createPayment, transferMoney } from "../utilities/payment/payment";
+import { createPayment, refundPayment } from "../utilities/payment/payment";
 // ERRORS
 import {
   BadRequestError,
+  ConflictError,
+  ForbiddenError,
+  InternalServerError,
   PaymentRequiredError,
   UnauthorizedError,
 } from "../errors";
 // HTTP STATUS CODES
 import { StatusCodes } from "http-status-codes";
 import currencyExchangeRates from "../utilities/payment/currencyExchangeRates";
-import { Model } from "mongoose";
+// ORDER INFORMATION
+import {
+  cancelInformationArray,
+  cargoInformationArray,
+  orderInformationArray,
+  orderStatusValues,
+  sellerInformationArray,
+} from "../utilities/categories";
 
 const createOrder: RequestHandler = async (req, res) => {
   // TODO COUNTRY MUST BE CAPITAL SHORT NAME SUCH AS US. CREATE AN INTERFACE FOR IT
@@ -55,7 +71,9 @@ const createOrder: RequestHandler = async (req, res) => {
     postalCode,
     country,
     state,
-  }: StripePaymentArgumentsSchema = req.body;
+    countryCode,
+    phoneNo,
+  }: StripePaymentArgumentsSchema & PhoneNumberInterface = req.body;
   // GET CART ITEMS FROM THE USER DOCUMENT
   if (!req.user) throw new UnauthorizedError("authorization failed");
   const userId = req.user._id;
@@ -84,9 +102,20 @@ const createOrder: RequestHandler = async (req, res) => {
     !city ||
     !postalCode ||
     !country ||
-    !state
+    !state ||
+    !countryCode ||
+    !phoneNo
   )
     throw new BadRequestError("invalid credientals");
+  // INFORMATION TO REACH THE ORDER TO THE USER
+  const address: AddressInterface = {
+    street,
+    city,
+    postalCode,
+    country,
+    state,
+  };
+  const phoneNumber: PhoneNumberInterface = { countryCode, phoneNo };
   // ALL ORDERS IN AN ARRAY TO APPEND IT TO ORDER MODEL LATER
   let orderItems: SingleOrderSchemaInterface[] = [];
   // TOTAL PRICE OF SINGLE ORDERS
@@ -133,10 +162,15 @@ const createOrder: RequestHandler = async (req, res) => {
       price: priceVal,
       tax,
       currency,
+      address,
+      phoneNumber,
       user: req.user?._id,
       seller,
       product,
     });
+    // UPDATE PRODUCT STOCK AFTER ORDER
+    productDocument.stock -= amount;
+    await productDocument.save();
     // SEND CREATED SINGLE ORDER TO CREATED SINGLE ORDERS ARRAY FOR CHANGING STATUS LATER
     createdSingleOrders = [...createdSingleOrders, singleOrder];
     // APPEND THIS ORDER TO ORDERITEMS ARRAY
@@ -181,6 +215,8 @@ const createOrder: RequestHandler = async (req, res) => {
     postalCode,
     country,
     state,
+    countryCode,
+    phoneNo,
     user: req.user,
   });
   // CHECK IF PAYMENT INTENT EXISTS
@@ -190,8 +226,6 @@ const createOrder: RequestHandler = async (req, res) => {
   if (!amount || !client_secret || !paymentIntentId)
     throw new PaymentRequiredError("payment required");
 
-  // CLEAR USER CART BECAUSE ORDER IS SUCCESFUL
-  user.cartItems = [];
   // CREATE ACTUAL ORDER HERE
   const order = await Order.create({
     orderItems,
@@ -199,18 +233,30 @@ const createOrder: RequestHandler = async (req, res) => {
     subTotal,
     totalPrice,
     currency,
-    status: "paid",
+    address,
+    phoneNumber,
     user: req.user?._id,
     clientSecret: client_secret,
-    paymentIntentID: paymentIntentId,
+    paymentIntentId,
   });
+
   // CHANGE ALL SINGLE ORDERS STATUS TO PAID AND SAVE THEM TO THE DATABASE
+  let updatedSingleOrders: SingleOrderSchemaInterface[] = [];
   for (let i = 0; i < createdSingleOrders.length; i++) {
     createdSingleOrders[i].status = "paid";
     createdSingleOrders[i].order = order._id;
+    updatedSingleOrders = [...updatedSingleOrders, createdSingleOrders[i]];
+
     await createdSingleOrders[i].save();
   }
+  // UPDATE ORDER WITH UPDATED SINGLE ORDERS AND SAVE
+  order.orderItems = updatedSingleOrders;
+  await order.save();
+  // CLEAR USER CART BECAUSE ORDER IS SUCCESFUL
+  user.cartItems = [];
+  // SAVE USER
   await user.save();
+
   // SENT CLIENT SECRET TO THE CLIENT
   res
     .status(StatusCodes.CREATED)
@@ -225,26 +271,33 @@ const getAllSingleOrders: RequestHandler = async (req, res) => {
     tax,
     currency,
     product: productId,
-    seller: sellerId,
     order: orderId,
     orderPage,
   }: SingleOrderSchemaInterface & {
     orderPage: number;
     priceVal: string;
   } = req.body;
+  // IF THERE IS NO USER THROW ERROR
+  if (!req.user) throw new UnauthorizedError("authorization denied");
+  // SEPARATE USER TYPE AND ID FROM USER
+  const { userType, _id: id } = req.user;
+  // CHECK USER TYPE TO GET PROPER OBJECT TO MERGE WITH MAIN QUERY
+  const { userTypeQuery } = getUserTypeQuery({
+    userType,
+    id,
+  });
   // EMPTY QUERY
-  const query: Partial<SingleOrderQuery> = {};
+  const initialQuery: Partial<SingleOrderQuery> = {};
   // SET QUERY KEYS AND VALUES
-  if (amount) query.amount = amount;
-  if (priceVal) query.price = gteAndLteQueryForDb(priceVal);
-  if (tax) query.tax = tax;
-  if (currency) query.currency = currency;
-  if (productId) query.product = productId;
-  if (sellerId) query.seller = sellerId;
-  if (orderId) query.order = orderId;
-  // IF USER IS A REGULAR USER THEN ADD TO QUERY OF THE USERS ID TO FIND ONLY RELATED SINGLE ORDERS
-  if (req.user && req.user.userType === "user") query.user = req.user._id;
+  if (amount) initialQuery.amount = amount;
+  if (priceVal) initialQuery.price = gteAndLteQueryForDb(priceVal);
+  if (tax) initialQuery.tax = tax;
+  if (currency) initialQuery.currency = currency;
+  if (productId) initialQuery.product = productId;
+  if (orderId) initialQuery.order = orderId;
 
+  // MERGE QUERY WITH USERTYPE QUERY
+  const query = { ...initialQuery, ...userTypeQuery };
   // LIMIT AND SKIP VALUES
   const myLimit = 10;
   const { limit, skip } = limitAndSkip({ limit: myLimit, page: orderPage });
@@ -263,16 +316,20 @@ const getSingleOrder: RequestHandler = async (req, res) => {
   const { id: singleOrderId } = req.params;
   // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
   if (!singleOrderId) throw new BadRequestError("single order id is required");
-  // FIND THE SINGLE ORDER
-  const userId = req.user?.userType === "user" && req.user?._id;
-  const sellerId = req.user?.userType === "seller" && req.user?._id;
 
-  const singleOrder = await findDocumentByIdAndModel({
+  // GET USER, SELLER OR COURIER ID AS OBJECT
+  if (!req.user) throw new UnauthorizedError("authorization denied");
+  const { userType, _id: id } = req.user;
+  const { userTypeQuery } = getUserTypeQuery({ userType, id });
+  // SINGLE ORDER QUERY
+  const query = {
     id: singleOrderId,
-    user: userId.toString(),
-    seller: sellerId.toString(),
     MyModel: SingleOrder,
-  });
+    ...userTypeQuery,
+  };
+  // FIND THE SINGLE ORDER
+
+  const singleOrder = await findDocumentByIdAndModel(query);
   // CHECK USER MATCHES WITH THE SINGLE ORDER USER
   if (req.user) {
     // SET USER OR SELLER ID TO COMPARE WITH ACTUAL ACCOUNT USER
@@ -309,7 +366,7 @@ const getAllOrders: RequestHandler = async (req, res) => {
   query.shippingFee = sortByShippingFee;
   if (status) query.status = status;
   // IF USER IS NOT ADMIN THEN ADD TO QUERY OF THE USERS ID TO FIND ONLY RELATED SINGLE ORDERS
-  if (req.user && req.user.userType !== "admin") query.user = req.user._id;
+  if (req.user && req.user.userType === "admin") query.user = req.user._id;
   if (priceVal) query.price = gteAndLteQueryForDb(priceVal);
   if (currency) query.currency = currency;
   // LIMIT AND SKIP
@@ -347,24 +404,22 @@ const getOrder: RequestHandler = async (req, res) => {
   res.status(StatusCodes.OK).json({ msg: "order fetched", result: order });
 };
 
-const updateOrder: RequestHandler = async (req, res) => {
+const updateSingleOrder: RequestHandler = async (req, res) => {
   // GET ORDER ID FROM THE CLIENT
   const { id: singleOrderId } = req.params;
   // CHECK IF SINGLE ORDER ID IS PROVIDED
   if (!singleOrderId) throw new BadRequestError("single order id is required");
-  // GET USER ID
   const {
-    status,
-    destination,
+    courier,
+    orderInformation,
   }: {
-    userId: string;
-    destination: string;
-  } & OrderStatusInterface = req.body;
+    courier: string;
+  } & OrderInformationInterface = req.body;
 
   // CHECK IF BODY VARIABLES ARE PROVIDED
 
-  if (!status || !singleOrderId)
-    throw new BadRequestError("status and single order id are required");
+  if (!singleOrderId || !orderInformation)
+    throw new BadRequestError("invalid credientals");
 
   // FIND THIS SINGLE ORDER IN DOCUMENTS
   const singleOrder = await findDocumentByIdAndModel({
@@ -382,40 +437,104 @@ const updateOrder: RequestHandler = async (req, res) => {
   }
 
   // IF IT IS A CANCELATION THEN PAY BACK THE MONEY
-  // TODO IF USER THEN CHECK DELIVED STATUS AND DELIVERY DATE. IF IT IS DELIVERED NOT MORE THAN 2 WEEKS AGO THEN ACCEPT CANCELATION
-  // TODO IF SELLER THEN CHECK IF IT IS PAID
-  // TODO IF COURIER THEN CHECK IF IT IS PAID
-  if (status === "canceled") {
-    if (!destination)
-      throw new BadRequestError("destination account no is required");
-    const amount = singleOrder.amount;
-    const currency = singleOrder.currency;
-    const transfer = await transferMoney({ amount, currency, destination });
-    singleOrder.cancelTransferId = transfer.id;
+
+  // USER TYPE
+  const userType = req.user?.userType;
+  // ORDER INFORMATION IN SINGLE ORDER
+  const singleOrderInformationValue = singleOrder.orderInformation;
+  // QUERY TO CHECK ORDER INFORMATION VALIDATION
+  const updateOrderInformationByUserTypeQuery: UpdateOrderInformationByUserTypeInterface =
+    {
+      orderInformation,
+      singleOrderInformationValue,
+      informationArray: [],
+      status: singleOrder.status,
+    };
+  // CHECK IF USER IS A SELLER AND IF THE SINGLE ORDER STATUS IS PAID
+  if (userType === "seller" && singleOrder.status === "paid")
+    updateOrderInformationByUserTypeQuery.informationArray =
+      sellerInformationArray;
+  // CHECK IF USER IS A COURIER AND IF THE SINGLE ORDER STATUS IS CARGO
+
+  if (userType === "courier" && singleOrder.status === "cargo")
+    updateOrderInformationByUserTypeQuery.informationArray =
+      cargoInformationArray;
+  // CHECK IF USER IS A COURIER AND IF THE SINGLE ORDER STATUS IS CARGO
+  if (userType === "courier" && singleOrder.status === "delivered")
+    updateOrderInformationByUserTypeQuery.informationArray =
+      cancelInformationArray;
+  // CALL THE ACTUAL FUNCTION FOR VALIDATION OF ORDER INFORMATION
+  const { status, isDeliveryToCargo, isDeliveryToUser, isCancelation } =
+    updateOrderInformationByUserType(updateOrderInformationByUserTypeQuery);
+
+  // UPDATE THE ORDER INFORMATION OF SINGLE ORDER
+  singleOrder.orderInformation = orderInformation;
+  // IF STATUS IS UNDEFINED THEN THROW AN ERROR
+  if (!status)
+    throw new InternalServerError("single order status is undefined");
+  // SET STATUS IF IT IS CHANGED
+  if (singleOrder.status !== status) {
     // FIND ORDER
     const order = await findDocumentByIdAndModel({
       id: singleOrder.order.toString(),
       MyModel: Order,
     });
-    // ORDER PAYMENT DECREASE CHANGE DUE TO CANCELATION
-    order.subTotal -= singleOrder.amount;
-    order.totalPrice -= singleOrder.amount;
-    // UPDATE SINGLE ORDER IN ORDER FOR ITS CANCELATION
-    order.orderItems.forEach((orderItem) => {
-      if (orderItem._id === singleOrder._id) {
-        orderItem.cancelTransferId = singleOrder.cancelTransferId;
-      }
+
+    // CARGO IS TRUE AND DATE IS SET
+    if (isDeliveryToCargo) {
+      if (!courier) throw new BadRequestError("courier id required");
+      singleOrder.deliveryDateToCargo = new Date(Date.now());
+      singleOrder.courier = courier;
+    }
+    // DELIVERED IS TRUE AND DATE IS SET
+    if (isDeliveryToUser) singleOrder.deliveryDateToUser = new Date(Date.now());
+    // IF STATUS IS CHANGED TO CANCELED THEN SET NEW ORDER PRICES
+    if (isCancelation) {
+      // IF ORDER IS NEVER DELIVERED TO THE USER THEN THEY CAN NOT CANCEL IT
+      if (!singleOrder.deliveryDateToUser)
+        throw new ConflictError("cargo is not delivered");
+      // COMPARE DELIVERY DATE AND CURRENT DATE
+      const currentDate = new Date(Date.now());
+      // DIFFERENCE OF CURRENT AND DELIVERY DATE IN MS
+      const diffInMs =
+        currentDate.getTime() - singleOrder.deliveryDateToUser.getTime();
+      // A DAY IN MS
+      const dayInMs = 24 * 60 * 60 * 1000;
+      // DIFFERENCE OF CURRENT AND DELIVERY DATE IN DAYS
+      const diffInDays = diffInMs / dayInMs;
+      // IF 14 DAYS PASSED THEN CAN NOT CANCEL THE PRODUCT
+      if (diffInDays > 14) throw new ForbiddenError("cancel period is expired");
+
+      const { amount } = singleOrder;
+      // TRANSFER PAYMENT BACK TO ACCOUNT NO OF USER
+      const refund = await refundPayment({
+        paymentIntentId: order.paymentIntentId,
+        amount,
+      });
+      // UPDATE SINGLE ORDER CANCEL DETAILS
+      singleOrder.refundId = refund.id;
+      // CANCELED IS TRUE AND SET THE DATE
+      singleOrder.cancelationDate = new Date(Date.now());
+      // ORDER PAYMENT DECREASE CHANGE DUE TO CANCELATION
+      order.subTotal -= singleOrder.amount;
+      order.totalPrice -= singleOrder.amount;
+      // INCREASE REFUNDED AMOUNT
+      if (order.refunded) order.refunded += refund.amount;
+    }
+    // UPDATE STATUS BECAUSE IT HAS CHANGED
+    const product = await findDocumentByIdAndModel({
+      id: singleOrder.product.toString(),
+      MyModel: Product,
     });
-    const everySingleOrderCanceled = order.orderItems.every(
-      (orderItem) => orderItem.cancelTransferId
-    );
-    if (everySingleOrderCanceled) order.status = "canceled";
+    if (status === "canceled") {
+      product.stock += singleOrder.amount;
+      await product.save();
+    }
+
+    singleOrder.status = status;
   }
-  // UPDATE THE STATUS OF SINGLE ORDER
-  singleOrder.status = status;
   // SAVE THE SINGLE ORDER
   await singleOrder.save();
-
   res
     .status(StatusCodes.OK)
     .json({ msg: "order updated", result: singleOrder });
@@ -440,6 +559,6 @@ export {
   getOrder,
   getAllSingleOrders,
   getSingleOrder,
-  updateOrder,
+  updateSingleOrder,
   currencyExchange,
 };

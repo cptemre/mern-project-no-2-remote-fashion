@@ -17,6 +17,6 @@ router.route("/verify-email").post(verifyEmail);
 router.route("/login").post(login);
 router.route("/forgot-password").post(forgotPassword);
 router.route("/reset-password").post(resetPassword);
-router.route("/logout").delete(authUser, logout);
+router.route("/logout").get(logout);
 
 export default router;

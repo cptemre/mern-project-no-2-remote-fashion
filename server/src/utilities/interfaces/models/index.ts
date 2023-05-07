@@ -1,9 +1,10 @@
 import {
   CartItemsInterface,
   OrderSchemaInterface,
-  SingleOrderModelInterface,
   SingleOrderSchemaInterface,
   OrderStatusInterface,
+  OrderInformationInterface,
+  DeliveryDateInterface,
 } from "./OrderSchemaInterface";
 
 import ProductSchemaInterface from "./ProductSchemaInterface";
@@ -25,7 +26,6 @@ import {
 export {
   CartItemsInterface,
   OrderSchemaInterface,
-  SingleOrderModelInterface,
   SingleOrderSchemaInterface,
   ProductSchemaInterface,
   ReviewModelInterface,
@@ -36,4 +36,6 @@ export {
   UserSchemaInterface,
   CreditCardInformationInterface,
   OrderStatusInterface,
+  OrderInformationInterface,
+  DeliveryDateInterface,
 };

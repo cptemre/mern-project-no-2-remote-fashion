@@ -62,6 +62,7 @@ const UserSchema = new Schema<UserSchemaInterface>(
       type: [Object],
       default: [],
     },
+    // ! This has to be updated if you change it to seller or courier
     company: {
       type: String,
       minlength: [2, "company name must be at least 2 characters"],

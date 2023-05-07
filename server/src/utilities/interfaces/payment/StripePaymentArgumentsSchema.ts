@@ -2,15 +2,16 @@ import { ObjectId } from "mongoose";
 // INTERFACES
 import {
   AddressInterface,
+  PhoneNumberInterface,
   CreditCardInformationInterface,
-  UserSchemaInterface,
 } from "../models/UserSchemaInterface";
 import { CurrencyInterface } from "./CurrencyInterface";
 
 interface StripePaymentArgumentsSchema
   extends CurrencyInterface,
     CreditCardInformationInterface,
-    AddressInterface {
+    AddressInterface,
+    PhoneNumberInterface {
   totalPrice: number;
 }
 

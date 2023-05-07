@@ -101,16 +101,10 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
         query.rating = Number(rating);
     if (gender)
         query.gender = gender;
-    console.log(page);
-    if (page)
-        query.page = page;
-    else
-        query.page = 1;
-    if (!req.user)
-        throw new errors_1.UnauthorizedError("authorization failed");
-    const userId = (_b = req.user) === null || _b === void 0 ? void 0 : _b._id;
+    query.page = page ? page : 1;
+    const userId = (_b = req.user) === null || _b === void 0 ? void 0 : _b._id.toString();
     if (seller)
-        query.seller = userId.toString();
+        query.seller = userId;
     // LIMIT AND SKIP VALUES
     const myLimit = 20;
     const { limit, skip } = (0, controllers_1.limitAndSkip)({ limit: myLimit, page: Number(page) });

@@ -12,15 +12,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transferMoney = exports.createPayment = void 0;
+exports.refundPayment = exports.createPayment = void 0;
 // STRIPE
 const stripe_1 = __importDefault(require("stripe"));
 const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY, {
     apiVersion: "2022-11-15",
 });
 const errors_1 = require("../../errors");
-const createPayment = ({ totalPrice, currency, cardNumber, expMonth, expYear, cvc, street, city, postalCode, country, state, user, }) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+const createPayment = ({ totalPrice, currency, cardNumber, expMonth, expYear, cvc, street, city, postalCode, country, state, countryCode, phoneNo, user, }) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (!totalPrice ||
             !currency ||
@@ -32,6 +31,8 @@ const createPayment = ({ totalPrice, currency, cardNumber, expMonth, expYear, cv
             !postalCode ||
             !country ||
             !state ||
+            !countryCode ||
+            !phoneNo ||
             !user)
             throw new errors_1.BadRequestError("invalid credentials");
         // NAME OF THE CUSTOMER
@@ -39,9 +40,7 @@ const createPayment = ({ totalPrice, currency, cardNumber, expMonth, expYear, cv
         // EMAIL OF THE USER
         const email = user.email;
         // PHONE OF THE USER
-        const phone = user.phoneNumber
-            ? ((_a = user.phoneNumber) === null || _a === void 0 ? void 0 : _a.countryCode) + ((_b = user.phoneNumber) === null || _b === void 0 ? void 0 : _b.phoneNo)
-            : "";
+        const phone = countryCode + phoneNo;
         // ADDRESS OF THE CUSTOMER
         const address = {
             city,
@@ -123,12 +122,11 @@ const createOrGetCustomer = ({ name, email, phone, address, }) => __awaiter(void
     return customer;
 });
 // PAY BACK FOR PRODUCT
-const transferMoney = ({ amount, currency, destination, }) => __awaiter(void 0, void 0, void 0, function* () {
-    const transfer = yield stripe.transfers.create({
+const refundPayment = ({ paymentIntentId: payment_intent, amount, }) => __awaiter(void 0, void 0, void 0, function* () {
+    const refund = yield stripe.refunds.create({
+        payment_intent,
         amount,
-        currency,
-        destination,
     });
-    return transfer;
+    return refund;
 });
-exports.transferMoney = transferMoney;
+exports.refundPayment = refundPayment;

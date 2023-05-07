@@ -157,9 +157,6 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.login = login;
 const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
-    yield models_1.Token.findOneAndDelete({ user: userId });
     res.cookie("access_token", "", {
         httpOnly: true,
         expires: new Date(Date.now()),
