@@ -127,13 +127,9 @@ const getAllProducts: RequestHandler = async (req, res) => {
   if (isStock) query.stock = { $gt: 0 };
   if (rating) query.rating = Number(rating);
   if (gender) query.gender = gender;
-  console.log(page);
-
-  if (page) query.page = page;
-  else query.page = 1;
-  if (!req.user) throw new UnauthorizedError("authorization failed");
-  const userId = req.user?._id;
-  if (seller) query.seller = userId.toString();
+  query.page = page ? page : 1;
+  const userId = req.user?._id.toString();
+  if (seller) query.seller = userId;
   // LIMIT AND SKIP VALUES
   const myLimit = 20;
   const { limit, skip } = limitAndSkip({ limit: myLimit, page: Number(page) });

@@ -1,7 +1,6 @@
 import {
   CartItemsInterface,
   OrderSchemaInterface,
-  SingleOrderModelInterface,
   SingleOrderSchemaInterface,
   OrderStatusInterface,
   OrderInformationInterface,
@@ -27,7 +26,6 @@ import {
 export {
   CartItemsInterface,
   OrderSchemaInterface,
-  SingleOrderModelInterface,
   SingleOrderSchemaInterface,
   ProductSchemaInterface,
   ReviewModelInterface,

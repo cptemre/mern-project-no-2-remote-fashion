@@ -3,7 +3,6 @@ import mongoose, { Schema, model, Types, ObjectId } from "mongoose";
 // INTERFACES
 import {
   SingleOrderSchemaInterface,
-  SingleOrderModelInterface,
   OrderSchemaInterface,
 } from "../utilities/interfaces/models";
 // VALUES ARRAY
@@ -78,7 +77,7 @@ const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>(
     deliveryDateToCargo: Date,
     deliveryDateToUser: Date,
     cancelationDate: Date,
-    cancelTransferId: String,
+    refundId: String,
   },
   { timestamps: true }
 );
@@ -125,73 +124,23 @@ const OrderSchema = new Schema<OrderSchemaInterface>(
       type: String,
       required: [true, "client secret is required"],
     },
-    paymentIntentID: {
+    paymentIntentId: {
       type: String,
       required: [true, "payment intend id is required"],
+    },
+    refunded: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true }
 );
 
-SingleOrderSchema.statics.updateProductStock = async function ({
-  productId,
-  amount,
-  operation,
-}: {
-  productId: string;
-  amount: number;
-  operation: "+" | "-";
-}) {
-  try {
-    // FIND THE PRODUCT
-    const product = await findDocumentByIdAndModel({
-      id: productId,
-      MyModel: Product,
-    });
-    // UPDATE STOCK BY OPERATION
-    if (operation === "+") product.stock += amount;
-    if (operation === "-") product.stock -= amount;
-    // SAVE PRODUCT WITH ITS NEW STOCK VALUE
-    await product.save();
-  } catch (error) {
-    console.log(error);
-  }
-};
-// SAVE SINGLE ORDER FUNCTION CALL TO DECREASE STOCK VALUES OF THE PRODUCT
-SingleOrderSchema.pre("save", async function () {
-  if (this.isModified(this.status)) {
-    console.log(this.status);
-
-    // IF STATUS IS SAVED AS REPAYED THEN ADD IT BACK TO STOCK, ELSE IF IT IS NOT FAILED DECREASE THE STOCK
-    let operation: "+" | "-" | "" =
-      this.status === "canceled" || this.status === "failed"
-        ? "+"
-        : this.status === "paid"
-        ? "-"
-        : "";
-    // RETURN BACK IF IT IS FAILED
-    if (operation === "") return;
-
-    await SingleOrder.updateProductStock({
-      productId: this.product as string,
-      amount: this.amount,
-      operation,
-    });
-  }
-});
-// DELETE SINGLE ORDER FUNCTION CALL TO INCREASE STOCK VALUES OF THE PRODUCT
-SingleOrderSchema.post("findOneAndDelete", async function (doc) {
-  await SingleOrder.updateProductStock({
-    productId: doc.product as string,
-    amount: doc.amount,
-    operation: "+",
-  });
-});
 // SINGLE ORDER MODEL
-const SingleOrder = model<
-  SingleOrderSchemaInterface,
-  SingleOrderModelInterface
->("SingleOrder", SingleOrderSchema);
+const SingleOrder = model<SingleOrderSchemaInterface>(
+  "SingleOrder",
+  SingleOrderSchema
+);
 
 // ORDER MODEL
 const Order = model<OrderSchemaInterface>("Order", OrderSchema);

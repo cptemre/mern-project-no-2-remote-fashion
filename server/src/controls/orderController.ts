@@ -35,7 +35,7 @@ import {
   updateOrderInformationByUserType,
 } from "../utilities/controllers";
 // PAYMENT
-import { createPayment, transferMoney } from "../utilities/payment/payment";
+import { createPayment, refundPayment } from "../utilities/payment/payment";
 // ERRORS
 import {
   BadRequestError,
@@ -162,13 +162,15 @@ const createOrder: RequestHandler = async (req, res) => {
       price: priceVal,
       tax,
       currency,
-      status: "paid",
       address,
       phoneNumber,
       user: req.user?._id,
       seller,
       product,
     });
+    // UPDATE PRODUCT STOCK AFTER ORDER
+    productDocument.stock -= amount;
+    await productDocument.save();
     // SEND CREATED SINGLE ORDER TO CREATED SINGLE ORDERS ARRAY FOR CHANGING STATUS LATER
     createdSingleOrders = [...createdSingleOrders, singleOrder];
     // APPEND THIS ORDER TO ORDERITEMS ARRAY
@@ -235,7 +237,7 @@ const createOrder: RequestHandler = async (req, res) => {
     phoneNumber,
     user: req.user?._id,
     clientSecret: client_secret,
-    paymentIntentID: paymentIntentId,
+    paymentIntentId,
   });
 
   // CHANGE ALL SINGLE ORDERS STATUS TO PAID AND SAVE THEM TO THE DATABASE
@@ -244,6 +246,7 @@ const createOrder: RequestHandler = async (req, res) => {
     createdSingleOrders[i].status = "paid";
     createdSingleOrders[i].order = order._id;
     updatedSingleOrders = [...updatedSingleOrders, createdSingleOrders[i]];
+
     await createdSingleOrders[i].save();
   }
   // UPDATE ORDER WITH UPDATED SINGLE ORDERS AND SAVE
@@ -253,6 +256,7 @@ const createOrder: RequestHandler = async (req, res) => {
   user.cartItems = [];
   // SAVE USER
   await user.save();
+
   // SENT CLIENT SECRET TO THE CLIENT
   res
     .status(StatusCodes.CREATED)
@@ -406,11 +410,9 @@ const updateSingleOrder: RequestHandler = async (req, res) => {
   // CHECK IF SINGLE ORDER ID IS PROVIDED
   if (!singleOrderId) throw new BadRequestError("single order id is required");
   const {
-    destination,
     courier,
     orderInformation,
   }: {
-    destination: string;
     courier: string;
   } & OrderInformationInterface = req.body;
 
@@ -453,6 +455,7 @@ const updateSingleOrder: RequestHandler = async (req, res) => {
     updateOrderInformationByUserTypeQuery.informationArray =
       sellerInformationArray;
   // CHECK IF USER IS A COURIER AND IF THE SINGLE ORDER STATUS IS CARGO
+
   if (userType === "courier" && singleOrder.status === "cargo")
     updateOrderInformationByUserTypeQuery.informationArray =
       cargoInformationArray;
@@ -476,6 +479,7 @@ const updateSingleOrder: RequestHandler = async (req, res) => {
       id: singleOrder.order.toString(),
       MyModel: Order,
     });
+
     // CARGO IS TRUE AND DATE IS SET
     if (isDeliveryToCargo) {
       if (!courier) throw new BadRequestError("courier id required");
@@ -486,9 +490,6 @@ const updateSingleOrder: RequestHandler = async (req, res) => {
     if (isDeliveryToUser) singleOrder.deliveryDateToUser = new Date(Date.now());
     // IF STATUS IS CHANGED TO CANCELED THEN SET NEW ORDER PRICES
     if (isCancelation) {
-      // ACCOUNT NO IS REQUIRED FOR CANCELING
-      // if (!destination)
-      //   throw new BadRequestError("destination account no is required");
       // IF ORDER IS NEVER DELIVERED TO THE USER THEN THEY CAN NOT CANCEL IT
       if (!singleOrder.deliveryDateToUser)
         throw new ConflictError("cargo is not delivered");
@@ -504,33 +505,36 @@ const updateSingleOrder: RequestHandler = async (req, res) => {
       // IF 14 DAYS PASSED THEN CAN NOT CANCEL THE PRODUCT
       if (diffInDays > 14) throw new ForbiddenError("cancel period is expired");
 
-      const { amount, currency } = singleOrder;
+      const { amount } = singleOrder;
       // TRANSFER PAYMENT BACK TO ACCOUNT NO OF USER
-      // const transfer = await transferMoney({ amount, currency, destination });
+      const refund = await refundPayment({
+        paymentIntentId: order.paymentIntentId,
+        amount,
+      });
       // UPDATE SINGLE ORDER CANCEL DETAILS
-      // singleOrder.cancelTransferId = transfer.id;
+      singleOrder.refundId = refund.id;
       // CANCELED IS TRUE AND SET THE DATE
       singleOrder.cancelationDate = new Date(Date.now());
       // ORDER PAYMENT DECREASE CHANGE DUE TO CANCELATION
       order.subTotal -= singleOrder.amount;
       order.totalPrice -= singleOrder.amount;
-      // TODO ADD PRODUCT STOCK BACK
-      // UPDATE SINGLE ORDER IN ORDER FOR ITS CANCELATION
-      order.orderItems.forEach((orderItem) => {
-        if (orderItem._id === singleOrder._id) {
-          orderItem.cancelTransferId = singleOrder.cancelTransferId;
-        }
-      });
+      // INCREASE REFUNDED AMOUNT
+      if (order.refunded) order.refunded += refund.amount;
     }
-    console.log({ status });
-
     // UPDATE STATUS BECAUSE IT HAS CHANGED
+    const product = await findDocumentByIdAndModel({
+      id: singleOrder.product.toString(),
+      MyModel: Product,
+    });
+    if (status === "canceled") {
+      product.stock += singleOrder.amount;
+      await product.save();
+    }
+
     singleOrder.status = status;
   }
-
   // SAVE THE SINGLE ORDER
   await singleOrder.save();
-
   res
     .status(StatusCodes.OK)
     .json({ msg: "order updated", result: singleOrder });

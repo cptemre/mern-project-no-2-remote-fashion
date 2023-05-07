@@ -113,13 +113,15 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             price: priceVal,
             tax,
             currency,
-            status: "paid",
             address,
             phoneNumber,
             user: (_a = req.user) === null || _a === void 0 ? void 0 : _a._id,
             seller,
             product,
         });
+        // UPDATE PRODUCT STOCK AFTER ORDER
+        productDocument.stock -= amount;
+        yield productDocument.save();
         // SEND CREATED SINGLE ORDER TO CREATED SINGLE ORDERS ARRAY FOR CHANGING STATUS LATER
         createdSingleOrders = [...createdSingleOrders, singleOrder];
         // APPEND THIS ORDER TO ORDERITEMS ARRAY
@@ -187,7 +189,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         phoneNumber,
         user: (_b = req.user) === null || _b === void 0 ? void 0 : _b._id,
         clientSecret: client_secret,
-        paymentIntentID: paymentIntentId,
+        paymentIntentId,
     });
     // CHANGE ALL SINGLE ORDERS STATUS TO PAID AND SAVE THEM TO THE DATABASE
     let updatedSingleOrders = [];
@@ -347,7 +349,7 @@ const updateSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, functi
     // CHECK IF SINGLE ORDER ID IS PROVIDED
     if (!singleOrderId)
         throw new errors_1.BadRequestError("single order id is required");
-    const { destination, courier, orderInformation, } = req.body;
+    const { courier, orderInformation, } = req.body;
     // CHECK IF BODY VARIABLES ARE PROVIDED
     if (!singleOrderId || !orderInformation)
         throw new errors_1.BadRequestError("invalid credientals");
@@ -414,9 +416,6 @@ const updateSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, functi
             singleOrder.deliveryDateToUser = new Date(Date.now());
         // IF STATUS IS CHANGED TO CANCELED THEN SET NEW ORDER PRICES
         if (isCancelation) {
-            // ACCOUNT NO IS REQUIRED FOR CANCELING
-            // if (!destination)
-            //   throw new BadRequestError("destination account no is required");
             // IF ORDER IS NEVER DELIVERED TO THE USER THEN THEY CAN NOT CANCEL IT
             if (!singleOrder.deliveryDateToUser)
                 throw new errors_1.ConflictError("cargo is not delivered");
@@ -431,26 +430,32 @@ const updateSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, functi
             // IF 14 DAYS PASSED THEN CAN NOT CANCEL THE PRODUCT
             if (diffInDays > 14)
                 throw new errors_1.ForbiddenError("cancel period is expired");
-            const { amount, currency } = singleOrder;
+            const { amount } = singleOrder;
             // TRANSFER PAYMENT BACK TO ACCOUNT NO OF USER
-            // const transfer = await transferMoney({ amount, currency, destination });
+            const refund = yield (0, payment_1.refundPayment)({
+                paymentIntentId: order.paymentIntentId,
+                amount,
+            });
             // UPDATE SINGLE ORDER CANCEL DETAILS
-            // singleOrder.cancelTransferId = transfer.id;
+            singleOrder.refundId = refund.id;
             // CANCELED IS TRUE AND SET THE DATE
             singleOrder.cancelationDate = new Date(Date.now());
             // ORDER PAYMENT DECREASE CHANGE DUE TO CANCELATION
             order.subTotal -= singleOrder.amount;
             order.totalPrice -= singleOrder.amount;
-            // TODO ADD PRODUCT STOCK BACK
-            // UPDATE SINGLE ORDER IN ORDER FOR ITS CANCELATION
-            order.orderItems.forEach((orderItem) => {
-                if (orderItem._id === singleOrder._id) {
-                    orderItem.cancelTransferId = singleOrder.cancelTransferId;
-                }
-            });
+            // INCREASE REFUNDED AMOUNT
+            if (order.refunded)
+                order.refunded += refund.amount;
         }
-        console.log({ status });
         // UPDATE STATUS BECAUSE IT HAS CHANGED
+        const product = yield (0, controllers_1.findDocumentByIdAndModel)({
+            id: singleOrder.product.toString(),
+            MyModel: models_1.Product,
+        });
+        if (status === "canceled") {
+            product.stock += singleOrder.amount;
+            yield product.save();
+        }
         singleOrder.status = status;
     }
     // SAVE THE SINGLE ORDER

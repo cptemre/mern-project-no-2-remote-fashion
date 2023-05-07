@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.transferMoney = exports.createPayment = void 0;
+exports.refundPayment = exports.createPayment = void 0;
 // STRIPE
 const stripe_1 = __importDefault(require("stripe"));
 const stripe = new stripe_1.default(process.env.STRIPE_SECRET_KEY, {
@@ -122,12 +122,11 @@ const createOrGetCustomer = ({ name, email, phone, address, }) => __awaiter(void
     return customer;
 });
 // PAY BACK FOR PRODUCT
-const transferMoney = ({ amount, currency, destination, }) => __awaiter(void 0, void 0, void 0, function* () {
-    const transfer = yield stripe.transfers.create({
+const refundPayment = ({ paymentIntentId: payment_intent, amount, }) => __awaiter(void 0, void 0, void 0, function* () {
+    const refund = yield stripe.refunds.create({
+        payment_intent,
         amount,
-        currency,
-        destination,
     });
-    return transfer;
+    return refund;
 });
-exports.transferMoney = transferMoney;
+exports.refundPayment = refundPayment;

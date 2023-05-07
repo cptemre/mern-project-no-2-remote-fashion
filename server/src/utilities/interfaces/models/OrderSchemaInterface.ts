@@ -31,18 +31,7 @@ interface SingleOrderSchemaInterface
   seller: ObjectId | string;
   order: ObjectId | string;
   courier?: ObjectId | string;
-  cancelTransferId?: string;
-}
-interface SingleOrderModelInterface extends Model<SingleOrderSchemaInterface> {
-  updateProductStock({
-    productId,
-    amount,
-    operation,
-  }: {
-    productId: string;
-    amount: number;
-    operation: "+" | "-";
-  }): Promise<void>;
+  refundId?: string;
 }
 
 // FOR CLIENT CART ITEMS LENGTH
@@ -68,12 +57,12 @@ interface OrderSchemaInterface
   phoneNumber: PhoneNumberInterface;
   user: ObjectId | string;
   clientSecret: string;
-  paymentIntentID: string;
+  paymentIntentId: string;
+  refunded?: number;
 }
 export {
   SingleOrderSchemaInterface,
   OrderSchemaInterface,
-  SingleOrderModelInterface,
   CartItemsInterface,
   OrderStatusInterface,
   OrderInformationInterface,
