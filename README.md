@@ -78,17 +78,17 @@
 
 ## GET ALL SINGLE ORDERS - GET ALL ORDERS
 
-- User and seller gets only his/her single orders with req.body properties.
+- User, seller and courier gets only his/her single orders.
 - Admin can see all.
 - priceVal has to be calculated from client side.
 - Page value works.
-- Currency exchange is not tested yet.
+- Currency exchange is tested.
 
 ## GET SINGLE ORDER - GET ORDER
 
-- User and seller gets only his/her single orders with id param.
+- User, seller and courier gets only his/her single orders with id param.
 - Admin can see any single order.
-- isShipping query is tested as well.
+- isShipping query is tested as well for order
 
 ## UPDATE ORDER
 

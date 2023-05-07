@@ -82,15 +82,8 @@ const SingleOrderSchema = new mongoose_1.Schema({
         },
         default: "gbp",
     },
-    deliveredToUser: {
-        type: Boolean,
-        default: false,
-    },
-    deliveryDate: Date,
-    canceled: {
-        type: Boolean,
-        default: false,
-    },
+    deliveryDateToCargo: Date,
+    deliveryDateToUser: Date,
     cancelationDate: Date,
     cancelTransferId: String,
 }, { timestamps: true });

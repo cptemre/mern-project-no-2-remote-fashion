@@ -21,14 +21,14 @@ router
 router.get(
   "/single-order",
   authUser,
-  authRole("admin", "user", "seller"),
+  authRole("admin", "user", "seller", "courier"),
   getAllSingleOrders
 );
 
 router
   .route("/single-order/:id")
-  .get(authUser, authRole("admin", "user", "seller"), getSingleOrder)
-  .patch(authUser, authRole("admin", "seller"), updateSingleOrder);
+  .get(authUser, authRole("admin", "user", "seller", "courier"), getSingleOrder)
+  .patch(authUser, authRole("admin", "seller", "courier"), updateSingleOrder);
 
 router.get(
   "/currency-exchange",

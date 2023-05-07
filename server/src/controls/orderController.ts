@@ -39,6 +39,8 @@ import { createPayment, transferMoney } from "../utilities/payment/payment";
 // ERRORS
 import {
   BadRequestError,
+  ConflictError,
+  ForbiddenError,
   InternalServerError,
   PaymentRequiredError,
   UnauthorizedError,
@@ -48,6 +50,7 @@ import { StatusCodes } from "http-status-codes";
 import currencyExchangeRates from "../utilities/payment/currencyExchangeRates";
 // ORDER INFORMATION
 import {
+  cancelInformationArray,
   cargoInformationArray,
   orderInformationArray,
   orderStatusValues,
@@ -404,9 +407,11 @@ const updateSingleOrder: RequestHandler = async (req, res) => {
   if (!singleOrderId) throw new BadRequestError("single order id is required");
   const {
     destination,
+    courier,
     orderInformation,
   }: {
     destination: string;
+    courier: string;
   } & OrderInformationInterface = req.body;
 
   // CHECK IF BODY VARIABLES ARE PROVIDED
@@ -452,50 +457,75 @@ const updateSingleOrder: RequestHandler = async (req, res) => {
     updateOrderInformationByUserTypeQuery.informationArray =
       cargoInformationArray;
   // CHECK IF USER IS A COURIER AND IF THE SINGLE ORDER STATUS IS CARGO
-  if (userType === "courier" && singleOrder.status === "canceled")
+  if (userType === "courier" && singleOrder.status === "delivered")
     updateOrderInformationByUserTypeQuery.informationArray =
-      cargoInformationArray;
+      cancelInformationArray;
   // CALL THE ACTUAL FUNCTION FOR VALIDATION OF ORDER INFORMATION
-  const { status, deliveredToUser, deliveryDate, canceled, cancelationDate } =
+  const { status, isDeliveryToCargo, isDeliveryToUser, isCancelation } =
     updateOrderInformationByUserType(updateOrderInformationByUserTypeQuery);
+
   // UPDATE THE ORDER INFORMATION OF SINGLE ORDER
   singleOrder.orderInformation = orderInformation;
   // IF STATUS IS UNDEFINED THEN THROW AN ERROR
   if (!status)
     throw new InternalServerError("single order status is undefined");
-  // SET STATUS
-  singleOrder.status = status;
-  // IF EXISTS SET DELIVERED TO USER BOOLEAN
-  if (deliveredToUser) singleOrder.deliveredToUser = deliveredToUser;
-  // IF EXISTS SET DELIVERY DATE
-  if (deliveryDate) singleOrder.deliveryDate = deliveryDate;
-  // IF EXISTS SET CANCELED BOOLEAN
-  if (canceled) singleOrder.canceled = canceled;
-  // IF EXISTS SET CANCELATION DATE
-  if (cancelationDate) singleOrder.cancelationDate = cancelationDate;
-
-  // FIND ORDER
-  const order = await findDocumentByIdAndModel({
-    id: singleOrder.order.toString(),
-    MyModel: Order,
-  });
-  // IF STATUS IS CANCELED THEN SET NEW ORDER PRICES
-  if (status === "canceled") {
-    if (!destination)
-      throw new BadRequestError("destination account no is required");
-    const { amount, currency } = singleOrder;
-    const transfer = await transferMoney({ amount, currency, destination });
-    singleOrder.cancelTransferId = transfer.id;
-
-    // ORDER PAYMENT DECREASE CHANGE DUE TO CANCELATION
-    order.subTotal -= singleOrder.amount;
-    order.totalPrice -= singleOrder.amount;
-    // UPDATE SINGLE ORDER IN ORDER FOR ITS CANCELATION
-    order.orderItems.forEach((orderItem) => {
-      if (orderItem._id === singleOrder._id) {
-        orderItem.cancelTransferId = singleOrder.cancelTransferId;
-      }
+  // SET STATUS IF IT IS CHANGED
+  if (singleOrder.status !== status) {
+    // FIND ORDER
+    const order = await findDocumentByIdAndModel({
+      id: singleOrder.order.toString(),
+      MyModel: Order,
     });
+    // CARGO IS TRUE AND DATE IS SET
+    if (isDeliveryToCargo) {
+      if (!courier) throw new BadRequestError("courier id required");
+      singleOrder.deliveryDateToCargo = new Date(Date.now());
+      singleOrder.courier = courier;
+    }
+    // DELIVERED IS TRUE AND DATE IS SET
+    if (isDeliveryToUser) singleOrder.deliveryDateToUser = new Date(Date.now());
+    // IF STATUS IS CHANGED TO CANCELED THEN SET NEW ORDER PRICES
+    if (isCancelation) {
+      // ACCOUNT NO IS REQUIRED FOR CANCELING
+      // if (!destination)
+      //   throw new BadRequestError("destination account no is required");
+      // IF ORDER IS NEVER DELIVERED TO THE USER THEN THEY CAN NOT CANCEL IT
+      if (!singleOrder.deliveryDateToUser)
+        throw new ConflictError("cargo is not delivered");
+      // COMPARE DELIVERY DATE AND CURRENT DATE
+      const currentDate = new Date(Date.now());
+      // DIFFERENCE OF CURRENT AND DELIVERY DATE IN MS
+      const diffInMs =
+        currentDate.getTime() - singleOrder.deliveryDateToUser.getTime();
+      // A DAY IN MS
+      const dayInMs = 24 * 60 * 60 * 1000;
+      // DIFFERENCE OF CURRENT AND DELIVERY DATE IN DAYS
+      const diffInDays = diffInMs / dayInMs;
+      // IF 14 DAYS PASSED THEN CAN NOT CANCEL THE PRODUCT
+      if (diffInDays > 14) throw new ForbiddenError("cancel period is expired");
+
+      const { amount, currency } = singleOrder;
+      // TRANSFER PAYMENT BACK TO ACCOUNT NO OF USER
+      // const transfer = await transferMoney({ amount, currency, destination });
+      // UPDATE SINGLE ORDER CANCEL DETAILS
+      // singleOrder.cancelTransferId = transfer.id;
+      // CANCELED IS TRUE AND SET THE DATE
+      singleOrder.cancelationDate = new Date(Date.now());
+      // ORDER PAYMENT DECREASE CHANGE DUE TO CANCELATION
+      order.subTotal -= singleOrder.amount;
+      order.totalPrice -= singleOrder.amount;
+      // TODO ADD PRODUCT STOCK BACK
+      // UPDATE SINGLE ORDER IN ORDER FOR ITS CANCELATION
+      order.orderItems.forEach((orderItem) => {
+        if (orderItem._id === singleOrder._id) {
+          orderItem.cancelTransferId = singleOrder.cancelTransferId;
+        }
+      });
+    }
+    console.log({ status });
+
+    // UPDATE STATUS BECAUSE IT HAS CHANGED
+    singleOrder.status = status;
   }
 
   // SAVE THE SINGLE ORDER

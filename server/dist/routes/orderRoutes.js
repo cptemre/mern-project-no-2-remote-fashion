@@ -11,11 +11,11 @@ router
     .route("/")
     .post(authorization_1.authUser, (0, authorization_1.authRole)("admin", "user"), orderController_1.createOrder)
     .get(authorization_1.authUser, (0, authorization_1.authRole)("admin", "user"), orderController_1.getAllOrders);
-router.get("/single-order", authorization_1.authUser, (0, authorization_1.authRole)("admin", "user", "seller"), orderController_1.getAllSingleOrders);
+router.get("/single-order", authorization_1.authUser, (0, authorization_1.authRole)("admin", "user", "seller", "courier"), orderController_1.getAllSingleOrders);
 router
     .route("/single-order/:id")
-    .get(authorization_1.authUser, (0, authorization_1.authRole)("admin", "user", "seller"), orderController_1.getSingleOrder)
-    .patch(authorization_1.authUser, (0, authorization_1.authRole)("admin", "seller"), orderController_1.updateSingleOrder);
+    .get(authorization_1.authUser, (0, authorization_1.authRole)("admin", "user", "seller", "courier"), orderController_1.getSingleOrder)
+    .patch(authorization_1.authUser, (0, authorization_1.authRole)("admin", "seller", "courier"), orderController_1.updateSingleOrder);
 router.get("/currency-exchange", authorization_1.authUser, (0, authorization_1.authRole)("admin", "user"), orderController_1.currencyExchange);
 router.route("/:id").get(authorization_1.authUser, (0, authorization_1.authRole)("admin", "user"), orderController_1.getOrder);
 exports.default = router;

@@ -7,6 +7,7 @@ import currencyList from "./currencyList";
 import {
   sellerInformationArray,
   cargoInformationArray,
+  cancelInformationArray,
   orderInformationArray,
   recievedMsg,
 } from "./orderInformationArray";
@@ -18,6 +19,7 @@ export {
   currencyList,
   sellerInformationArray,
   cargoInformationArray,
+  cancelInformationArray,
   orderInformationArray,
   recievedMsg,
 };

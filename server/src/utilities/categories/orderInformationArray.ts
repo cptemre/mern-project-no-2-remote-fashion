@@ -33,6 +33,7 @@ const orderInformationArray = [
 export {
   sellerInformationArray,
   cargoInformationArray,
+  cancelInformationArray,
   orderInformationArray,
   recievedMsg,
 };

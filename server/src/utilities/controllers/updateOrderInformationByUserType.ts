@@ -33,35 +33,27 @@ const updateOrderInformationByUserType = ({
   )
     return { status };
   // IF IT IS LAST MESSAGE IN THE ARRAY AND IF THE STATUS IS NOT CANCELED THEN RETURN THE NEXT STATUS FROM THE ORDER STATUS VALUES ARRAY
-  if (status !== "canceled") {
-    // GET THE INDEX OF CURRENT STATUS FROM THE ORDER STATUS VALUES ARRAY
-    const indexOfStatus = orderStatusValues.indexOf(status);
-    // GET THE NEW STATUS BY ADDING THE INDEX +1
-    const newStatus = orderStatusValues[
-      indexOfStatus + 1
-    ] as OrderStatusInterface["status"];
-    console.log(newStatus);
+  // GET THE INDEX OF CURRENT STATUS FROM THE ORDER STATUS VALUES ARRAY
+  const indexOfStatus = orderStatusValues.indexOf(status);
+  // GET THE NEW STATUS BY ADDING THE INDEX +1
+  const newStatus = orderStatusValues[
+    indexOfStatus + 1
+  ] as OrderStatusInterface["status"];
+  console.log({ newStatus });
 
-    // IF THERE IS NO SUCH STATUS THEN THROW AN ERROR
-    if (!newStatus) throw new BadRequestError("status is not correct");
-
-    // IF NEW STATUS IS DELIVERED
-    const deliveredToUser = newStatus === "delivered";
-    const deliveryDate = newStatus === "delivered" && new Date(Date.now());
-    // IF NEW STATUS IS CANCELED
-    const canceled = newStatus === "canceled";
-    const cancelationDate = newStatus === "canceled" && new Date(Date.now());
-    // RETURN NEW STATUS
-    return {
-      status: newStatus,
-      deliveredToUser,
-      deliveryDate,
-      canceled,
-      cancelationDate,
-    };
-  }
-  // IF CANCELED THEN RETURN THE SAME STATUS
-  return { status };
+  // IF THERE IS NO SUCH STATUS THEN THROW AN ERROR
+  if (!newStatus) throw new BadRequestError("status is not correct");
+  // DATES TO DETERMINE STATUS CHANGE DATE
+  const isDeliveryToCargo = newStatus === "cargo";
+  const isDeliveryToUser = newStatus === "delivered";
+  const isCancelation = newStatus === "canceled";
+  // RETURN NEW STATUS
+  return {
+    status: newStatus,
+    isDeliveryToCargo,
+    isDeliveryToUser,
+    isCancelation,
+  };
 };
 
 export default updateOrderInformationByUserType;

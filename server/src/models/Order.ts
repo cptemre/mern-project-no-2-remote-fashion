@@ -75,15 +75,8 @@ const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>(
       },
       default: "gbp",
     },
-    deliveredToUser: {
-      type: Boolean,
-      default: false,
-    },
-    deliveryDate: Date,
-    canceled: {
-      type: Boolean,
-      default: false,
-    },
+    deliveryDateToCargo: Date,
+    deliveryDateToUser: Date,
     cancelationDate: Date,
     cancelTransferId: String,
   },

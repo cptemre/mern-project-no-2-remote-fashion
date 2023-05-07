@@ -4,6 +4,7 @@ import UnauthorizedError from "./UnauthorizedError";
 import BadRequestError from "./BadRequestError";
 import PaymentRequiredError from "./PaymentRequiredError";
 import InternalServerError from "./InternalServerError";
+import ForbiddenError from "./ForbiddenError";
 
 export {
   CustomError,
@@ -12,4 +13,5 @@ export {
   BadRequestError,
   PaymentRequiredError,
   InternalServerError,
+  ForbiddenError,
 };

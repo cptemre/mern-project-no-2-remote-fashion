@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.InternalServerError = exports.PaymentRequiredError = exports.BadRequestError = exports.UnauthorizedError = exports.ConflictError = exports.CustomError = void 0;
+exports.ForbiddenError = exports.InternalServerError = exports.PaymentRequiredError = exports.BadRequestError = exports.UnauthorizedError = exports.ConflictError = exports.CustomError = void 0;
 const CustomError_1 = __importDefault(require("./CustomError"));
 exports.CustomError = CustomError_1.default;
 const ConflictError_1 = __importDefault(require("./ConflictError"));
@@ -16,3 +16,5 @@ const PaymentRequiredError_1 = __importDefault(require("./PaymentRequiredError")
 exports.PaymentRequiredError = PaymentRequiredError_1.default;
 const InternalServerError_1 = __importDefault(require("./InternalServerError"));
 exports.InternalServerError = InternalServerError_1.default;
+const ForbiddenError_1 = __importDefault(require("./ForbiddenError"));
+exports.ForbiddenError = ForbiddenError_1.default;

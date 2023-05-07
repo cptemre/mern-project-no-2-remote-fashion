@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.recievedMsg = exports.orderInformationArray = exports.cargoInformationArray = exports.sellerInformationArray = void 0;
+exports.recievedMsg = exports.orderInformationArray = exports.cancelInformationArray = exports.cargoInformationArray = exports.sellerInformationArray = void 0;
 const recievedMsg = "order recieved";
 exports.recievedMsg = recievedMsg;
 const warehouseMsg = "packaging in the warehouse";
@@ -26,6 +26,7 @@ const cancelInformationArray = [
     deliveredToTheCourierMsg,
     deliveredToTheSellerMsg,
 ];
+exports.cancelInformationArray = cancelInformationArray;
 const orderInformationArray = [
     ...sellerInformationArray,
     ...cargoInformationArray,

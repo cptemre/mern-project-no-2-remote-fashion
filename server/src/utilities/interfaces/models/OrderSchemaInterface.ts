@@ -9,10 +9,9 @@ interface OrderInformationInterface {
   orderInformation: string;
 }
 
-interface DeliveryInterface {
-  deliveredToUser?: boolean;
-  deliveryDate?: Date;
-  canceled?: boolean;
+interface DeliveryDateInterface {
+  deliveryDateToCargo?: Date;
+  deliveryDateToUser?: Date;
   cancelationDate?: Date;
 }
 
@@ -21,7 +20,7 @@ interface SingleOrderSchemaInterface
     CurrencyInterface,
     OrderStatusInterface,
     OrderInformationInterface,
-    DeliveryInterface {
+    DeliveryDateInterface {
   amount: number;
   price: number;
   tax: number;
@@ -78,5 +77,5 @@ export {
   CartItemsInterface,
   OrderStatusInterface,
   OrderInformationInterface,
-  DeliveryInterface,
+  DeliveryDateInterface,
 };

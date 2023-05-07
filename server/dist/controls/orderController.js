@@ -347,7 +347,7 @@ const updateSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, functi
     // CHECK IF SINGLE ORDER ID IS PROVIDED
     if (!singleOrderId)
         throw new errors_1.BadRequestError("single order id is required");
-    const { destination, orderInformation, } = req.body;
+    const { destination, courier, orderInformation, } = req.body;
     // CHECK IF BODY VARIABLES ARE PROVIDED
     if (!singleOrderId || !orderInformation)
         throw new errors_1.BadRequestError("invalid credientals");
@@ -385,51 +385,73 @@ const updateSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, functi
         updateOrderInformationByUserTypeQuery.informationArray =
             categories_1.cargoInformationArray;
     // CHECK IF USER IS A COURIER AND IF THE SINGLE ORDER STATUS IS CARGO
-    if (userType === "courier" && singleOrder.status === "canceled")
+    if (userType === "courier" && singleOrder.status === "delivered")
         updateOrderInformationByUserTypeQuery.informationArray =
-            categories_1.cargoInformationArray;
+            categories_1.cancelInformationArray;
     // CALL THE ACTUAL FUNCTION FOR VALIDATION OF ORDER INFORMATION
-    const { status, deliveredToUser, deliveryDate, canceled, cancelationDate } = (0, controllers_1.updateOrderInformationByUserType)(updateOrderInformationByUserTypeQuery);
+    const { status, isDeliveryToCargo, isDeliveryToUser, isCancelation } = (0, controllers_1.updateOrderInformationByUserType)(updateOrderInformationByUserTypeQuery);
     // UPDATE THE ORDER INFORMATION OF SINGLE ORDER
     singleOrder.orderInformation = orderInformation;
     // IF STATUS IS UNDEFINED THEN THROW AN ERROR
     if (!status)
         throw new errors_1.InternalServerError("single order status is undefined");
-    // SET STATUS
-    singleOrder.status = status;
-    // IF EXISTS SET DELIVERED TO USER BOOLEAN
-    if (deliveredToUser)
-        singleOrder.deliveredToUser = deliveredToUser;
-    // IF EXISTS SET DELIVERY DATE
-    if (deliveryDate)
-        singleOrder.deliveryDate = deliveryDate;
-    // IF EXISTS SET CANCELED BOOLEAN
-    if (canceled)
-        singleOrder.canceled = canceled;
-    // IF EXISTS SET CANCELATION DATE
-    if (cancelationDate)
-        singleOrder.cancelationDate = cancelationDate;
-    // FIND ORDER
-    const order = yield (0, controllers_1.findDocumentByIdAndModel)({
-        id: singleOrder.order.toString(),
-        MyModel: models_1.Order,
-    });
-    // IF STATUS IS CANCELED THEN SET NEW ORDER PRICES
-    if (status === "canceled") {
-        if (!destination)
-            throw new errors_1.BadRequestError("destination account no is required");
-        const { amount, currency } = singleOrder;
-        const transfer = yield (0, payment_1.transferMoney)({ amount, currency, destination });
-        singleOrder.cancelTransferId = transfer.id;
-        // ORDER PAYMENT DECREASE CHANGE DUE TO CANCELATION
-        order.subTotal -= singleOrder.amount;
-        order.totalPrice -= singleOrder.amount;
-        // UPDATE SINGLE ORDER IN ORDER FOR ITS CANCELATION
-        order.orderItems.forEach((orderItem) => {
-            if (orderItem._id === singleOrder._id) {
-                orderItem.cancelTransferId = singleOrder.cancelTransferId;
-            }
+    // SET STATUS IF IT IS CHANGED
+    if (singleOrder.status !== status) {
+        // FIND ORDER
+        const order = yield (0, controllers_1.findDocumentByIdAndModel)({
+            id: singleOrder.order.toString(),
+            MyModel: models_1.Order,
         });
+        // CARGO IS TRUE AND DATE IS SET
+        if (isDeliveryToCargo) {
+            if (!courier)
+                throw new errors_1.BadRequestError("courier id required");
+            singleOrder.deliveryDateToCargo = new Date(Date.now());
+            singleOrder.courier = courier;
+        }
+        // DELIVERED IS TRUE AND DATE IS SET
+        if (isDeliveryToUser)
+            singleOrder.deliveryDateToUser = new Date(Date.now());
+        // IF STATUS IS CHANGED TO CANCELED THEN SET NEW ORDER PRICES
+        if (isCancelation) {
+            // ACCOUNT NO IS REQUIRED FOR CANCELING
+            // if (!destination)
+            //   throw new BadRequestError("destination account no is required");
+            // IF ORDER IS NEVER DELIVERED TO THE USER THEN THEY CAN NOT CANCEL IT
+            if (!singleOrder.deliveryDateToUser)
+                throw new errors_1.ConflictError("cargo is not delivered");
+            // COMPARE DELIVERY DATE AND CURRENT DATE
+            const currentDate = new Date(Date.now());
+            // DIFFERENCE OF CURRENT AND DELIVERY DATE IN MS
+            const diffInMs = currentDate.getTime() - singleOrder.deliveryDateToUser.getTime();
+            // A DAY IN MS
+            const dayInMs = 24 * 60 * 60 * 1000;
+            // DIFFERENCE OF CURRENT AND DELIVERY DATE IN DAYS
+            const diffInDays = diffInMs / dayInMs;
+            // IF 14 DAYS PASSED THEN CAN NOT CANCEL THE PRODUCT
+            if (diffInDays > 14)
+                throw new errors_1.ForbiddenError("cancel period is expired");
+            const { amount, currency } = singleOrder;
+            // TRANSFER PAYMENT BACK TO ACCOUNT NO OF USER
+            // const transfer = await transferMoney({ amount, currency, destination });
+            // UPDATE SINGLE ORDER CANCEL DETAILS
+            // singleOrder.cancelTransferId = transfer.id;
+            // CANCELED IS TRUE AND SET THE DATE
+            singleOrder.cancelationDate = new Date(Date.now());
+            // ORDER PAYMENT DECREASE CHANGE DUE TO CANCELATION
+            order.subTotal -= singleOrder.amount;
+            order.totalPrice -= singleOrder.amount;
+            // TODO ADD PRODUCT STOCK BACK
+            // UPDATE SINGLE ORDER IN ORDER FOR ITS CANCELATION
+            order.orderItems.forEach((orderItem) => {
+                if (orderItem._id === singleOrder._id) {
+                    orderItem.cancelTransferId = singleOrder.cancelTransferId;
+                }
+            });
+        }
+        console.log({ status });
+        // UPDATE STATUS BECAUSE IT HAS CHANGED
+        singleOrder.status = status;
     }
     // SAVE THE SINGLE ORDER
     yield singleOrder.save();
