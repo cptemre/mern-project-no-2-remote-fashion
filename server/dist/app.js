@@ -38,7 +38,7 @@ const productRoutes_1 = __importDefault(require("./routes/productRoutes"));
 const reviewRoutes_1 = __importDefault(require("./routes/reviewRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const orderRoutes_1 = __importDefault(require("./routes/orderRoutes"));
-const uploadRoutes_1 = __importDefault(require("./routes/uploadRoutes"));
+const imageRoutes_1 = __importDefault(require("./routes/imageRoutes"));
 // ERRORS
 const errorHandler_1 = __importDefault(require("./middlewares/errorHandler"));
 const notFoundError_1 = __importDefault(require("./middlewares/notFoundError"));
@@ -51,7 +51,7 @@ app.use("/api/v1/product", productRoutes_1.default);
 app.use("/api/v1/review", reviewRoutes_1.default);
 app.use("/api/v1/user", userRoutes_1.default);
 app.use("/api/v1/order", orderRoutes_1.default);
-app.use("/api/v1/upload", upload.array("product-images", 5), uploadRoutes_1.default);
+app.use("/api/v1/image", upload.array("images", 5), imageRoutes_1.default);
 // ERROR MIDDLEWARE
 app.use(errorHandler_1.default);
 app.use(notFoundError_1.default);

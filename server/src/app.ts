@@ -25,7 +25,7 @@ import productRouter from "./routes/productRoutes";
 import reviewRouter from "./routes/reviewRoutes";
 import userRouter from "./routes/userRoutes";
 import orderRouter from "./routes/orderRoutes";
-import uploadRouter from "./routes/uploadRoutes";
+import imageRouter from "./routes/imageRoutes";
 // ERRORS
 import errorHandler from "./middlewares/errorHandler";
 import notFoundError from "./middlewares/notFoundError";
@@ -39,7 +39,7 @@ app.use("/api/v1/product", productRouter);
 app.use("/api/v1/review", reviewRouter);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/order", orderRouter);
-app.use("/api/v1/upload", upload.array("product-images", 5), uploadRouter);
+app.use("/api/v1/image", upload.array("images", 5), imageRouter);
 // ERROR MIDDLEWARE
 app.use(errorHandler);
 app.use(notFoundError);

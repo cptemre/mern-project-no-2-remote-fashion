@@ -33,7 +33,7 @@ const createProduct: RequestHandler = async (req, res) => {
     brand,
     price,
     tax,
-    image,
+    images,
     description,
     size,
     gender,
@@ -49,7 +49,7 @@ const createProduct: RequestHandler = async (req, res) => {
     !brand ||
     !price ||
     !tax ||
-    !image ||
+    !images ||
     !description ||
     !size ||
     !gender ||
@@ -84,7 +84,7 @@ const createProduct: RequestHandler = async (req, res) => {
     brand,
     price,
     tax,
-    image,
+    images,
     description,
     size,
     gender,
@@ -146,11 +146,13 @@ const deleteProduct: RequestHandler = async (req, res) => {
     id: productId,
     MyModel: Product,
   });
-  // GET SELLER ID
-  const sellerId = checkProduct.seller.toString();
-  // COMPARE USER AND SELLER ID
-  if (req.user)
-    userIdAndModelUserIdMatchCheck({ user: req.user, userId: sellerId });
+  // USER MUST BE LOGGED IN
+  if (!req.user) throw new UnauthorizedError("authorization denied");
+  // CHECK IF SELLER AND PRODUCT SELLER MATCH
+  const { userType, _id: reqUserId } = req.user;
+  const sellerId = checkProduct.seller;
+  userIdAndModelUserIdMatchCheck({ userType, userId: sellerId, reqUserId });
+
   // DELETE THE PRODUCT
   const product = await Product.findOneAndDelete({ _id: productId });
   // ! TEST IF IT WILL BE DELETED FROM CART ITEMS
@@ -180,7 +182,7 @@ const updateProduct: RequestHandler = async (req, res) => {
     name,
     brand,
     price,
-    image,
+    images,
     description,
     size,
     gender,
@@ -197,7 +199,7 @@ const updateProduct: RequestHandler = async (req, res) => {
   if (name) product.name = name;
   if (brand) product.brand = brand;
   if (price) product.price = Number(price);
-  if (image) product.image = image;
+  if (images) product.images = images;
   if (description) product.description = description;
   if (size) product.size = size;
   if (gender) product.gender = gender;

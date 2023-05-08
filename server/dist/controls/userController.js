@@ -68,14 +68,19 @@ const showCurrentUser = (req, res) => __awaiter(void 0, void 0, void 0, function
 });
 exports.showCurrentUser = showCurrentUser;
 const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     // GET USER ID FROM PARAMS
     const { id: userId } = req.params;
     // CHECK IF THE USER HAS PERMISSION TO GET THE USER.
     // HAS TO BE SAME USER OR AN ADMIN TO DO THAT
     // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
-    if ((_a = req.user) === null || _a === void 0 ? void 0 : _a._id)
-        (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId });
+    if (!req.user)
+        throw new errors_1.UnauthorizedError("authorization denied");
+    const { userType: reqUserType, _id: reqUserId } = req.user;
+    (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+        userType: reqUserType,
+        userId,
+        reqUserId,
+    });
     // CHECK IF THE USER EXISTS
     const user = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: userId,
@@ -90,14 +95,16 @@ const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.deleteUser = deleteUser;
 // ! BEFORE UPDATE CLIENT SHOULD ASK FOR PASSWORD CHECK
 const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b, _c;
+    var _a;
     // GET USER ID FROM PARAMS
     const { id: userId } = req.params;
     // GET UPDATED VALUES FROM THE CLIENT
     const { name, surname, email, userType, phoneNumber, address, cardInfo, avatar, cartItems, accountNo, } = req.body;
     // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
-    if ((_b = req.user) === null || _b === void 0 ? void 0 : _b._id)
-        (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId });
+    if (!req.user)
+        throw new errors_1.UnauthorizedError("authorization denied");
+    const { userType: reqUserType, _id: reqUserId } = req.user;
+    (0, controllers_1.userIdAndModelUserIdMatchCheck)({ userType: reqUserType, userId, reqUserId });
     // CHECK IF THE USER EXISTS
     const user = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: userId,
@@ -137,7 +144,7 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
     // CART ITEMS UPDATE
     // CHECK IF PRICE, TAX AND USER MATCHES WITH THE ACTUAL PRODUCT VALUES
-    if (cartItems && ((_c = req.user) === null || _c === void 0 ? void 0 : _c.userType) !== "seller") {
+    if (cartItems && ((_a = req.user) === null || _a === void 0 ? void 0 : _a.userType) !== "seller") {
         for (let i = 0; i < cartItems.length; i++) {
             const { amount, price, tax, product, currency, status, user } = cartItems[i];
             // IF USER IS NOT CART ITEM'S USER THEN THROW AN ERROR

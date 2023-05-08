@@ -1,21 +1,24 @@
-// EXPRESS
-import { UserSchemaInterface } from "../interfaces/models";
+import { ObjectId } from "mongoose";
 // ERRORS
 import { UnauthorizedError } from "../../errors";
-// MONGOOSE
-import { ObjectId } from "mongoose";
+// ! PARAMS CHANGED - THERE MAY BE PROBLEMS
 const userIdAndModelUserIdMatchCheck = ({
-  user,
+  userType,
   userId,
+  reqUserId,
 }: {
   // ! CREATE AN INTERFACE FOR THE ID
-  user: UserSchemaInterface & { _id: ObjectId };
-  userId: string;
+  userType: string;
+  userId: string | ObjectId;
+  reqUserId: string | ObjectId;
 }) => {
-  const reqUserId = user?._id.toString();
-  if (user?.userType === "user" && userId !== reqUserId)
+  if (!userType || !userId || !reqUserId)
+    throw new UnauthorizedError("access denied");
+  const userIdString = userId.toString();
+  const reqUserIdString = reqUserId.toString();
+  if (userType === "user" && userIdString !== reqUserIdString)
     throw new UnauthorizedError("user id does not match");
-  if (user?.userType === "seller" && userId !== reqUserId)
+  if (userType === "seller" && userIdString !== reqUserIdString)
     throw new UnauthorizedError("seller id does not match");
   else return;
 };

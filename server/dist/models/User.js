@@ -57,7 +57,10 @@ const UserSchema = new mongoose_1.Schema({
         type: Object,
     },
     cardInfo: Object,
-    avatar: String,
+    avatar: {
+        type: [mongoose_1.Types.ObjectId],
+        ref: "Image",
+    },
     verificationToken: String,
     isVerified: {
         type: Boolean,

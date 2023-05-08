@@ -9,7 +9,11 @@ const ImageSchema = new Schema<ImageSchemaInterface>({
     minlength: [1, "original image name must be at least 1 character"],
     maxlength: [200, "original image name can not be more than 200 characters"],
   },
-  mimetype: {
+  cryptoName: {
+    type: String,
+    required: [true, "crypto image name is required"],
+  },
+  mimeType: {
     type: String,
     required: [true, "image type is required"],
     maxlength: [10, "image type can not be more than 10 characters"],

@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Types } from "mongoose";
 import { UserSchemaInterface } from "../utilities/interfaces/models";
 const validator = require("validator");
 import { createHash } from "../utilities/token";
@@ -49,7 +49,10 @@ const UserSchema = new Schema<UserSchemaInterface>(
       type: Object,
     },
     cardInfo: Object,
-    avatar: String,
+    avatar: {
+      type: [Types.ObjectId],
+      ref: "Image",
+    },
     verificationToken: String,
     isVerified: {
       type: Boolean,

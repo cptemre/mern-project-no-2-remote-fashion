@@ -44,8 +44,8 @@ const ProductSchema = new mongoose_1.Schema({
         type: Number,
         required: [true, "product tax percentage is required"],
     },
-    image: {
-        type: mongoose_1.Types.ObjectId,
+    images: {
+        type: [mongoose_1.Types.ObjectId],
         ref: "Image",
         required: [true, "image id is required"],
     },

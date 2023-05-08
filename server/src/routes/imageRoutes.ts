@@ -1,12 +1,12 @@
 import express from "express";
 const router = express.Router();
 
-import { uploadProductImages } from "../controls/uploadController";
+import { uploadImages } from "../controls/imageController";
 
 import { authUser, authRole } from "../middlewares/authorization";
 
 router
-  .route("/product-images")
-  .post(authUser, authRole("admin", "seller"), uploadProductImages);
+  .route("/upload")
+  .post(authUser, authRole("admin", "seller"), uploadImages);
 
 export default router;

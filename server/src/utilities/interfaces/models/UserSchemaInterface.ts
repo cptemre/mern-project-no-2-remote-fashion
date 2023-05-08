@@ -32,7 +32,7 @@ interface UserSchemaInterface extends Document {
   phoneNumber?: PhoneNumberInterface;
   address?: AddressInterface;
   cardInfo?: CreditCardInformationInterface;
-  avatar?: string;
+  avatar?: ObjectId[];
   verificationToken: string;
   isVerified: boolean;
   verified: Date | undefined;
