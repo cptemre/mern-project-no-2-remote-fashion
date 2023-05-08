@@ -520,6 +520,8 @@ const updateSingleOrder: RequestHandler = async (req, res) => {
       order.totalPrice -= singleOrder.amount;
       // INCREASE REFUNDED AMOUNT
       if (order.refunded) order.refunded += refund.amount;
+      // TODO TEST
+      await order.save();
     }
     // UPDATE STATUS BECAUSE IT HAS CHANGED
     const product = await findDocumentByIdAndModel({

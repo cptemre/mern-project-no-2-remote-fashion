@@ -7,7 +7,7 @@ interface ProductSchemaInterface extends Document, CurrencyInterface {
   brand: string;
   price: number;
   tax: number;
-  image: string[];
+  image: ObjectId;
   description: string[];
   size: string[];
   gender: "M" | "F" | "B";

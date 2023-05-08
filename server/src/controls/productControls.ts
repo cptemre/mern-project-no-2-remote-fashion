@@ -58,9 +58,6 @@ const createProduct: RequestHandler = async (req, res) => {
   )
     throw new BadRequestError("missing credentials");
 
-  // IMAGE ARRAY LENGTH CAN NOT BE MORE THAN 5
-  if (image.length > 5)
-    throw new BadRequestError("max image files for a product is 5");
   // DESCRIPTION ARRAY LENGTH CAN NOT BE MORE THAN 6
   if (description.length > 6)
     throw new BadRequestError("max description list length for a product is 6");

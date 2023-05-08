@@ -446,6 +446,8 @@ const updateSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, functi
             // INCREASE REFUNDED AMOUNT
             if (order.refunded)
                 order.refunded += refund.amount;
+            // TODO TEST
+            yield order.save();
         }
         // UPDATE STATUS BECAUSE IT HAS CHANGED
         const product = yield (0, controllers_1.findDocumentByIdAndModel)({

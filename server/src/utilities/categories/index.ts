@@ -12,6 +12,8 @@ import {
   recievedMsg,
 } from "./orderInformationArray";
 
+import imageUploadTypes from "./imageUploadTypes";
+
 export {
   allSubCategories,
   categoriesAndSubCategories,
@@ -22,4 +24,5 @@ export {
   cancelInformationArray,
   orderInformationArray,
   recievedMsg,
+  imageUploadTypes,
 };

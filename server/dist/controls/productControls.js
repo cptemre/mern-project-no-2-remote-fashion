@@ -37,9 +37,6 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         !category ||
         !subCategory)
         throw new errors_1.BadRequestError("missing credentials");
-    // IMAGE ARRAY LENGTH CAN NOT BE MORE THAN 5
-    if (image.length > 5)
-        throw new errors_1.BadRequestError("max image files for a product is 5");
     // DESCRIPTION ARRAY LENGTH CAN NOT BE MORE THAN 6
     if (description.length > 6)
         throw new errors_1.BadRequestError("max description list length for a product is 6");
