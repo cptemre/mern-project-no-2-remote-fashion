@@ -58,7 +58,7 @@ const deleteReview = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     // FIND REVIEW FROM DB
     const review = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: reviewId,
-        user: reqUserId.toString(),
+        user: reqUserId,
         MyModel: models_1.Review,
     });
     // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
@@ -84,7 +84,7 @@ const updateReview = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     // FIND THE REVIEW
     const review = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: reviewId,
-        user: reqUserId.toString(),
+        user: reqUserId,
         MyModel: models_1.Review,
     });
     // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR

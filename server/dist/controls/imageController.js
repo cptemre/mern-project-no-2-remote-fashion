@@ -15,6 +15,7 @@ const models_1 = require("../models");
 const categories_1 = require("../utilities/categories");
 // AWS S3 CLIENT
 const client_s3_1 = require("@aws-sdk/client-s3");
+const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 // ERROR
 const errors_1 = require("../errors");
 const http_status_codes_1 = require("http-status-codes");
@@ -34,7 +35,7 @@ const s3 = new client_s3_1.S3Client({
 });
 const uploadImages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // LEARN IF PRODUCT OR AVATAR IMAGE TYPE
-    const { type, product: productId, } = req.body;
+    const { type } = req.body;
     // THROW AN ERROR IF THERE IS NO TYPE FROM THE CLIENT
     if (!type)
         throw new errors_1.BadRequestError("image type is required");
@@ -48,15 +49,16 @@ const uploadImages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         throw new errors_1.BadRequestError("there is no image");
     // * MAX IMAGE LIMIT ERROR IS IN ERROR HANDLER FILE IN MIDDLEWARES FOLDER
     // THROW ERROR IF THE TYPE IS PRODUCT AND IMAGES ARE LESS THAN 2 OR THERE IS NO PRODUCT ID
-    if ((type === categories_1.imageUploadTypes[0] && productImagesFiles.length < 2) ||
-        !productId)
-        throw new errors_1.BadRequestError("minimum product image length is 2");
+    if (type === categories_1.imageUploadTypes[0] && productImagesFiles.length < 2)
+        throw new errors_1.BadRequestError("minimum product image length is one");
     // AVATAR CAN BE ONLY ONE IMAGE IN THE ARRAY TO UPLOAD
     if (type === categories_1.imageUploadTypes[1] && productImagesFiles.length === 1)
         throw new errors_1.BadRequestError("you can not upload more than one avatar image");
     // USER MUST BE LOGGED IN
     if (!req.user)
         throw new errors_1.UnauthorizedError("authorization denied");
+    // ALL IMAGES AS DOCUMENTS
+    let result = [];
     // LOOP THROUGH ALL FILES
     for (let i = 0; i < productImagesFiles.length; i++) {
         // FILE PROPERTIES
@@ -88,26 +90,78 @@ const uploadImages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             size,
             type,
         });
-        // UPDATE PRODUCT IMAGE OR USER AVATAR DEPENDS ON THE CLIENT TYPE PROPERTY
-        if (type === categories_1.imageUploadTypes[0]) {
-            // GET PRODUCT
-            const product = yield (0, controllers_1.findDocumentByIdAndModel)({
-                id: productId,
-                MyModel: models_1.Product,
-            });
-            // CHECK IF SELLER AND PRODUCT SELLER MATCH
-            const { userType, _id: reqUserId } = req.user;
-            const sellerId = product.seller;
-            (0, controllers_1.userIdAndModelUserIdMatchCheck)({
-                userType,
-                userId: sellerId,
-                reqUserId,
-            });
-            // UPDATE PRODUCT IMAGES
-            product.images = [...product.images];
-        }
+        // PUSH CREATED IMAGE DOCUMENT TO RESULT ARRAY
+        result = [...result, image];
     }
-    res.status(http_status_codes_1.StatusCodes.CREATED).json({ msg: "images are uploaded" });
+    res.status(http_status_codes_1.StatusCodes.CREATED).json({ msg: "images are uploaded", result });
 });
 exports.uploadImages = uploadImages;
-const getProductImages = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });
+const getSignedUrls = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // GET IMAGE AND PRODUCT ID FROM CLIENT
+    const { images, type, product: productId, } = req.body;
+    // CHECK CREDENTIALS
+    if (!images || !type)
+        throw new errors_1.BadRequestError("invalid credentials");
+    // USER MUST BE LOGGED IN
+    if (!req.user)
+        throw new errors_1.UnauthorizedError("authorization denied");
+    // USER TYPE AND ID
+    const { userType, _id: reqUserId } = req.user;
+    // CHECK TYPE PRODUCT
+    let product;
+    if (type === categories_1.imageUploadTypes[0]) {
+        // GET PRODUCT DOCUMENT
+        product = yield (0, controllers_1.findDocumentByIdAndModel)({
+            id: productId,
+            MyModel: models_1.Product,
+        });
+        // CHECK IF SELLER AND PRODUCT SELLER MATCH
+        (0, controllers_1.userIdAndModelUserIdMatchCheck)({ userType, userId: productId, reqUserId });
+    }
+    // CHECK TYPE PRODUCT
+    let user;
+    if (type === categories_1.imageUploadTypes[1])
+        // GET PRODUCT DOCUMENT
+        user = yield (0, controllers_1.findDocumentByIdAndModel)({
+            id: reqUserId,
+            MyModel: models_1.User,
+        });
+    // RESULT ARRAY
+    let result = [];
+    // LOOP THROUGH IMAGE CRYPTO NAMES TO GET SIGNED URL FROM AWS S3
+    for (let i = 0; i < images.length; i++) {
+        // GET IMAGE DOCUMENT
+        const image = yield (0, controllers_1.findDocumentByIdAndModel)({
+            id: images[i],
+            MyModel: models_1.Image,
+        });
+        // COMPARE IMAGE DOCUMENT TYPE AND PROVIDED TYPE TO COMPARE IF IT BELONGS TO PRODUCT OR AVATAR
+        if (image.type !== type)
+            throw new errors_1.BadRequestError("image type does not match");
+        // GET COMMAND WITH BUCKET NAME AND CRYPO NAME
+        const command = new client_s3_1.GetObjectCommand({
+            Bucket: bucket_name,
+            Key: image.cryptoName,
+        });
+        // GET URL
+        const signedUrl = yield (0, s3_request_presigner_1.getSignedUrl)(s3, command);
+        // PUSH URL TO RESULT ARRAY
+        result = [...result, signedUrl];
+    }
+    // IF PRODUCT DOCUMENT EXISTS
+    if (product) {
+        // WRITE THE SIGNED URL IN THE PRODUCT
+        product.images = result;
+        // SAVE PRODUCT TO DOCUMENT
+        yield product.save();
+    }
+    // IF USER DOCUMENT EXISTS
+    if (user) {
+        // WRITE THE SIGNED URL IN THE USER
+        user.avatar = result[0];
+        // SAVE USER TO DOCUMENT
+        yield user.save();
+    }
+    // SEND RESULT
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "image signed urls fetched", result });
+});

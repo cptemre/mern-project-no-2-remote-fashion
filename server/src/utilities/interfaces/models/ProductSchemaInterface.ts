@@ -1,5 +1,5 @@
 import { Document } from "mongoose";
-import { ObjectId } from "mongoose";
+import { Types, ObjectId } from "mongoose";
 import { CurrencyInterface } from "../payment";
 
 interface ProductSchemaInterface extends Document, CurrencyInterface {
@@ -7,7 +7,7 @@ interface ProductSchemaInterface extends Document, CurrencyInterface {
   brand: string;
   price: number;
   tax: number;
-  images: ObjectId[];
+  images: string[];
   description: string[];
   size: string[];
   gender: "M" | "F" | "B";

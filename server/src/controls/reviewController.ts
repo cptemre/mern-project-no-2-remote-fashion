@@ -64,7 +64,7 @@ const deleteReview: RequestHandler = async (req, res) => {
   // FIND REVIEW FROM DB
   const review = await findDocumentByIdAndModel({
     id: reviewId,
-    user: reqUserId.toString(),
+    user: reqUserId,
     MyModel: Review,
   });
   // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
@@ -94,7 +94,7 @@ const updateReview: RequestHandler = async (req, res) => {
   // FIND THE REVIEW
   const review = await findDocumentByIdAndModel({
     id: reviewId,
-    user: reqUserId.toString(),
+    user: reqUserId,
     MyModel: Review,
   });
   // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR

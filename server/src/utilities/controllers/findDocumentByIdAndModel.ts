@@ -1,5 +1,5 @@
 // MONGOOSE
-import { Model, Document } from "mongoose";
+import { Model, Document, ObjectId } from "mongoose";
 // ERROR
 import { BadRequestError } from "../../errors";
 const findDocumentByIdAndModel = async <T extends Document>({
@@ -9,10 +9,10 @@ const findDocumentByIdAndModel = async <T extends Document>({
   courier,
   MyModel,
 }: {
-  id: string;
-  user?: string;
-  seller?: string;
-  courier?: string;
+  id: string | ObjectId;
+  user?: string | ObjectId;
+  seller?: string | ObjectId;
+  courier?: string | ObjectId;
   MyModel: Model<T>;
 }) => {
   // QUERY FOR FINDING THE DOCUMENT
@@ -22,10 +22,10 @@ const findDocumentByIdAndModel = async <T extends Document>({
     seller?: string;
     courier?: string;
   } = {};
-  if (id) query._id = id;
-  if (user) query.user = user;
-  if (seller) query.seller = seller;
-  if (courier) query.courier = courier;
+  if (id) query._id = id.toString();
+  if (user) query.user = user.toString();
+  if (seller) query.seller = seller.toString();
+  if (courier) query.courier = courier.toString();
 
   // FIND THE DOCUMENT
   const document = await MyModel.findOne(query);

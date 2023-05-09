@@ -1,4 +1,6 @@
-interface ImageSchemaInterface {
+import { Document } from "mongoose";
+
+interface ImageSchemaInterface extends Document {
   originalName: string;
   cryptoName: string;
   mimeType: string;

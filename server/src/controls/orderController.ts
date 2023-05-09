@@ -80,7 +80,7 @@ const createOrder: RequestHandler = async (req, res) => {
   if (!req.user) throw new UnauthorizedError("authorization failed");
   const userId = req.user._id;
   const user = await findDocumentByIdAndModel({
-    id: userId.toString(),
+    id: userId,
     MyModel: User,
   });
   //
@@ -395,10 +395,10 @@ const getOrder: RequestHandler = async (req, res) => {
   // FIND THE SINGLE ORDER
   const query: {
     id: string;
-    user?: string;
+    user?: ObjectId;
     MyModel: Model<OrderSchemaInterface>;
   } = { id: orderId, MyModel: Order };
-  if (userType === "user") query.user = reqUserId.toString();
+  if (userType === "user") query.user = reqUserId;
 
   // FIND THE SINGLE ORDER
   const order = await findDocumentByIdAndModel(query);
@@ -480,7 +480,7 @@ const updateSingleOrder: RequestHandler = async (req, res) => {
   if (singleOrder.status !== status) {
     // FIND ORDER
     const order = await findDocumentByIdAndModel({
-      id: singleOrder.order.toString(),
+      id: singleOrder.order,
       MyModel: Order,
     });
 
@@ -529,7 +529,7 @@ const updateSingleOrder: RequestHandler = async (req, res) => {
     }
     // UPDATE STATUS BECAUSE IT HAS CHANGED
     const product = await findDocumentByIdAndModel({
-      id: singleOrder.product.toString(),
+      id: singleOrder.product,
       MyModel: Product,
     });
     if (status === "canceled") {

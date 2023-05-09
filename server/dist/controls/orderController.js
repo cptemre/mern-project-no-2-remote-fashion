@@ -36,7 +36,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         throw new errors_1.UnauthorizedError("authorization failed");
     const userId = req.user._id;
     const user = yield (0, controllers_1.findDocumentByIdAndModel)({
-        id: userId.toString(),
+        id: userId,
         MyModel: models_1.User,
     });
     //
@@ -331,7 +331,7 @@ const getOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // FIND THE SINGLE ORDER
     const query = { id: orderId, MyModel: models_1.Order };
     if (userType === "user")
-        query.user = reqUserId.toString();
+        query.user = reqUserId;
     // FIND THE SINGLE ORDER
     const order = yield (0, controllers_1.findDocumentByIdAndModel)(query);
     // CHECK USER MATCHES WITH THE ORDER USER OR IT IS ADMIN
@@ -401,7 +401,7 @@ const updateSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, functi
     if (singleOrder.status !== status) {
         // FIND ORDER
         const order = yield (0, controllers_1.findDocumentByIdAndModel)({
-            id: singleOrder.order.toString(),
+            id: singleOrder.order,
             MyModel: models_1.Order,
         });
         // CARGO IS TRUE AND DATE IS SET
@@ -451,7 +451,7 @@ const updateSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, functi
         }
         // UPDATE STATUS BECAUSE IT HAS CHANGED
         const product = yield (0, controllers_1.findDocumentByIdAndModel)({
-            id: singleOrder.product.toString(),
+            id: singleOrder.product,
             MyModel: models_1.Product,
         });
         if (status === "canceled") {

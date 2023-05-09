@@ -49,10 +49,7 @@ const UserSchema = new Schema<UserSchemaInterface>(
       type: Object,
     },
     cardInfo: Object,
-    avatar: {
-      type: [Types.ObjectId],
-      ref: "Image",
-    },
+    avatar: String,
     verificationToken: String,
     isVerified: {
       type: Boolean,
