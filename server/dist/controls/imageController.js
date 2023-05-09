@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadImages = void 0;
+exports.deleteImage = exports.getSignedUrls = exports.uploadImages = void 0;
 const token_1 = require("../utilities/token");
 const models_1 = require("../models");
 const categories_1 = require("../utilities/categories");
@@ -35,11 +35,10 @@ const s3 = new client_s3_1.S3Client({
 });
 const uploadImages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // LEARN IF PRODUCT OR AVATAR IMAGE TYPE
-    const { type } = req.body;
-    // THROW AN ERROR IF THERE IS NO TYPE FROM THE CLIENT
-    if (!type)
-        throw new errors_1.BadRequestError("image type is required");
-    // REQ FILES
+    const { type } = req.params;
+    // CHECK IF TYPE IS CORRECT
+    if (!categories_1.imageUploadTypes.includes(type))
+        throw new errors_1.BadRequestError("invalid type");
     const productImagesFiles = req.files;
     // CHECK IF THERE ARE FILES
     if (!productImagesFiles)
@@ -48,15 +47,14 @@ const uploadImages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     if (!Array.isArray(productImagesFiles))
         throw new errors_1.BadRequestError("there is no image");
     // * MAX IMAGE LIMIT ERROR IS IN ERROR HANDLER FILE IN MIDDLEWARES FOLDER
-    // THROW ERROR IF THE TYPE IS PRODUCT AND IMAGES ARE LESS THAN 2 OR THERE IS NO PRODUCT ID
-    if (type === categories_1.imageUploadTypes[0] && productImagesFiles.length < 2)
-        throw new errors_1.BadRequestError("minimum product image length is one");
     // AVATAR CAN BE ONLY ONE IMAGE IN THE ARRAY TO UPLOAD
-    if (type === categories_1.imageUploadTypes[1] && productImagesFiles.length === 1)
+    if (type === categories_1.imageUploadTypes[1] && productImagesFiles.length !== 1)
         throw new errors_1.BadRequestError("you can not upload more than one avatar image");
     // USER MUST BE LOGGED IN
     if (!req.user)
         throw new errors_1.UnauthorizedError("authorization denied");
+    // USER ID
+    const { _id: userId } = req.user;
     // ALL IMAGES AS DOCUMENTS
     let result = [];
     // LOOP THROUGH ALL FILES
@@ -89,6 +87,7 @@ const uploadImages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             mimeType,
             size,
             type,
+            createdBy: userId,
         });
         // PUSH CREATED IMAGE DOCUMENT TO RESULT ARRAY
         result = [...result, image];
@@ -98,43 +97,67 @@ const uploadImages = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.uploadImages = uploadImages;
 const getSignedUrls = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET IMAGE AND PRODUCT ID FROM CLIENT
-    const { images, type, product: productId, } = req.body;
+    const { id } = req.params;
+    const { images, type, } = req.body;
+    // CHECK IF TYPE IS CORRECT
+    if (!categories_1.imageUploadTypes.includes(type))
+        throw new errors_1.BadRequestError("invalid type");
+    // SET ID FROM PARAM BY TYPE
+    let productId = "";
+    let userId = "";
+    // TYPE === 'product'
+    if (type === categories_1.imageUploadTypes[0])
+        productId = id;
+    // TYPE === 'avatar'
+    if (type === categories_1.imageUploadTypes[1])
+        userId = id;
+    // CHECK IF ANY ID IS PROVIDED
+    if (!productId && !userId)
+        throw new errors_1.BadRequestError("document id is missing");
     // CHECK CREDENTIALS
-    if (!images || !type)
-        throw new errors_1.BadRequestError("invalid credentials");
+    if (!images)
+        throw new errors_1.BadRequestError("image id required");
     // USER MUST BE LOGGED IN
     if (!req.user)
         throw new errors_1.UnauthorizedError("authorization denied");
     // USER TYPE AND ID
     const { userType, _id: reqUserId } = req.user;
-    // CHECK TYPE PRODUCT
+    // EMPTY PRODUCT VARIABLE
     let product;
-    if (type === categories_1.imageUploadTypes[0]) {
+    //* IF IT IS PRODUCT TYPE
+    if (productId) {
         // GET PRODUCT DOCUMENT
         product = yield (0, controllers_1.findDocumentByIdAndModel)({
             id: productId,
             MyModel: models_1.Product,
         });
         // CHECK IF SELLER AND PRODUCT SELLER MATCH
-        (0, controllers_1.userIdAndModelUserIdMatchCheck)({ userType, userId: productId, reqUserId });
+        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+            userType,
+            userId: product.seller,
+            reqUserId,
+        });
     }
-    // CHECK TYPE PRODUCT
+    //* IF IT IS USER TYPE
     let user;
     if (type === categories_1.imageUploadTypes[1])
-        // GET PRODUCT DOCUMENT
+        // GET PRODUCT DOCUMENT - NO NEED TO COMPARE BECAUSE ID GETS FROM REQ.USER
         user = yield (0, controllers_1.findDocumentByIdAndModel)({
             id: reqUserId,
             MyModel: models_1.User,
         });
-    // RESULT ARRAY
-    let result = [];
-    // LOOP THROUGH IMAGE CRYPTO NAMES TO GET SIGNED URL FROM AWS S3
+    // IMAGES ARRAY TO SET WITH IMAGES
+    let imagesArray = [];
+    //* LOOP THROUGH IMAGE CRYPTO NAMES TO GET SIGNED URL FROM AWS S3
     for (let i = 0; i < images.length; i++) {
         // GET IMAGE DOCUMENT
         const image = yield (0, controllers_1.findDocumentByIdAndModel)({
             id: images[i],
             MyModel: models_1.Image,
         });
+        // CHECK IF THE IMAGE IS CREATED BY THE CURRENT USER
+        if (image.createdBy !== reqUserId && userType !== "admin")
+            throw new errors_1.UnauthorizedError("image creater id does not match");
         // COMPARE IMAGE DOCUMENT TYPE AND PROVIDED TYPE TO COMPARE IF IT BELONGS TO PRODUCT OR AVATAR
         if (image.type !== type)
             throw new errors_1.BadRequestError("image type does not match");
@@ -145,23 +168,92 @@ const getSignedUrls = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
         // GET URL
         const signedUrl = yield (0, s3_request_presigner_1.getSignedUrl)(s3, command);
-        // PUSH URL TO RESULT ARRAY
-        result = [...result, signedUrl];
+        // SET URL TO IMAGE DOCUMENT
+        image.url = signedUrl;
+        // PUSH IMAGE DOCUMENT TO RESULT ARRAY
+        imagesArray = [...imagesArray, image];
+        // IF PRODUCT DOCUMENT EXISTS SET IMAGE PRODUCT
+        if (product)
+            image.product = product._id;
+        // IF USER DOCUMENT EXISTS SET IMAGE USER
+        if (user)
+            image.user = user._id;
+        // SAVE IMAGE DOCUMENT
+        yield image.save();
     }
-    // IF PRODUCT DOCUMENT EXISTS
-    if (product) {
-        // WRITE THE SIGNED URL IN THE PRODUCT
-        product.images = result;
-        // SAVE PRODUCT TO DOCUMENT
+    //* LOOP END
+    // SET IMAGES DOCUMENT ARRAY LENGTH
+    const imagesArrayLength = imagesArray.length;
+    // SEND RESULT
+    res.status(http_status_codes_1.StatusCodes.OK).json({
+        msg: "image signed urls updated",
+        result: imagesArray,
+        length: imagesArrayLength,
+    });
+});
+exports.getSignedUrls = getSignedUrls;
+const deleteImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id: imageId } = req.params;
+    // CHECK IF TYPE IS CORRECT
+    if (!req.user)
+        throw new errors_1.UnauthorizedError("authorization denied");
+    // REQ USER ID
+    const { userType, _id: reqUserId } = req.user;
+    // FIND IMAGE DOCUMENT
+    const image = yield (0, controllers_1.findDocumentByIdAndModel)({
+        id: imageId,
+        MyModel: models_1.Image,
+    });
+    // IMAGE CRYPTED NAME
+    const { cryptoName, type, product: productId, user: userId } = image;
+    // CREATE DELETE COMMAND
+    const command = new client_s3_1.DeleteObjectCommand({
+        Bucket: bucket_name,
+        Key: cryptoName,
+    });
+    yield s3.send(command);
+    //* TYPE === PRODUCT
+    if (type === categories_1.imageUploadTypes[0]) {
+        if (!productId)
+            throw new errors_1.UnauthorizedError("authorization denied");
+        // FIND PRODUCT DOCUMENT
+        const product = yield (0, controllers_1.findDocumentByIdAndModel)({
+            id: productId,
+            MyModel: models_1.Product,
+        });
+        if (product.images.length < 3)
+            throw new errors_1.BadRequestError("there has to be at least 2 images for the product");
+        // COMPARE IMAGE USER AND ACTUAL USER FOR AUTHORIZATION
+        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+            userType,
+            userId: product.seller,
+            reqUserId,
+        });
+        // FILTER THE REQUIRED IMAGE ID FROM PRODUCT IMAGES ARRAY
+        const filteredImages = product.images.filter((image) => image.toString() !== imageId);
+        // SET NEW ARRAY TO THE PRODUCT
+        product.images = filteredImages;
+        // SAVE PRODUCT
         yield product.save();
     }
-    // IF USER DOCUMENT EXISTS
-    if (user) {
-        // WRITE THE SIGNED URL IN THE USER
-        user.avatar = result[0];
-        // SAVE USER TO DOCUMENT
+    //* TYPE === AVATAR
+    if (type === categories_1.imageUploadTypes[1]) {
+        if (!userId)
+            throw new errors_1.UnauthorizedError("authorization denied");
+        // COMPARE IMAGE USER AND ACTUAL USER FOR AUTHORIZATION
+        (0, controllers_1.userIdAndModelUserIdMatchCheck)({ userType, userId, reqUserId });
+        // FIND USER DOCUMENT
+        const user = yield (0, controllers_1.findDocumentByIdAndModel)({
+            id: userId,
+            MyModel: models_1.User,
+        });
+        // SET ITS AVATAR TO EMPTY STRING
+        user.avatar = "";
+        // SAVE THE USER
         yield user.save();
     }
-    // SEND RESULT
-    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "image signed urls fetched", result });
+    // DELETE IMAGE DOCUMENT
+    yield models_1.Image.findOneAndDelete({ _id: imageId });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "image deleted" });
 });
+exports.deleteImage = deleteImage;

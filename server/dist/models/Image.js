@@ -7,7 +7,10 @@ const ImageSchema = new mongoose_1.Schema({
         type: String,
         required: [true, "original image name is required"],
         minlength: [1, "original image name must be at least 1 character"],
-        maxlength: [200, "original image name can not be more than 200 characters"],
+        maxlength: [
+            200,
+            "original image name can not be more than 200 characters",
+        ],
     },
     cryptoName: {
         type: String,
@@ -32,6 +35,19 @@ const ImageSchema = new mongoose_1.Schema({
             message: `image type must be one of the following: ${categories_1.imageUploadTypes}`,
         },
     },
-});
+    user: {
+        type: mongoose_1.Types.ObjectId,
+        ref: "User",
+    },
+    product: {
+        type: mongoose_1.Types.ObjectId,
+        ref: "Product",
+    },
+    createdBy: {
+        type: mongoose_1.Types.ObjectId,
+        ref: "User",
+        required: [true, "creater's id required"],
+    },
+}, { timestamps: true });
 const Image = (0, mongoose_1.model)("Image", ImageSchema);
 exports.default = Image;

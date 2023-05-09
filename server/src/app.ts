@@ -39,7 +39,7 @@ app.use("/api/v1/product", productRouter);
 app.use("/api/v1/review", reviewRouter);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/order", orderRouter);
-app.use("/api/v1/image", upload.array("images", 5), imageRouter);
+app.use("/api/v1/upload/image", upload.array("images", 5), imageRouter);
 // ERROR MIDDLEWARE
 app.use(errorHandler);
 app.use(notFoundError);

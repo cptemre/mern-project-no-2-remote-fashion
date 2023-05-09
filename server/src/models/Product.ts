@@ -37,7 +37,7 @@ const ProductSchema = new Schema<ProductSchemaInterface>(
       required: [true, "product tax percentage is required"],
     },
     images: {
-      type: [String],
+      type: [Types.ObjectId],
       required: [true, "image id is required"],
     },
     description: [

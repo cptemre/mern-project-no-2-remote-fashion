@@ -51,7 +51,7 @@ app.use("/api/v1/product", productRoutes_1.default);
 app.use("/api/v1/review", reviewRoutes_1.default);
 app.use("/api/v1/user", userRoutes_1.default);
 app.use("/api/v1/order", orderRoutes_1.default);
-app.use("/api/v1/image", upload.array("images", 5), imageRoutes_1.default);
+app.use("/api/v1/upload/image", upload.array("images", 5), imageRoutes_1.default);
 // ERROR MIDDLEWARE
 app.use(errorHandler_1.default);
 app.use(notFoundError_1.default);
