@@ -23,6 +23,8 @@ import {
   CreditCardInformationInterface,
 } from "./UserSchemaInterface";
 
+import ImageSchemaInterface from "./ImageSchemaInterface";
+
 export {
   CartItemsInterface,
   OrderSchemaInterface,
@@ -38,4 +40,5 @@ export {
   OrderStatusInterface,
   OrderInformationInterface,
   DeliveryDateInterface,
+  ImageSchemaInterface,
 };

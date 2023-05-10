@@ -86,7 +86,13 @@ const deleteUser: RequestHandler = async (req, res) => {
   // CHECK IF THE USER HAS PERMISSION TO GET THE USER.
   // HAS TO BE SAME USER OR AN ADMIN TO DO THAT
   // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
-  if (req.user?._id) userIdAndModelUserIdMatchCheck({ user: req.user, userId });
+  if (!req.user) throw new UnauthorizedError("authorization denied");
+  const { userType: reqUserType, _id: reqUserId } = req.user;
+  userIdAndModelUserIdMatchCheck({
+    userType: reqUserType,
+    userId,
+    reqUserId,
+  });
   // CHECK IF THE USER EXISTS
   const user = await findDocumentByIdAndModel({
     id: userId,
@@ -118,7 +124,9 @@ const updateUser: RequestHandler = async (req, res) => {
     accountNo,
   }: UserSchemaInterface = req.body;
   // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
-  if (req.user?._id) userIdAndModelUserIdMatchCheck({ user: req.user, userId });
+  if (!req.user) throw new UnauthorizedError("authorization denied");
+  const { userType: reqUserType, _id: reqUserId } = req.user;
+  userIdAndModelUserIdMatchCheck({ userType: reqUserType, userId, reqUserId });
   // CHECK IF THE USER EXISTS
   const user = await findDocumentByIdAndModel({
     id: userId,

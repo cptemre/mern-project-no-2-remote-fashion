@@ -36,7 +36,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         throw new errors_1.UnauthorizedError("authorization failed");
     const userId = req.user._id;
     const user = yield (0, controllers_1.findDocumentByIdAndModel)({
-        id: userId.toString(),
+        id: userId,
         MyModel: models_1.User,
     });
     //
@@ -264,25 +264,26 @@ const getSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, function*
     // GET USER, SELLER OR COURIER ID AS OBJECT
     if (!req.user)
         throw new errors_1.UnauthorizedError("authorization denied");
-    const { userType, _id: id } = req.user;
-    const { userTypeQuery } = (0, controllers_1.getUserTypeQuery)({ userType, id });
+    const { userType, _id: reqUserId } = req.user;
+    const { userTypeQuery } = (0, controllers_1.getUserTypeQuery)({ userType, id: reqUserId });
     // SINGLE ORDER QUERY
     const query = Object.assign({ id: singleOrderId, MyModel: models_1.SingleOrder }, userTypeQuery);
     // FIND THE SINGLE ORDER
     const singleOrder = yield (0, controllers_1.findDocumentByIdAndModel)(query);
     // CHECK USER MATCHES WITH THE SINGLE ORDER USER
-    if (req.user) {
-        // SET USER OR SELLER ID TO COMPARE WITH ACTUAL ACCOUNT USER
-        let userOrSellerId = "";
-        if (req.user.userType === "user")
-            userOrSellerId = singleOrder.user.toString();
-        if (req.user.userType === "seller")
-            userOrSellerId = singleOrder.seller.toString();
-        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
-            user: req.user,
-            userId: userOrSellerId,
-        });
-    }
+    if (!req.user)
+        throw new errors_1.UnauthorizedError("authorization denied");
+    // SET USER OR SELLER ID TO COMPARE WITH ACTUAL ACCOUNT USER
+    let userOrSellerId = "";
+    if (req.user.userType === "user")
+        userOrSellerId = singleOrder.user.toString();
+    if (req.user.userType === "seller")
+        userOrSellerId = singleOrder.seller.toString();
+    (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+        userType,
+        userId: userOrSellerId,
+        reqUserId,
+    });
     // RESPONSE
     res
         .status(http_status_codes_1.StatusCodes.OK)
@@ -318,32 +319,32 @@ const getAllOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.getAllOrders = getAllOrders;
 const getOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _c, _d;
     // GET CLIENT SIDE QUERY
     const { id: orderId } = req.params;
     // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
     if (!orderId)
         throw new errors_1.BadRequestError("order id is required");
+    // CHECK IF THERE IS A USER
+    if (!req.user)
+        throw new errors_1.UnauthorizedError("authorization denied");
+    const { userType, _id: reqUserId } = req.user;
     // FIND THE SINGLE ORDER
-    const userId = ((_c = req.user) === null || _c === void 0 ? void 0 : _c.userType) === "user" && ((_d = req.user) === null || _d === void 0 ? void 0 : _d._id);
+    const query = { id: orderId, MyModel: models_1.Order };
+    if (userType === "user")
+        query.user = reqUserId;
     // FIND THE SINGLE ORDER
-    const order = yield (0, controllers_1.findDocumentByIdAndModel)({
-        id: orderId,
-        user: userId.toString(),
-        MyModel: models_1.Order,
-    });
+    const order = yield (0, controllers_1.findDocumentByIdAndModel)(query);
     // CHECK USER MATCHES WITH THE ORDER USER OR IT IS ADMIN
-    if (req.user)
-        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
-            user: req.user,
-            userId: order.user.toString(),
-        });
+    (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+        userType,
+        userId: order.user,
+        reqUserId,
+    });
     // RESPONSE
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "order fetched", result: order });
 });
 exports.getOrder = getOrder;
 const updateSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _e;
     // GET ORDER ID FROM THE CLIENT
     const { id: singleOrderId } = req.params;
     // CHECK IF SINGLE ORDER ID IS PROVIDED
@@ -359,16 +360,15 @@ const updateSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, functi
         MyModel: models_1.SingleOrder,
     });
     // CHECK IF CURRENT USER IS NOT ADMIN AND ORDER USER ID IS NOT EQUAL TO USER ID
-    if (req.user) {
-        let userOrSellerId = req.user.userType === "user" ? singleOrder.user : singleOrder.seller;
-        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
-            user: req.user,
-            userId: userOrSellerId.toString(),
-        });
-    }
-    // IF IT IS A CANCELATION THEN PAY BACK THE MONEY
-    // USER TYPE
-    const userType = (_e = req.user) === null || _e === void 0 ? void 0 : _e.userType;
+    if (!req.user)
+        throw new errors_1.UnauthorizedError("authorization denied");
+    let userOrSellerId = req.user.userType === "user" ? singleOrder.user : singleOrder.seller;
+    const { userType, _id: reqUserId } = req.user;
+    (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+        userType,
+        userId: userOrSellerId,
+        reqUserId,
+    });
     // ORDER INFORMATION IN SINGLE ORDER
     const singleOrderInformationValue = singleOrder.orderInformation;
     // QUERY TO CHECK ORDER INFORMATION VALIDATION
@@ -401,7 +401,7 @@ const updateSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, functi
     if (singleOrder.status !== status) {
         // FIND ORDER
         const order = yield (0, controllers_1.findDocumentByIdAndModel)({
-            id: singleOrder.order.toString(),
+            id: singleOrder.order,
             MyModel: models_1.Order,
         });
         // CARGO IS TRUE AND DATE IS SET
@@ -446,10 +446,12 @@ const updateSingleOrder = (req, res) => __awaiter(void 0, void 0, void 0, functi
             // INCREASE REFUNDED AMOUNT
             if (order.refunded)
                 order.refunded += refund.amount;
+            // TODO TEST
+            yield order.save();
         }
         // UPDATE STATUS BECAUSE IT HAS CHANGED
         const product = yield (0, controllers_1.findDocumentByIdAndModel)({
-            id: singleOrder.product.toString(),
+            id: singleOrder.product,
             MyModel: models_1.Product,
         });
         if (status === "canceled") {

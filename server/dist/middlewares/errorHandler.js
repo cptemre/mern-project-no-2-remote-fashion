@@ -23,6 +23,11 @@ const errorHandler = (err, req, res, next) => {
         customError.msg = errorArray.toString();
         customError.statusCode = http_status_codes_1.StatusCodes.UNPROCESSABLE_ENTITY;
     }
+    // DUPLICATE ERROR HANDLE
+    if (err.code === "LIMIT_UNEXPECTED_FILE") {
+        customError.msg = "maximum product image length is 5";
+        customError.statusCode = http_status_codes_1.StatusCodes.BAD_REQUEST;
+    }
     // SHOW ERROR IN CONSOLE FOR DETAILS
     console.log(err);
     res.status(customError.statusCode).json({ msg: customError.msg });

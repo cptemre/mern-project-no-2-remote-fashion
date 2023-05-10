@@ -15,6 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // DOTENV
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
+// ENV VARIABLES
+const mongoUrl = process.env.MONGO_URL;
+const port = Number(process.env.PORT) || 5000;
+const jwtSecret = process.env.JWT_SECRET;
 // ASYNC ERRORS
 require("express-async-errors");
 // COOKIE PARSER
@@ -22,18 +26,19 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 // EXPRESS
 const express_1 = __importDefault(require("express"));
 const app = (0, express_1.default)();
+// MULTER
+const multer_1 = __importDefault(require("multer"));
+const storage = multer_1.default.memoryStorage();
+const upload = (0, multer_1.default)({ storage });
 // DATABASE
 const connectDB_1 = require("./connectDB/connectDB");
-// ENV VARIABLES
-const mongoUrl = process.env.MONGO_URL;
-const port = Number(process.env.PORT) || 5000;
-const jwtSecret = process.env.JWT_SECRET;
 // ROUTES
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const productRoutes_1 = __importDefault(require("./routes/productRoutes"));
 const reviewRoutes_1 = __importDefault(require("./routes/reviewRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const orderRoutes_1 = __importDefault(require("./routes/orderRoutes"));
+const imageRoutes_1 = __importDefault(require("./routes/imageRoutes"));
 // ERRORS
 const errorHandler_1 = __importDefault(require("./middlewares/errorHandler"));
 const notFoundError_1 = __importDefault(require("./middlewares/notFoundError"));
@@ -46,6 +51,7 @@ app.use("/api/v1/product", productRoutes_1.default);
 app.use("/api/v1/review", reviewRoutes_1.default);
 app.use("/api/v1/user", userRoutes_1.default);
 app.use("/api/v1/order", orderRoutes_1.default);
+app.use("/api/v1/upload/image", upload.array("images", 5), imageRoutes_1.default);
 // ERROR MIDDLEWARE
 app.use(errorHandler_1.default);
 app.use(notFoundError_1.default);

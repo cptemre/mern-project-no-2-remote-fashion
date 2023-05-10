@@ -9,6 +9,7 @@ import {
   PhoneNumberInterface,
   AddressInterface,
   OrderInformationInterface,
+  OrderSchemaInterface,
 } from "../utilities/interfaces/models";
 // QUERY MODELS
 import {
@@ -56,6 +57,7 @@ import {
   orderStatusValues,
   sellerInformationArray,
 } from "../utilities/categories";
+import { Model, ObjectId } from "mongoose";
 
 const createOrder: RequestHandler = async (req, res) => {
   // TODO COUNTRY MUST BE CAPITAL SHORT NAME SUCH AS US. CREATE AN INTERFACE FOR IT
@@ -78,7 +80,7 @@ const createOrder: RequestHandler = async (req, res) => {
   if (!req.user) throw new UnauthorizedError("authorization failed");
   const userId = req.user._id;
   const user = await findDocumentByIdAndModel({
-    id: userId.toString(),
+    id: userId,
     MyModel: User,
   });
   //
@@ -319,8 +321,8 @@ const getSingleOrder: RequestHandler = async (req, res) => {
 
   // GET USER, SELLER OR COURIER ID AS OBJECT
   if (!req.user) throw new UnauthorizedError("authorization denied");
-  const { userType, _id: id } = req.user;
-  const { userTypeQuery } = getUserTypeQuery({ userType, id });
+  const { userType, _id: reqUserId } = req.user;
+  const { userTypeQuery } = getUserTypeQuery({ userType, id: reqUserId });
   // SINGLE ORDER QUERY
   const query = {
     id: singleOrderId,
@@ -331,18 +333,19 @@ const getSingleOrder: RequestHandler = async (req, res) => {
 
   const singleOrder = await findDocumentByIdAndModel(query);
   // CHECK USER MATCHES WITH THE SINGLE ORDER USER
-  if (req.user) {
-    // SET USER OR SELLER ID TO COMPARE WITH ACTUAL ACCOUNT USER
-    let userOrSellerId: string = "";
-    if (req.user.userType === "user")
-      userOrSellerId = singleOrder.user.toString();
-    if (req.user.userType === "seller")
-      userOrSellerId = singleOrder.seller.toString();
-    userIdAndModelUserIdMatchCheck({
-      user: req.user,
-      userId: userOrSellerId,
-    });
-  }
+  if (!req.user) throw new UnauthorizedError("authorization denied");
+  // SET USER OR SELLER ID TO COMPARE WITH ACTUAL ACCOUNT USER
+  let userOrSellerId: string = "";
+  if (req.user.userType === "user")
+    userOrSellerId = singleOrder.user.toString();
+  if (req.user.userType === "seller")
+    userOrSellerId = singleOrder.seller.toString();
+
+  userIdAndModelUserIdMatchCheck({
+    userType,
+    userId: userOrSellerId,
+    reqUserId,
+  });
   // RESPONSE
   res
     .status(StatusCodes.OK)
@@ -386,20 +389,25 @@ const getOrder: RequestHandler = async (req, res) => {
   const { id: orderId } = req.params;
   // IF PRODUCT ID DOES NOT EXIST THROW AN ERROR
   if (!orderId) throw new BadRequestError("order id is required");
+  // CHECK IF THERE IS A USER
+  if (!req.user) throw new UnauthorizedError("authorization denied");
+  const { userType, _id: reqUserId } = req.user;
   // FIND THE SINGLE ORDER
-  const userId = req.user?.userType === "user" && req.user?._id;
+  const query: {
+    id: string;
+    user?: ObjectId;
+    MyModel: Model<OrderSchemaInterface>;
+  } = { id: orderId, MyModel: Order };
+  if (userType === "user") query.user = reqUserId;
+
   // FIND THE SINGLE ORDER
-  const order = await findDocumentByIdAndModel({
-    id: orderId,
-    user: userId.toString(),
-    MyModel: Order,
-  });
+  const order = await findDocumentByIdAndModel(query);
   // CHECK USER MATCHES WITH THE ORDER USER OR IT IS ADMIN
-  if (req.user)
-    userIdAndModelUserIdMatchCheck({
-      user: req.user,
-      userId: order.user.toString(),
-    });
+  userIdAndModelUserIdMatchCheck({
+    userType,
+    userId: order.user,
+    reqUserId,
+  });
   // RESPONSE
   res.status(StatusCodes.OK).json({ msg: "order fetched", result: order });
 };
@@ -427,19 +435,15 @@ const updateSingleOrder: RequestHandler = async (req, res) => {
     MyModel: SingleOrder,
   });
   // CHECK IF CURRENT USER IS NOT ADMIN AND ORDER USER ID IS NOT EQUAL TO USER ID
-  if (req.user) {
-    let userOrSellerId =
-      req.user.userType === "user" ? singleOrder.user : singleOrder.seller;
-    userIdAndModelUserIdMatchCheck({
-      user: req.user,
-      userId: userOrSellerId.toString(),
-    });
-  }
-
-  // IF IT IS A CANCELATION THEN PAY BACK THE MONEY
-
-  // USER TYPE
-  const userType = req.user?.userType;
+  if (!req.user) throw new UnauthorizedError("authorization denied");
+  let userOrSellerId =
+    req.user.userType === "user" ? singleOrder.user : singleOrder.seller;
+  const { userType, _id: reqUserId } = req.user;
+  userIdAndModelUserIdMatchCheck({
+    userType,
+    userId: userOrSellerId,
+    reqUserId,
+  });
   // ORDER INFORMATION IN SINGLE ORDER
   const singleOrderInformationValue = singleOrder.orderInformation;
   // QUERY TO CHECK ORDER INFORMATION VALIDATION
@@ -476,7 +480,7 @@ const updateSingleOrder: RequestHandler = async (req, res) => {
   if (singleOrder.status !== status) {
     // FIND ORDER
     const order = await findDocumentByIdAndModel({
-      id: singleOrder.order.toString(),
+      id: singleOrder.order,
       MyModel: Order,
     });
 
@@ -520,10 +524,12 @@ const updateSingleOrder: RequestHandler = async (req, res) => {
       order.totalPrice -= singleOrder.amount;
       // INCREASE REFUNDED AMOUNT
       if (order.refunded) order.refunded += refund.amount;
+      // TODO TEST
+      await order.save();
     }
     // UPDATE STATUS BECAUSE IT HAS CHANGED
     const product = await findDocumentByIdAndModel({
-      id: singleOrder.product.toString(),
+      id: singleOrder.product,
       MyModel: Product,
     });
     if (status === "canceled") {

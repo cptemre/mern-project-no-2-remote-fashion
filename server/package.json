@@ -25,8 +25,9 @@
   },
   "dependencies": {
     "@aws-sdk/client-cloudfront": "^3.303.0",
-    "@aws-sdk/client-s3": "^3.305.0",
+    "@aws-sdk/client-s3": "^3.329.0",
     "@aws-sdk/cloudfront-signer": "^3.303.0",
+    "@aws-sdk/s3-request-presigner": "^3.329.0",
     "@sendgrid/mail": "^7.7.0",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",

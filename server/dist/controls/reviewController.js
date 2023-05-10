@@ -49,32 +49,30 @@ const createReview = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.createReview = createReview;
 const deleteReview = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _c, _d;
     // GET REVIEW ID
     const { id: reviewId } = req.params;
     // USER AUTH ID
     if (!req.user)
         throw new errors_1.UnauthorizedError("authorization failed");
-    const userId = (_c = req.user) === null || _c === void 0 ? void 0 : _c._id.toString();
+    const { userType, _id: reqUserId } = req.user;
     // FIND REVIEW FROM DB
     const review = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: reviewId,
-        user: userId,
+        user: reqUserId,
         MyModel: models_1.Review,
     });
     // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
-    if ((_d = req.user) === null || _d === void 0 ? void 0 : _d._id)
-        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
-            user: req.user,
-            userId: review.user.toString(),
-        });
+    (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+        userType,
+        userId: review.user,
+        reqUserId,
+    });
     // DELETE REVIEW
     yield models_1.Review.findOneAndDelete({ _id: reviewId });
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "review deleted" });
 });
 exports.deleteReview = deleteReview;
 const updateReview = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _e, _f;
     // GET REVIEW ID
     const { id: reviewId } = req.params;
     // GET UPDATE VALUES FROM CLIENT BODY
@@ -82,19 +80,19 @@ const updateReview = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     // USER AUTH ID
     if (!req.user)
         throw new errors_1.UnauthorizedError("authorization failed");
-    const userId = (_e = req.user) === null || _e === void 0 ? void 0 : _e._id.toString();
+    const { userType, _id: reqUserId } = req.user;
     // FIND THE REVIEW
     const review = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: reviewId,
-        user: userId,
+        user: reqUserId,
         MyModel: models_1.Review,
     });
     // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
-    if ((_f = req.user) === null || _f === void 0 ? void 0 : _f._id)
-        (0, controllers_1.userIdAndModelUserIdMatchCheck)({
-            user: req.user,
-            userId: review.user.toString(),
-        });
+    (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+        userType,
+        userId: review.user,
+        reqUserId,
+    });
     // UPDATE THE REVIEW DOCUMENT
     if (title)
         review.title = title;
@@ -126,10 +124,10 @@ const getAllReviews = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.getAllReviews = getAllReviews;
 const getMyAllReviews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _g;
+    var _c;
     // GET REVIEW PAGE
     const { reviewPage, product: productId, } = req.body;
-    const userId = (_g = req.user) === null || _g === void 0 ? void 0 : _g._id.toString();
+    const userId = (_c = req.user) === null || _c === void 0 ? void 0 : _c._id.toString();
     return (0, controllers_1.getAllReviewsController)({ userId, reviewPage, productId, res });
 });
 exports.getMyAllReviews = getMyAllReviews;

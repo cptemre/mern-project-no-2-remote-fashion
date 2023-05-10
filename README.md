@@ -50,8 +50,9 @@
 
 - Only admin and sellers are able to delete a product.
 - Sellers can only delete their own products.
+- Related reviews are deleted.
 <!-- ! -->
-- Later check if delete effects reviews and cart items
+- Later check if delete effects cart items
 
 ## UPDATE PRODUCT
 
@@ -116,14 +117,29 @@
 
 ## UPDATE REVIEW
 
-- Users can update their own products.
+- Users can update their own reviews.
 
 ## DELETE REVIEW
 
-- Users can delete their own products.
+- Users can delete their own reviews.
+
+# IMAGE CONTROLLERS
+
+## UPLOAD IMAGES
+
+- Upload by type param works. (For product tested not for avatar.)
+
+## GET SIGNED URLS
+
+- By document id param, it gets the url for the image and updates the documents. (For product tested not for avatar.)
+- Seller can only update their own product and image.
+
+## DELETE IMAGE
+
+- Deletes the image from
 
 # TODO
 
 - Check user update email change.
 - Check product delete, cart items delete
-- Check cancelation stock change
+- Test upload, update image from aws and db.

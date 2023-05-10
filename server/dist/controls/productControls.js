@@ -23,23 +23,20 @@ const controllers_1 = require("../utilities/controllers");
 const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     // GET CLIENT SIDE BODY REQUEST TO CREATE A PRODUCT
-    const { name, brand, price, tax, image, description, size, gender, category, subCategory, stock, } = req.body;
+    const { name, brand, price, tax, images, description, size, gender, category, subCategory, stock, } = req.body;
     const stockVal = Number(stock) || 0;
     // CHECK IF ALL NECESSARY CREDENTIALS ARE PROVIDED
     if (!name ||
         !brand ||
         !price ||
         !tax ||
-        !image ||
+        !images ||
         !description ||
         !size ||
         !gender ||
         !category ||
         !subCategory)
         throw new errors_1.BadRequestError("missing credentials");
-    // IMAGE ARRAY LENGTH CAN NOT BE MORE THAN 5
-    if (image.length > 5)
-        throw new errors_1.BadRequestError("max image files for a product is 5");
     // DESCRIPTION ARRAY LENGTH CAN NOT BE MORE THAN 6
     if (description.length > 6)
         throw new errors_1.BadRequestError("max description list length for a product is 6");
@@ -63,7 +60,7 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         brand,
         price,
         tax,
-        image,
+        images,
         description,
         size,
         gender,
@@ -124,11 +121,13 @@ const deleteProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         id: productId,
         MyModel: models_1.Product,
     });
-    // GET SELLER ID
-    const sellerId = checkProduct.seller.toString();
-    // COMPARE USER AND SELLER ID
-    if (req.user)
-        (0, controllers_1.userIdAndModelUserIdMatchCheck)({ user: req.user, userId: sellerId });
+    // USER MUST BE LOGGED IN
+    if (!req.user)
+        throw new errors_1.UnauthorizedError("authorization denied");
+    // CHECK IF SELLER AND PRODUCT SELLER MATCH
+    const { userType, _id: reqUserId } = req.user;
+    const sellerId = checkProduct.seller;
+    (0, controllers_1.userIdAndModelUserIdMatchCheck)({ userType, userId: sellerId, reqUserId });
     // DELETE THE PRODUCT
     const product = yield models_1.Product.findOneAndDelete({ _id: productId });
     // ! TEST IF IT WILL BE DELETED FROM CART ITEMS
@@ -152,7 +151,7 @@ exports.getSingleProduct = getSingleProduct;
 const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET PRODUCT ID FROM BODY
     const { id: productId } = req.params;
-    const { name, brand, price, image, description, size, gender, category, subCategory, stock, } = req.body;
+    const { name, brand, price, images, description, size, gender, category, subCategory, stock, } = req.body;
     // FIND THE PRODUCT
     const product = yield (0, controllers_1.findDocumentByIdAndModel)({
         id: productId,
@@ -165,8 +164,8 @@ const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         product.brand = brand;
     if (price)
         product.price = Number(price);
-    if (image)
-        product.image = image;
+    if (images)
+        product.images = images;
     if (description)
         product.description = description;
     if (size)

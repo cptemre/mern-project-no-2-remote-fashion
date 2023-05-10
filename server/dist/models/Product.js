@@ -44,12 +44,10 @@ const ProductSchema = new mongoose_1.Schema({
         type: Number,
         required: [true, "product tax percentage is required"],
     },
-    image: [
-        {
-            type: String,
-            required: [true, "product name is required"],
-        },
-    ],
+    images: {
+        type: [mongoose_1.Types.ObjectId],
+        required: [true, "image id is required"],
+    },
     description: [
         {
             type: String,

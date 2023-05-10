@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Types } from "mongoose";
 import { UserSchemaInterface } from "../utilities/interfaces/models";
 const validator = require("validator");
 import { createHash } from "../utilities/token";

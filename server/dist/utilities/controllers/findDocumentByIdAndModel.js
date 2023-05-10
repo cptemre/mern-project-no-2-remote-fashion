@@ -15,13 +15,13 @@ const findDocumentByIdAndModel = ({ id, user, seller, courier, MyModel, }) => __
     // QUERY FOR FINDING THE DOCUMENT
     const query = {};
     if (id)
-        query._id = id;
+        query._id = id.toString();
     if (user)
-        query.user = user;
+        query.user = user.toString();
     if (seller)
-        query.seller = seller;
+        query.seller = seller.toString();
     if (courier)
-        query.courier = courier;
+        query.courier = courier.toString();
     // FIND THE DOCUMENT
     const document = yield MyModel.findOne(query);
     // IF DOCUMENT DOES NOT EXIST SEND AN ERROR

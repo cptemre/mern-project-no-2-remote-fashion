@@ -60,19 +60,19 @@ const deleteReview: RequestHandler = async (req, res) => {
   const { id: reviewId } = req.params;
   // USER AUTH ID
   if (!req.user) throw new UnauthorizedError("authorization failed");
-  const userId: string = req.user?._id.toString();
+  const { userType, _id: reqUserId } = req.user;
   // FIND REVIEW FROM DB
   const review = await findDocumentByIdAndModel({
     id: reviewId,
-    user: userId,
+    user: reqUserId,
     MyModel: Review,
   });
   // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
-  if (req.user?._id)
-    userIdAndModelUserIdMatchCheck({
-      user: req.user,
-      userId: review.user.toString(),
-    });
+  userIdAndModelUserIdMatchCheck({
+    userType,
+    userId: review.user,
+    reqUserId,
+  });
   // DELETE REVIEW
   await Review.findOneAndDelete({ _id: reviewId });
 
@@ -90,19 +90,19 @@ const updateReview: RequestHandler = async (req, res) => {
   }: Omit<ReviewSchemaInterface, "user | product"> = req.body;
   // USER AUTH ID
   if (!req.user) throw new UnauthorizedError("authorization failed");
-  const userId: string = req.user?._id.toString();
+  const { userType, _id: reqUserId } = req.user;
   // FIND THE REVIEW
   const review = await findDocumentByIdAndModel({
     id: reviewId,
-    user: userId,
+    user: reqUserId,
     MyModel: Review,
   });
   // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
-  if (req.user?._id)
-    userIdAndModelUserIdMatchCheck({
-      user: req.user,
-      userId: review.user.toString(),
-    });
+  userIdAndModelUserIdMatchCheck({
+    userType,
+    userId: review.user,
+    reqUserId,
+  });
   // UPDATE THE REVIEW DOCUMENT
   if (title) review.title = title;
   if (comment) review.comment = comment;
