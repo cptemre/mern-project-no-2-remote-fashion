@@ -12,6 +12,7 @@ import {
   userIdAndModelUserIdMatchCheck,
   limitAndSkip,
   priceAndExchangedPriceCompare,
+  createMongooseRegex,
 } from "../utilities/controllers";
 // CRYPTO
 import { createCrypto } from "../utilities/token";
@@ -35,27 +36,27 @@ const getAllUsers: RequestHandler = async (req, res) => {
   > & { country: string; userPage: number } = req.body;
   // QUERY OBJECT TO FIND NEEDED USERS
   const query: {
-    name?: string;
-    surname?: string;
-    email?: string;
+    name?: { $regex: string; $options: string } | string;
+    surname?: { $regex: string; $options: string } | string;
+    email?: { $regex: string; $options: string } | string;
     userType?: string;
     country?: string;
     isVerified?: boolean;
   } = {};
-  console.log(userType);
-
   // SET QUERY KEYS
-  if (name) query.name = name;
-  if (surname) query.surname = surname;
-  if (email) query.email = email;
+  if (name) query.name = createMongooseRegex(name);
+  if (surname) query.surname = createMongooseRegex(surname);
+  if (email) query.email = createMongooseRegex(email);
   if (userType) query.userType = userType;
   if (country) query.country = country;
   if (isVerified) query.isVerified = isVerified;
-  // GET USERS
-  const result = User.find(query).select("-password -passwordToken");
   // LIMIT AND SKIP VALUES
   const myLimit = 20;
   const { limit, skip } = limitAndSkip({ limit: myLimit, page: userPage });
+  // GET USERS
+  const result = User.find(query).select("-password -passwordToken");
+  console.log(query);
+
   const users = await result.skip(skip).limit(limit);
   // SEND BACK FETCHED USERS
   res.status(StatusCodes.OK).json({ msg: "users fetched", users });
@@ -114,7 +115,6 @@ const updateUser: RequestHandler = async (req, res) => {
   const {
     name,
     surname,
-    email,
     userType,
     phoneNumber,
     address,
@@ -123,6 +123,7 @@ const updateUser: RequestHandler = async (req, res) => {
     cartItems,
     accountNo,
   }: UserSchemaInterface = req.body;
+
   // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
   if (!req.user) throw new UnauthorizedError("authorization denied");
   const { userType: reqUserType, _id: reqUserId } = req.user;
@@ -133,37 +134,43 @@ const updateUser: RequestHandler = async (req, res) => {
     user: userId,
     MyModel: User,
   });
-  // SAVE THE OLD EMAIL TO COMPARE IF CHANGED
-  let oldEmail = user.email;
-  let isEmailChanged = false;
   // MAIN INFO UPDATE
   if (name) user.name = name;
   if (surname) user.surname = surname;
-  if (email) user.email = email;
   if (userType) user.userType = userType;
   if (address) user.address = address;
   if (phoneNumber) user.phoneNumber = phoneNumber;
   if (cardInfo) user.cardInfo = cardInfo;
   if (avatar) user.avatar = avatar;
   if (accountNo) user.accountNo = accountNo;
-  // IF EMAIL DID NOT CHANGE THEN SEND THE RESPONSE
-  if (oldEmail !== user.email) {
-    isEmailChanged = true;
-    // RESET THE VERIFICATION
-    user.verificationToken = createCrypto();
-    user.verified = undefined;
-    user.isVerified = false;
-    // ! CLIENT SHOULD CALL LOGOUT AFTER THIS EVENT
-  }
   // CART ITEMS UPDATE
   // CHECK IF PRICE, TAX AND USER MATCHES WITH THE ACTUAL PRODUCT VALUES
-  if (cartItems && req.user?.userType !== "seller") {
+
+  if (cartItems && cartItems.length) {
+    // ONLY ADMIN AND USER CAN SET CART ITEMS FOR USER
+    if (reqUserType === "seller" || reqUserType === "courier")
+      throw new UnauthorizedError("authorization denied");
     for (let i = 0; i < cartItems.length; i++) {
-      const { amount, price, tax, product, currency, status, user } =
+      const { name, amount, price, tax, product, currency, status, user } =
         cartItems[i];
+      //
+      if (
+        !name ||
+        !amount ||
+        !price ||
+        !tax ||
+        !product ||
+        !currency ||
+        !status ||
+        !user
+      )
+        throw new BadRequestError("invalid credentials");
       // IF USER IS NOT CART ITEM'S USER THEN THROW AN ERROR
-      if (req.user && user !== req.user._id)
-        throw new UnauthorizedError("user does not match");
+      userIdAndModelUserIdMatchCheck({
+        userType: reqUserType,
+        userId: user,
+        reqUserId,
+      });
       if (status !== "pending")
         throw new UnauthorizedError("status of the cart item is not correct");
       const productId = product.toString();
@@ -187,9 +194,7 @@ const updateUser: RequestHandler = async (req, res) => {
   user.password = "";
   user.verificationToken = "";
   user.passwordToken = "";
-  res
-    .status(StatusCodes.OK)
-    .json({ msg: "user updated", user, isEmailChanged });
+  res.status(StatusCodes.OK).json({ msg: "user updated", user });
 };
 
 export { getAllUsers, getSingleUser, showCurrentUser, deleteUser, updateUser };

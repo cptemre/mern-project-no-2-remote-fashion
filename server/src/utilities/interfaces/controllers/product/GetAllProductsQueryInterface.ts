@@ -1,7 +1,9 @@
+import { RegexInterface } from "../";
+
 interface GetAllProductsQueryInterface {
-  name: string;
-  brand: string;
-  color: string;
+  name: RegexInterface["regex"];
+  brand: RegexInterface["regex"];
+  color: RegexInterface["regex"];
   size: string;
   price: { $gte: number | undefined; $lte: number | undefined };
   numberOfReviews: { $gt: number };

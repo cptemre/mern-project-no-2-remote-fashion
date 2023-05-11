@@ -6,7 +6,7 @@ import priceAndExchangedPriceCompare from "./priceAndExchangedPriceCompare";
 import getAllReviewsController from "./getAllReviewsController";
 import getUserTypeQuery from "./getUserTypeQuery";
 import updateOrderInformationByUserType from "./updateOrderInformationByUserType";
-
+import createMongooseRegex from "./createMongooseRegex";
 export {
   findDocumentByIdAndModel,
   userIdAndModelUserIdMatchCheck,
@@ -16,4 +16,5 @@ export {
   getAllReviewsController,
   getUserTypeQuery,
   updateOrderInformationByUserType,
+  createMongooseRegex,
 };

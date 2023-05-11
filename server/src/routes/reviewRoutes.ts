@@ -8,7 +8,7 @@ import {
   createReview,
   deleteReview,
   updateReview,
-} from "../controls/reviewController";
+} from "../controllers/reviewController";
 
 import { authUser, authRole } from "../middlewares/authorization";
 

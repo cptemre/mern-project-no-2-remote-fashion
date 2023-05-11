@@ -81,11 +81,11 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
     // EMPTY QUERY IN SERVER TO SET VALUES
     const query = {};
     if (name)
-        query.name = name;
+        query.name = (0, controllers_1.createMongooseRegex)(name);
     if (brand)
-        query.brand = brand;
+        query.brand = (0, controllers_1.createMongooseRegex)(brand);
     if (color)
-        query.color = color;
+        query.color = (0, controllers_1.createMongooseRegex)(color);
     if (size)
         query.size = size;
     if (price)
@@ -103,14 +103,15 @@ const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function*
     if (seller)
         query.seller = userId;
     // LIMIT AND SKIP VALUES
+    console.log(query);
     const myLimit = 20;
     const { limit, skip } = (0, controllers_1.limitAndSkip)({ limit: myLimit, page: Number(page) });
     // FIND PRODUCTS
     const findProducts = models_1.Product.find(query);
     // LIMIT AND SKIP
-    const products = yield findProducts.skip(skip).limit(limit);
-    const productLength = products.length;
-    res.status(http_status_codes_1.StatusCodes.OK).json({ products, productLength });
+    const result = yield findProducts.skip(skip).limit(limit);
+    const length = result.length;
+    res.status(http_status_codes_1.StatusCodes.OK).json({ result, length });
 });
 exports.getAllProducts = getAllProducts;
 const deleteProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -130,8 +131,6 @@ const deleteProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     (0, controllers_1.userIdAndModelUserIdMatchCheck)({ userType, userId: sellerId, reqUserId });
     // DELETE THE PRODUCT
     const product = yield models_1.Product.findOneAndDelete({ _id: productId });
-    // ! TEST IF IT WILL BE DELETED FROM CART ITEMS
-    // ! TEST IF REVIEWS WILL BE DELETED
     res
         .status(http_status_codes_1.StatusCodes.OK)
         .json({ msg: "product, related reviews and cart items are deleted" });

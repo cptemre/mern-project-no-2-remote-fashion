@@ -24,6 +24,7 @@ import {
   gteAndLteQueryForDb,
   limitAndSkip,
   userIdAndModelUserIdMatchCheck,
+  createMongooseRegex,
 } from "../utilities/controllers";
 
 const createProduct: RequestHandler = async (req, res) => {
@@ -113,11 +114,12 @@ const getAllProducts: RequestHandler = async (req, res) => {
     page,
     seller,
   }: Partial<GetAllProductsReqBodyInterface> = req.body;
+
   // EMPTY QUERY IN SERVER TO SET VALUES
   const query: Partial<GetAllProductsQueryInterface> = {};
-  if (name) query.name = name;
-  if (brand) query.brand = brand;
-  if (color) query.color = color;
+  if (name) query.name = createMongooseRegex(name);
+  if (brand) query.brand = createMongooseRegex(brand);
+  if (color) query.color = createMongooseRegex(color);
   if (size) query.size = size;
   if (price) query.price = gteAndLteQueryForDb(price);
   if (isReview) query.numberOfReviews = { $gt: 0 };
@@ -128,14 +130,16 @@ const getAllProducts: RequestHandler = async (req, res) => {
   const userId = req.user?._id.toString();
   if (seller) query.seller = userId;
   // LIMIT AND SKIP VALUES
+  console.log(query);
+
   const myLimit = 20;
   const { limit, skip } = limitAndSkip({ limit: myLimit, page: Number(page) });
   // FIND PRODUCTS
   const findProducts = Product.find(query);
   // LIMIT AND SKIP
-  const products = await findProducts.skip(skip).limit(limit);
-  const productLength = products.length;
-  res.status(StatusCodes.OK).json({ products, productLength });
+  const result = await findProducts.skip(skip).limit(limit);
+  const length = result.length;
+  res.status(StatusCodes.OK).json({ result, length });
 };
 
 const deleteProduct: RequestHandler = async (req, res) => {
@@ -155,8 +159,6 @@ const deleteProduct: RequestHandler = async (req, res) => {
 
   // DELETE THE PRODUCT
   const product = await Product.findOneAndDelete({ _id: productId });
-  // ! TEST IF IT WILL BE DELETED FROM CART ITEMS
-  // ! TEST IF REVIEWS WILL BE DELETED
 
   res
     .status(StatusCodes.OK)

@@ -8,7 +8,7 @@ import {
   forgotPassword,
   resetPassword,
   logout,
-} from "../controls/authController";
+} from "../controllers/authController";
 
 import { authUser } from "../middlewares/authorization";
 

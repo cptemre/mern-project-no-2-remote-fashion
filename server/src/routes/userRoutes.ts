@@ -8,7 +8,7 @@ import {
   showCurrentUser,
   deleteUser,
   updateUser,
-} from "../controls/userController";
+} from "../controllers/userController";
 
 import { authUser, authRole } from "../middlewares/authorization";
 
