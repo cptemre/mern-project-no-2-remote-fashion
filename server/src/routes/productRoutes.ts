@@ -7,7 +7,7 @@ import {
   deleteProduct,
   getSingleProduct,
   updateProduct,
-} from "../controls/productControls";
+} from "../controllers/productControls";
 
 import { authUser, authRole } from "../middlewares/authorization";
 

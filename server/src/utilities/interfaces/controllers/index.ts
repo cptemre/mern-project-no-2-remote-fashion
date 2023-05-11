@@ -12,6 +12,7 @@ import {
 import UpdateOrderInformationByUserTypeInterface from "./order/UpdateOrderInformationByUserTypeInterface";
 // CUSTOM
 import PriceQueryInterface from "./custom/PriceQueryInterface";
+import RegexInterface from "./custom/RegexInterface";
 // GET USERS
 import GetAllUsersInterface from "./user/GetAllUsersInterface";
 
@@ -23,6 +24,7 @@ export {
   OrderClientReqInterface,
   UpdateOrderInformationByUserTypeInterface,
   PriceQueryInterface,
+  RegexInterface,
   SingleOrderQuery,
   GetAllUsersInterface,
 };

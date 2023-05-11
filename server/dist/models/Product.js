@@ -107,7 +107,7 @@ ProductSchema.post("findOneAndDelete", function (doc) {
             yield models_1.Review.findOneAndDelete({ _id: reviews[i]._id });
         }
         // FIND ALL USERS WHOSE cartItems ARRAY CONTAINS AN ITEM WITH THE SPECIFIED _id, AND REMOVE THAT ITEM FROM THE ARRAY.
-        yield models_1.User.updateMany({ "cartItems._id": productId }, { $pull: { cartItems: { _id: productId } } });
+        yield models_1.User.updateMany({ "cartItems.product": productId }, { $pull: { cartItems: { product: productId } } });
     });
 });
 const Product = (0, mongoose_1.model)("Product", ProductSchema);

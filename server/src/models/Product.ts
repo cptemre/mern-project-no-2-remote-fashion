@@ -102,8 +102,8 @@ ProductSchema.post("findOneAndDelete", async function (doc) {
   }
   // FIND ALL USERS WHOSE cartItems ARRAY CONTAINS AN ITEM WITH THE SPECIFIED _id, AND REMOVE THAT ITEM FROM THE ARRAY.
   await User.updateMany(
-    { "cartItems._id": productId },
-    { $pull: { cartItems: { _id: productId } } }
+    { "cartItems.product": productId },
+    { $pull: { cartItems: { product: productId } } }
   );
 });
 

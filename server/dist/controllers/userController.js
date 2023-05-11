@@ -16,33 +16,31 @@ const models_1 = require("../models");
 const http_status_codes_1 = require("http-status-codes");
 // FIND DOCUMENT
 const controllers_1 = require("../utilities/controllers");
-// CRYPTO
-const token_1 = require("../utilities/token");
 const errors_1 = require("../errors");
 const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // BODY FROM THE CLIENT
     const { name, surname, email, userType, country, isVerified, userPage, } = req.body;
     // QUERY OBJECT TO FIND NEEDED USERS
     const query = {};
-    console.log(userType);
     // SET QUERY KEYS
     if (name)
-        query.name = name;
+        query.name = (0, controllers_1.createMongooseRegex)(name);
     if (surname)
-        query.surname = surname;
+        query.surname = (0, controllers_1.createMongooseRegex)(surname);
     if (email)
-        query.email = email;
+        query.email = (0, controllers_1.createMongooseRegex)(email);
     if (userType)
         query.userType = userType;
     if (country)
         query.country = country;
     if (isVerified)
         query.isVerified = isVerified;
-    // GET USERS
-    const result = models_1.User.find(query).select("-password -passwordToken");
     // LIMIT AND SKIP VALUES
     const myLimit = 20;
     const { limit, skip } = (0, controllers_1.limitAndSkip)({ limit: myLimit, page: userPage });
+    // GET USERS
+    const result = models_1.User.find(query).select("-password -passwordToken");
+    console.log(query);
     const users = yield result.skip(skip).limit(limit);
     // SEND BACK FETCHED USERS
     res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "users fetched", users });
@@ -95,11 +93,10 @@ const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 exports.deleteUser = deleteUser;
 // ! BEFORE UPDATE CLIENT SHOULD ASK FOR PASSWORD CHECK
 const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     // GET USER ID FROM PARAMS
     const { id: userId } = req.params;
     // GET UPDATED VALUES FROM THE CLIENT
-    const { name, surname, email, userType, phoneNumber, address, cardInfo, avatar, cartItems, accountNo, } = req.body;
+    const { name, surname, userType, phoneNumber, address, cardInfo, avatar, cartItems, accountNo, } = req.body;
     // IF USER TYPE IS NOT ADMIN, THEN CHECK IF REQUIRED USER AND AUTHORIZED USER HAS THE SAME ID OR NOT. IF NOT SAME THROW AN ERROR
     if (!req.user)
         throw new errors_1.UnauthorizedError("authorization denied");
@@ -111,16 +108,11 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         user: userId,
         MyModel: models_1.User,
     });
-    // SAVE THE OLD EMAIL TO COMPARE IF CHANGED
-    let oldEmail = user.email;
-    let isEmailChanged = false;
     // MAIN INFO UPDATE
     if (name)
         user.name = name;
     if (surname)
         user.surname = surname;
-    if (email)
-        user.email = email;
     if (userType)
         user.userType = userType;
     if (address)
@@ -133,23 +125,30 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         user.avatar = avatar;
     if (accountNo)
         user.accountNo = accountNo;
-    // IF EMAIL DID NOT CHANGE THEN SEND THE RESPONSE
-    if (oldEmail !== user.email) {
-        isEmailChanged = true;
-        // RESET THE VERIFICATION
-        user.verificationToken = (0, token_1.createCrypto)();
-        user.verified = undefined;
-        user.isVerified = false;
-        // ! CLIENT SHOULD CALL LOGOUT AFTER THIS EVENT
-    }
     // CART ITEMS UPDATE
     // CHECK IF PRICE, TAX AND USER MATCHES WITH THE ACTUAL PRODUCT VALUES
-    if (cartItems && ((_a = req.user) === null || _a === void 0 ? void 0 : _a.userType) !== "seller") {
+    if (cartItems && cartItems.length) {
+        // ONLY ADMIN AND USER CAN SET CART ITEMS FOR USER
+        if (reqUserType === "seller" || reqUserType === "courier")
+            throw new errors_1.UnauthorizedError("authorization denied");
         for (let i = 0; i < cartItems.length; i++) {
-            const { amount, price, tax, product, currency, status, user } = cartItems[i];
+            const { name, amount, price, tax, product, currency, status, user } = cartItems[i];
+            //
+            if (!name ||
+                !amount ||
+                !price ||
+                !tax ||
+                !product ||
+                !currency ||
+                !status ||
+                !user)
+                throw new errors_1.BadRequestError("invalid credentials");
             // IF USER IS NOT CART ITEM'S USER THEN THROW AN ERROR
-            if (req.user && user !== req.user._id)
-                throw new errors_1.UnauthorizedError("user does not match");
+            (0, controllers_1.userIdAndModelUserIdMatchCheck)({
+                userType: reqUserType,
+                userId: user,
+                reqUserId,
+            });
             if (status !== "pending")
                 throw new errors_1.UnauthorizedError("status of the cart item is not correct");
             const productId = product.toString();
@@ -172,8 +171,6 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     user.password = "";
     user.verificationToken = "";
     user.passwordToken = "";
-    res
-        .status(http_status_codes_1.StatusCodes.OK)
-        .json({ msg: "user updated", user, isEmailChanged });
+    res.status(http_status_codes_1.StatusCodes.OK).json({ msg: "user updated", user });
 });
 exports.updateUser = updateUser;

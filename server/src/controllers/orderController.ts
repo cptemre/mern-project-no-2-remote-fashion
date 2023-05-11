@@ -34,6 +34,7 @@ import {
   priceAndExchangedPriceCompare,
   getUserTypeQuery,
   updateOrderInformationByUserType,
+  createMongooseRegex,
 } from "../utilities/controllers";
 // PAYMENT
 import { createPayment, refundPayment } from "../utilities/payment/payment";
@@ -126,7 +127,7 @@ const createOrder: RequestHandler = async (req, res) => {
   // *LOOP THROUGH CLIENT CART ITEMS OBJECT
   for (let i = 0; i < cartItems.length; i++) {
     // SINGLE CART ITEM BY CLIENT
-    const { amount, price, tax, product } = cartItems[i];
+    const { name, amount, price, tax, product } = cartItems[i];
     // THIS VARIABLE WILL BE EQUAL TO PRICE FROM CART.
     // IF CURRENCY IS NOT GBP THEN PRICE WILL BE RECALCULATED AND WILL BE SET TO THIS VARIABLE
     let priceVal: number = price;
@@ -157,9 +158,12 @@ const createOrder: RequestHandler = async (req, res) => {
       id: productId,
       MyModel: Product,
     });
+    if (name !== productDocument.name)
+      throw new BadRequestError("product name does not match");
     const seller = productDocument.seller;
     // CREATE A SINGLE ORDER
     const singleOrder = await SingleOrder.create({
+      name,
       amount,
       price: priceVal,
       tax,
@@ -268,6 +272,7 @@ const createOrder: RequestHandler = async (req, res) => {
 const getAllSingleOrders: RequestHandler = async (req, res) => {
   // GET CLIENT SIDE QUERIES
   const {
+    name,
     amount,
     priceVal,
     tax,
@@ -291,6 +296,7 @@ const getAllSingleOrders: RequestHandler = async (req, res) => {
   // EMPTY QUERY
   const initialQuery: Partial<SingleOrderQuery> = {};
   // SET QUERY KEYS AND VALUES
+  if (name) initialQuery.name = createMongooseRegex(name);
   if (amount) initialQuery.amount = amount;
   if (priceVal) initialQuery.price = gteAndLteQueryForDb(priceVal);
   if (tax) initialQuery.tax = tax;
