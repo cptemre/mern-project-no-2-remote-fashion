@@ -1,0 +1,21 @@
+#home-section {
+  flex: 0.4;
+  padding: 0 1rem;
+}
+
+#home-article {
+  background-color: var(--orange-color-1);
+  color: white;
+  padding: 0.2rem 1rem;
+}
+
+#home-article:hover {
+  background-color: rgb(214, 107, 7);
+  box-shadow: var(--box-shadow-015);
+}
+
+.title {
+  height: 50%;
+  font-family: "Dancing Script", cursive;
+  letter-spacing: 4px;
+}
