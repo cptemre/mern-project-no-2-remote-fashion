@@ -1,6 +1,6 @@
 import React from "react";
 // CSS
-import "../../../../css/header/header-down/new-button/home-button.css";
+import "../../../css/header/home-button/home-button.css";
 
 const HomeButton = () => {
   return (

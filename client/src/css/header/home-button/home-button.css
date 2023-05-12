@@ -1,12 +1,13 @@
 #home-section {
   flex: 0.4;
-  padding: 0 1rem;
+  padding: 0 0.2rem;
 }
 
 #home-article {
   background-color: var(--orange-color-1);
   color: white;
-  padding: 0.2rem 1rem;
+  padding: 0.2rem 0;
+  max-width: 20rem;
 }
 
 #home-article:hover {
@@ -15,7 +16,7 @@
 }
 
 .title {
+  flex: 1;
   height: 50%;
-  font-family: "Dancing Script", cursive;
   letter-spacing: 4px;
 }

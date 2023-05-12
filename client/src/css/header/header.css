@@ -1,0 +1,4 @@
+#header-section > section {
+  min-height: 6rem;
+  font-weight: 600;
+}
