@@ -1,0 +1,24 @@
+#categories-section {
+  position: absolute;
+  border: 0.2rem solid var(--orange-color-1);
+  border-radius: 1rem;
+  top: 5rem;
+  left: 0;
+  width: 15rem;
+  height: auto;
+  max-height: 20rem;
+  overflow: hidden;
+}
+
+.categories-article {
+  height: auto;
+  min-height: 4rem;
+  background-color: var(--orange-color-1);
+  color: white;
+  cursor: pointer;
+}
+
+.categories-article:hover {
+  background-color: white;
+  color: orange;
+}

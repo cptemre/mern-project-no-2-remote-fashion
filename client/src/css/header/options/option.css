@@ -3,7 +3,7 @@
 }
 
 .option-div {
-  background-color: rgb(200, 136, 19);
+  background-color: var(--dark-orange-color-1);
   color: white;
   height: auto;
   padding: 0.5rem;

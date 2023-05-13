@@ -2,19 +2,20 @@
   flex: 0.4;
   padding: 0 0.2rem;
   height: 5rem;
-  max-width: 20rem;
+  max-width: 15rem;
 }
 
 #home-article {
-  background-color: var(--orange-color-1);
-  color: white;
+  border: 0.2rem solid var(--orange-color-1);
+  color: var(--orange-color-1);
   padding: 0.2rem 0;
   max-width: 20rem;
   flex-direction: column;
 }
 
 #home-article:hover {
-  background-color: rgb(214, 107, 7);
+  color: white;
+  background-color: var(--orange-color-1);
   box-shadow: var(--box-shadow-015);
 }
 

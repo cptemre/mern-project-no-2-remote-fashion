@@ -1,0 +1,25 @@
+#menu-button-section {
+  flex: 0.2;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  row-gap: 0.2rem;
+  padding: 0 0.5rem;
+  height: 4rem;
+  flex: 0.7;
+}
+#menu-button-section:hover {
+  box-shadow: var(--box-shadow-015);
+  background-color: var(--orange-color-1);
+}
+.menu-button-row {
+  column-gap: 1rem;
+  flex-wrap: nowrap;
+  max-width: 2rem;
+}
+
+.menu-button-dot {
+  border: 0.3rem solid var(--orange-color-1);
+  height: 0.1rem;
+  flex: 0.1;
+  border-radius: 50%;
+}

@@ -7,7 +7,7 @@ const Login = () => {
       <article id="login-article">
         <div id="login-button-div" className="pointer">
           <div id="login-div">LOGIN</div>
-          <div id="login-div-underline"></div>
+          <div className="login-div-underline"></div>
         </div>
       </article>
     </section>
