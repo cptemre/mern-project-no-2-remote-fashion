@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 //* CSS
+import "../../../css/header/options/options.css";
 import "../../../css/header/options/option.css";
 
 const Options = () => {
@@ -9,7 +10,7 @@ const Options = () => {
     <section id="options-section">
       {options.map((option) => (
         <article className="option-article">
-          <div className="option-div">{option}</div>
+          <div className="option-div border-radius pointer">{option}</div>
         </article>
       ))}
     </section>

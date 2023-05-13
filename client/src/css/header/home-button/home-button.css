@@ -1,6 +1,8 @@
 #home-section {
   flex: 0.4;
   padding: 0 0.2rem;
+  height: 5rem;
+  max-width: 20rem;
 }
 
 #home-article {
@@ -8,6 +10,7 @@
   color: white;
   padding: 0.2rem 0;
   max-width: 20rem;
+  flex-direction: column;
 }
 
 #home-article:hover {
@@ -16,7 +19,6 @@
 }
 
 .title {
-  flex: 1;
-  height: 50%;
   letter-spacing: 4px;
+  font-size: 1.5rem !important;
 }

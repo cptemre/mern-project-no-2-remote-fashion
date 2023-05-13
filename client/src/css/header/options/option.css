@@ -1,7 +1,10 @@
-.option-article {
-  padding-bottom: 0.75rem;
+.option-div {
+  font-size: 2rem !important;
 }
 
 .option-div {
-  align-items: flex-end;
+  background-color: rgb(200, 136, 19);
+  color: white;
+  height: auto;
+  padding: 0.5rem;
 }

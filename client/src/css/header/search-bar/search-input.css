@@ -1,6 +1,4 @@
 #search-input-article {
-  padding-bottom: 0.75rem;
-  align-items: flex-end;
   position: relative;
 }
 
@@ -11,7 +9,7 @@
   position: absolute;
   width: auto;
   left: 0.4rem;
-  bottom: 1.2rem;
+  bottom: 1.5rem;
 }
 
 #search-icon {

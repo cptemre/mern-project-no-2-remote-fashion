@@ -1,0 +1,42 @@
+#contact-section {
+  flex: 0.6;
+  row-gap: 0.5rem;
+  max-width: 20rem;
+  border: 0.2rem solid orange;
+  border-width: 0 0.2rem;
+}
+
+#contact-article {
+  height: 1rem;
+  flex-basis: 33.3%;
+}
+
+.contact-icon {
+  font-size: 1.5rem;
+  padding-bottom: 0.5rem;
+  aspect-ratio: 1/1;
+}
+
+.fa-facebook-f {
+  color: rgb(1, 101, 225);
+}
+
+.fa-twitter {
+  color: rgb(29, 155, 240);
+}
+
+.fa-instagram {
+  color: rgb(193, 53, 132);
+}
+
+.fa-youtube {
+  color: rgb(255, 0, 0);
+}
+
+.fa-github {
+  color: rgb(33, 31, 31);
+}
+
+.fa-envelope {
+  color: rgb(82, 82, 82);
+}

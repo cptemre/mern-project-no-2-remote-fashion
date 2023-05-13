@@ -39,6 +39,7 @@ header {
   height: 100%;
   font-size: 2rem;
   font-family: "Source Sans Pro", sans-serif;
+  letter-spacing: 0.2rem;
 }
 
 header {
@@ -53,10 +54,6 @@ button {
   border: none;
   outline: none;
   height: 100%;
-}
-
-a {
-  color: black;
 }
 
 .pointer {

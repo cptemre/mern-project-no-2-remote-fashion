@@ -21,12 +21,14 @@ const Contact = () => {
     faGithub,
     faEnvelope,
   ];
+  console.log(faFacebookF);
+
   return (
     <section id="contact-section">
       {icons.map((icon) => (
-        <article className="icon">
+        <article id="contact-article" className="icon">
           <a href="#">
-            <FontAwesomeIcon icon={icon} className="icon" />
+            <FontAwesomeIcon icon={icon} className="icon contact-icon" />
           </a>
         </article>
       ))}

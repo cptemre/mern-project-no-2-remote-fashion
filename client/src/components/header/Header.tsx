@@ -11,7 +11,7 @@ import Options from "./options/Options";
 // CONTACT
 import Contact from "./contact/Contact";
 // LOGIN-REGISTER
-import LoginRegister from "./login-register/LoginRegister";
+import AccountInfo from "./account-info/AccountInfo";
 //* CSS
 import "../../css/header/header.css";
 
@@ -23,7 +23,7 @@ const Header = () => {
       <SearchBar />
       <Options />
       <Contact />
-      <LoginRegister />
+      <AccountInfo />
     </header>
   );
 };
