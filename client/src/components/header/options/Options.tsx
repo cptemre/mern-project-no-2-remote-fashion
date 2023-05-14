@@ -8,8 +8,8 @@ const Options = () => {
   const [options, setOptions] = useState(["PRODUCTS", "ORDERS"]);
   return (
     <section id="options-section">
-      {options.map((option) => (
-        <article className="option-article">
+      {options.map((option, i) => (
+        <article key={`option-article-${i}`} className="option-article">
           <div className="option-div border-radius pointer">{option}</div>
         </article>
       ))}

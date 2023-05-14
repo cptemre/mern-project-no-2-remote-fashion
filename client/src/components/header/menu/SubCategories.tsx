@@ -8,15 +8,24 @@ const SubCategories = () => {
 
   return (
     <section id="sub-categories-section">
-      {categories.map((category) => (
-        <article className="sub-categories-article">
-          <div className="sub-categories-gender">{category}</div>
+      {categories.map((category, i) => (
+        <article
+          key={`sub-categories-article-${i}`}
+          className="sub-categories-article"
+        >
+          <div className="sub-categories-gender">
+            <div className="category">{category}</div>
+            <div className="underline"></div>
+          </div>
           <div className="sub-categories-div">
-            {subCategories.map((subCategory) => (
-              <>
-                <div className="subCategory">{subCategory}</div>
-                <div className="login-div-underline"></div>
-              </>
+            {subCategories.map((subCategory, j) => (
+              <div
+                key={`sub-category-div-${i}-${j}`}
+                className="sub-category-div"
+              >
+                <div className="sub-category">{subCategory}</div>
+                <div className="underline"></div>
+              </div>
             ))}
           </div>
         </article>

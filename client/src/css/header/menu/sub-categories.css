@@ -5,7 +5,6 @@
   min-width: 40rem;
   height: auto;
   max-height: 40rem;
-  background-color: rgb(255, 106, 0);
   border: 2px solid rgb(255, 106, 0);
   border-radius: 1rem;
   overflow: hidden;
@@ -17,18 +16,30 @@
 }
 
 .sub-categories-gender {
-  min-height: 4rem;
-  height: auto;
   background-color: white;
-  flex: 0.2;
+  background-color: rgb(248, 193, 151);
+  cursor: pointer;
+  flex-direction: column;
+  padding: 0.5rem 0;
+}
+
+.category {
+  min-height: 3rem;
 }
 
 .sub-categories-div {
   flex-direction: column;
   height: auto;
+  cursor: pointer;
+  background-color: rgb(255, 253, 250);
 }
 
-.subCategory {
+.sub-category-div {
+  flex-direction: column;
+  row-gap: 0.3rem;
+  padding: 0.5rem 0;
+}
+
+.sub-category {
   min-height: 3rem;
-  background-color: rgb(255, 106, 0);
 }

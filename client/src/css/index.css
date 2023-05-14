@@ -57,9 +57,22 @@ button {
   height: 100%;
 }
 
-.login-div-underline {
+.underline {
   width: 1.8rem;
   border: 0.1rem solid red;
+}
+
+.underline:hover {
+  animation: underline 0.4s forwards;
+}
+
+@keyframes underline {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 50%;
+  }
 }
 
 .pointer {

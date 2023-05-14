@@ -6,8 +6,10 @@ const Categories = () => {
   const categories = ["CLOTHES", "SHOES"];
   return (
     <section id="categories-section">
-      {categories.map((category) => (
-        <article className="categories-article">{category}</article>
+      {categories.map((category, i) => (
+        <article key={`categories-article-${i}`} className="categories-article">
+          {category}
+        </article>
       ))}
     </section>
   );
