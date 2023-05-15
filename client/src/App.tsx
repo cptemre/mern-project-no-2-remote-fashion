@@ -6,12 +6,8 @@ import Header from "./components/header/Header";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 //* UTILITIES
 // REDUCER - DEFAULT STATE
-import {
-  reducer,
-  initialState,
-} from "./utilities/local-variables/initialState";
+import { reducer, initialState, Context } from "./utilities/local-variables";
 // CONTEXT
-import { Context } from "./utilities/local-variables/Context";
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
   return (

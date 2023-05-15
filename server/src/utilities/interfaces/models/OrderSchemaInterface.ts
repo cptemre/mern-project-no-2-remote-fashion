@@ -21,6 +21,7 @@ interface SingleOrderSchemaInterface
     OrderStatusInterface,
     OrderInformationInterface,
     DeliveryDateInterface {
+  name: string;
   amount: number;
   price: number;
   tax: number;

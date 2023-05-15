@@ -16,6 +16,10 @@ import { recievedMsg, orderInformationArray } from "../utilities/categories";
 
 const SingleOrderSchema = new Schema<SingleOrderSchemaInterface>(
   {
+    name: {
+      type: String,
+      required: [true, "product name is required"],
+    },
     amount: {
       type: Number,
       required: [true, "product order amount is required"],

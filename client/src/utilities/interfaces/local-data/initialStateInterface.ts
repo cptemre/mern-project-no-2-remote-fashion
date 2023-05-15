@@ -1,4 +1,4 @@
-export interface InitialStateInterface {
+interface InitialStateInterface {
   urls: {
     defaultFetchUrl: string;
     product: {
@@ -9,3 +9,5 @@ export interface InitialStateInterface {
     categories: string[];
   };
 }
+
+export type { InitialStateInterface };

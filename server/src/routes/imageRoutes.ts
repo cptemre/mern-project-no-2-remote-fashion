@@ -5,7 +5,7 @@ import {
   uploadImages,
   getSignedUrls,
   deleteImage,
-} from "../controls/imageController";
+} from "../controllers/imageController";
 
 import { authUser, authRole } from "../middlewares/authorization";
 

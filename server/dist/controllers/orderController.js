@@ -77,7 +77,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     // *LOOP THROUGH CLIENT CART ITEMS OBJECT
     for (let i = 0; i < cartItems.length; i++) {
         // SINGLE CART ITEM BY CLIENT
-        const { amount, price, tax, product } = cartItems[i];
+        const { name, amount, price, tax, product } = cartItems[i];
         // THIS VARIABLE WILL BE EQUAL TO PRICE FROM CART.
         // IF CURRENCY IS NOT GBP THEN PRICE WILL BE RECALCULATED AND WILL BE SET TO THIS VARIABLE
         let priceVal = price;
@@ -106,9 +106,12 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
             id: productId,
             MyModel: models_1.Product,
         });
+        if (name !== productDocument.name)
+            throw new errors_1.BadRequestError("product name does not match");
         const seller = productDocument.seller;
         // CREATE A SINGLE ORDER
         const singleOrder = yield models_1.SingleOrder.create({
+            name,
             amount,
             price: priceVal,
             tax,
@@ -214,7 +217,7 @@ const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.createOrder = createOrder;
 const getAllSingleOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     // GET CLIENT SIDE QUERIES
-    const { amount, priceVal, tax, currency, product: productId, order: orderId, orderPage, } = req.body;
+    const { name, amount, priceVal, tax, currency, product: productId, order: orderId, orderPage, } = req.body;
     // IF THERE IS NO USER THROW ERROR
     if (!req.user)
         throw new errors_1.UnauthorizedError("authorization denied");
@@ -228,6 +231,8 @@ const getAllSingleOrders = (req, res) => __awaiter(void 0, void 0, void 0, funct
     // EMPTY QUERY
     const initialQuery = {};
     // SET QUERY KEYS AND VALUES
+    if (name)
+        initialQuery.name = (0, controllers_1.createMongooseRegex)(name);
     if (amount)
         initialQuery.amount = amount;
     if (priceVal)

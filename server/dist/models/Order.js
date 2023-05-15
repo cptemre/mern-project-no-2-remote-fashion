@@ -8,6 +8,10 @@ const categories_1 = require("../utilities/categories");
 // CATEGORY
 const categories_2 = require("../utilities/categories");
 const SingleOrderSchema = new mongoose_1.Schema({
+    name: {
+        type: String,
+        required: [true, "product name is required"],
+    },
     amount: {
         type: Number,
         required: [true, "product order amount is required"],

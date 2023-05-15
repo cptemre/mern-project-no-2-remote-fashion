@@ -8,8 +8,11 @@ import { OrderStatusInterface } from "../../models";
 import { PriceQueryInterface } from "..";
 // MONGOOSE
 import { ObjectId } from "mongoose";
+// REGEX INTERFACE
+import { RegexInterface } from "../";
 
 interface SingleOrderQuery extends CurrencyInterface {
+  name: RegexInterface["regex"];
   amount: number;
   price: { $gte: number | undefined; $lte: number | undefined };
   tax: number;

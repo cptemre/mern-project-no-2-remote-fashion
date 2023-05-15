@@ -1,19 +1,11 @@
 import { createContext } from "react";
 //* UTILITIES
 // LOCAL VARIABLES
-import { initialState } from "./initialState";
+import initialState from "./initialState";
 // INTERFACES - INITIAL STATE
-import { InitialStateInterface } from "../interfaces/local-data/initialStateInterface";
-interface Action {
-  type: string;
-  payload?: any;
-}
-interface ContextInterface {
-  state: InitialStateInterface;
-  dispatch: React.Dispatch<Action>;
-}
+import { ActionInterface, ContextInterface } from "../interfaces/local-data";
 
 export const Context = createContext<ContextInterface>({
   state: initialState,
-  dispatch: (action: Action) => {},
+  dispatch: (action: ActionInterface) => {},
 });

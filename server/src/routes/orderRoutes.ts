@@ -9,7 +9,7 @@ import {
   getSingleOrder,
   updateSingleOrder,
   currencyExchange,
-} from "../controls/orderController";
+} from "../controllers/orderController";
 
 import { authRole, authUser } from "../middlewares/authorization";
 

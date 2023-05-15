@@ -3,7 +3,7 @@ import React, { useContext, useState, useEffect } from "react";
 import useFetch from "../../../hooks/useFetch";
 //* UTILITIES
 // CONTEXT
-import { Context } from "../../../utilities/local-variables/Context";
+import { Context } from "../../../utilities/local-variables";
 
 //* CSS
 import "../../../css/header/menu/categories.css";

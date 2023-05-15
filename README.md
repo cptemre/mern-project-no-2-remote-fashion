@@ -140,6 +140,4 @@
 
 # TODO
 
-- Check user update email change.
-- Check product delete, cart items delete
-- Test upload, update image from aws and db.
+- Test avatar image controls.
