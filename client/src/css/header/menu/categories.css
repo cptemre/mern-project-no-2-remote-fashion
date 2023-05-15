@@ -2,12 +2,15 @@
   position: absolute;
   border: 0.2rem solid var(--orange-color-1);
   border-radius: 1rem;
-  top: 5rem;
+  top: 5.5rem;
   left: 0;
   width: 15rem;
   height: auto;
   max-height: 20rem;
   overflow: hidden;
+  transform: scale(0);
+  transform-origin: top left;
+  transition: 0.1s;
 }
 
 .categories-article {
@@ -16,6 +19,7 @@
   background-color: var(--orange-color-1);
   color: white;
   cursor: pointer;
+  font-weight: 800;
 }
 
 .categories-article:hover {

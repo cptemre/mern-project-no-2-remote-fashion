@@ -15,6 +15,8 @@ const SubCategories = () => {
 
   // USE REDUCER VALUES FROM CONTEXT
   const { state } = useContext(Context);
+  // TRANSITION MS
+  const transitionMs = 300;
 
   // GET SUBCATEGORIES FROM THE STATE
   const stateSubCategories = state.subCategories;
@@ -27,28 +29,30 @@ const SubCategories = () => {
     e: React.MouseEvent<HTMLDivElement, MouseEvent>
   ) => {
     // CURRENT TARGET ANIMATION
-    $(e.currentTarget).css("background-color", "var(--white-color-2)");
+    $(e.currentTarget).css("background-color", "var(--soft-white-color-1)");
 
     // CURRENT TARGET'S UNDERLINE ANIMATION
     $(e.currentTarget)
       .children(".underline")
-      .animate({ width: "5rem" }, 300)
-      .css("border-color", "red");
+      .animate({ width: "25%" }, transitionMs);
   };
   // SUB CATEGORY DIV MOUSE ENTER FUNCTION
   const subCategoryDivMouseLeave = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>
   ) => {
-    // CURRENT TARGET ANIMATION
-    $(e.currentTarget).css("background-color", "var(--white-color-1)");
+    // CURRENT TARGET BACKGROUND COLOR CHANGE
+    const backgroundColor =
+      $(e.currentTarget).attr("class") === "sub-categories-gender"
+        ? "var(--orange-color-2)"
+        : "white";
+    $(e.currentTarget).css("background-color", backgroundColor);
 
     // CURRENT TARGET'S UNDERLINE ANIMATION
     $(e.currentTarget)
       .children(".underline")
-      .animate({ width: 0 }, 300, function () {
-        $(this).css("border-color", "transparent");
-      });
+      .animate({ width: "2rem" }, transitionMs);
   };
+
   return (
     <section id="sub-categories-section">
       {Object.keys(subCategories).map((gender, i) => (
@@ -56,7 +60,11 @@ const SubCategories = () => {
           key={`sub-categories-article-${i}`}
           className="sub-categories-article"
         >
-          <div className="sub-categories-gender">
+          <div
+            className="sub-categories-gender"
+            onMouseEnter={(e) => subCategoryDivMouseEnter(e)}
+            onMouseLeave={(e) => subCategoryDivMouseLeave(e)}
+          >
             <div className="category">{gender}</div>
             <div className="underline"></div>
           </div>
