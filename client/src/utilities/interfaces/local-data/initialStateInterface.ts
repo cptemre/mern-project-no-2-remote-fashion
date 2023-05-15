@@ -5,9 +5,8 @@ interface InitialStateInterface {
       get: string;
     };
   };
-  localVariables: {
-    categories: string[];
-  };
+  categories: string[];
+  subCategories: { [key: string]: string[] };
 }
 
 export type { InitialStateInterface };

@@ -2,16 +2,19 @@
 // INTERFACES - DEFAULT STATE INTERFACE
 import { InitialStateInterface } from "../interfaces/local-data/initialStateInterface";
 // DEFAULT STATE - LOCAL VARIABLES
-import { categories } from "./localVariables";
+import {
+  defaultFetchUrl,
+  categories,
+  subCategories,
+} from "./initialStateVariables";
 
 const initialState: InitialStateInterface = {
-  localVariables: {
-    categories,
-  },
+  categories,
+  subCategories,
   urls: {
-    defaultFetchUrl: "/api/v1/",
+    defaultFetchUrl,
     product: {
-      get: "",
+      get: defaultFetchUrl + "product/",
     },
   },
 };

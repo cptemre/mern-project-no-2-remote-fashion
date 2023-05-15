@@ -3,6 +3,8 @@
   --orage-color-hover-1: rgb(214, 107, 7);
   --dark-orange-color-1: rgb(200, 136, 19);
   --box-shadow-015: 0 0 0px 0.15rem black;
+  --white-color-1: rgb(250, 244, 234);
+  --white-color-2: rgb(239, 216, 176);
 }
 
 * {
@@ -58,21 +60,8 @@ button {
 }
 
 .underline {
-  width: 1.8rem;
-  border: 0.1rem solid red;
-}
-
-.underline:hover {
-  animation: underline 0.4s forwards;
-}
-
-@keyframes underline {
-  0% {
-    width: 0;
-  }
-  100% {
-    width: 50%;
-  }
+  width: 0;
+  border: 0.1rem solid transparent;
 }
 
 .pointer {

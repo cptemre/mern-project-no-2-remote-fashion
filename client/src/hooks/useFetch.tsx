@@ -5,8 +5,9 @@ import axios from "axios";
 const useFetch = async ({ url, type, body }: useFetchInterface) => {
   if (type === "get") {
     try {
-      const { data } = await axios.get(url);
-      console.log(data);
+      const { data: result } = await axios.get(url);
+
+      return result.result;
     } catch (error) {
       console.log(error);
     }

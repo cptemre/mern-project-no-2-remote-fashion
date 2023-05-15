@@ -16,7 +16,6 @@
 }
 
 .sub-categories-gender {
-  background-color: white;
   background-color: rgb(248, 193, 151);
   cursor: pointer;
   flex-direction: column;
@@ -31,7 +30,7 @@
   flex-direction: column;
   height: auto;
   cursor: pointer;
-  background-color: rgb(255, 253, 250);
+  background-color: var(--white-color-1);
 }
 
 .sub-category-div {

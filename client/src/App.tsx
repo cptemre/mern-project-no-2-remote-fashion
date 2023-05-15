@@ -1,4 +1,4 @@
-import React, { useReducer, createContext } from "react";
+import React, { useReducer } from "react";
 //* COMPONENTS
 // HEADER
 import Header from "./components/header/Header";
@@ -10,6 +10,7 @@ import { reducer, initialState, Context } from "./utilities/local-variables";
 // CONTEXT
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
+
   return (
     <Router>
       <Context.Provider value={{ state, dispatch }}>

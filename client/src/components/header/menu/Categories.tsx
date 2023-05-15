@@ -9,14 +9,18 @@ import { Context } from "../../../utilities/local-variables";
 import "../../../css/header/menu/categories.css";
 
 const Categories = () => {
-  const [categories, setCategories] = useState([]);
-  const { state, dispatch } = useContext(Context);
-  useEffect(() => {
-    dispatch({ type: "TEST", payload: [] });
-  }, [state.urls]);
-  console.log(state.localVariables);
+  // CATEGORIES ARRAY
+  const [categories, setCategories] = useState<string[]>([]);
+  // USE REDUCER VALUES FROM CONTEXT
+  const { state } = useContext(Context);
+  // STATE > CATEGORIES ARRAY
+  const stateCategories = state.categories;
 
-  // useFetch({ url: "/api/v1/product", type: "get",body: {} });
+  // GET CATEGORIES AND ASSIGN IT TO CATEGORIES ARRAY
+  useEffect(() => {
+    setCategories(stateCategories);
+  }, [stateCategories]);
+
   return (
     <section id="categories-section">
       {categories.map((category, i) => (
