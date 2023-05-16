@@ -8,9 +8,9 @@ const reducer = (
     payload: any;
   }
 ) => {
-  if (action.type === "TEST") {
+  if (action.type === "SELECTED_CATEGORY") {
     console.log(action.payload);
-    return { ...state, localVariables: action.payload };
+    return { ...state, selectedCategory: action.payload };
   }
   return state;
 };

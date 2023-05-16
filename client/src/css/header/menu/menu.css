@@ -3,3 +3,7 @@
   position: relative;
   max-width: 6rem;
 }
+
+#categories-subcategories-section {
+  position: absolute;
+}

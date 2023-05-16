@@ -14,15 +14,19 @@
 }
 
 .categories-article {
+  flex-direction: column;
   height: auto;
-  min-height: 4rem;
-  background-color: var(--orange-color-1);
-  color: white;
+  background-color: white;
+  color: var(--orange-color-1);
   cursor: pointer;
   font-weight: 800;
 }
 
-.categories-article:hover {
-  background-color: white;
-  color: orange;
+.categories-article:nth-child(2n) {
+  background-color: var(--orange-color-1);
+  color: white;
+}
+
+.categories-div {
+  min-height: 4rem;
 }

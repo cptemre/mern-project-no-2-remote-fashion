@@ -64,6 +64,7 @@ button {
 .underline {
   width: 2rem;
   border: 0.1rem solid var(--red-color-1);
+  margin-bottom: 0.5rem;
 }
 
 .pointer {

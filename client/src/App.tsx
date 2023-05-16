@@ -5,8 +5,10 @@ import Header from "./components/header/Header";
 //* NPMS
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 //* UTILITIES
-// REDUCER - DEFAULT STATE
-import { reducer, initialState, Context } from "./utilities/local-variables";
+// REDUCER - INITIAL STATE - CONTEXT
+import reducer from "./utilities/local-variables/reducer";
+import { Context } from "./utilities/local-variables/Context";
+import initialState from "./utilities/local-variables/initialState";
 // CONTEXT
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState);

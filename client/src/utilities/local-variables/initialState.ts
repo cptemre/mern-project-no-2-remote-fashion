@@ -6,11 +6,16 @@ import {
   defaultFetchUrl,
   categories,
   subCategories,
+  underlineWidth,
 } from "./initialStateVariables";
 
 const initialState: InitialStateInterface = {
   categories,
+  selectedCategory: "CLOTHES",
   subCategories,
+  underlineWidth1: underlineWidth + "rem",
+  underlineWidth2: underlineWidth * 2 + "rem",
+  transitionMs: 200,
   urls: {
     defaultFetchUrl,
     product: {
