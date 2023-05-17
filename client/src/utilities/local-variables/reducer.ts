@@ -9,7 +9,6 @@ const reducer = (
   }
 ) => {
   if (action.type === "SELECTED_CATEGORY") {
-    console.log(action.payload);
     return { ...state, selectedCategory: action.payload };
   }
   return state;

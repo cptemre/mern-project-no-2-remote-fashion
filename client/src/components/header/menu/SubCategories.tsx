@@ -7,64 +7,55 @@ import $ from "jquery";
 //* CSS
 import "../../../css/header/menu/sub-categories.css";
 import { InitialStateInterface } from "../../../utilities/interfaces/local-data/initialStateInterface";
-import backgroundColorChangeByIndex from "../../../utilities/functions/backgroundColorChangeByIndex";
 
 const SubCategories = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>();
   const [subCategories, setSubCategories] = useState<
-    InitialStateInterface["subCategories"]
+    InitialStateInterface["category"]["subCategories"]
   >({ MALE: [""], FEMALE: [""] });
 
   // USE REDUCER VALUES FROM CONTEXT
   const { state } = useContext(Context);
+  // STATE VARIABLES
+  const stateSubCategory = state.category.subCategories;
+  const stateUnderline1 = state.css.underlineWidth1;
+  const stateUnderline2 = state.css.underlineWidth2;
+  const stateTransitionMs = state.css.transitionMs;
 
   useEffect(() => {
-    setSelectedCategory(state.selectedCategory);
-  }, [state.selectedCategory]);
-
-  useEffect(() => {
-    setSubCategories(state.subCategories);
-  }, [state.subCategories]);
+    setSubCategories(stateSubCategory);
+  }, [stateSubCategory]);
 
   // SUB CATEGORY DIV MOUSE ENTER FUNCTION
   const mouseEnterHandle = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>
   ) => {
-    // CURRENT TARGET ANIMATION
+    // CURRENT TARGET BACKGROUND COLOR
     $(e.currentTarget).css("background-color", "var(--soft-white-color-1)");
 
-    // CURRENT TARGET'S UNDERLINE ANIMATION
+    //* UNDERLINE WIDTH CHANGE
+    // SUB-CATEGORY ALL UNDERLINE WIDTH TO INITIAL
+    $(".sub-categories-article")
+      .find("div .underline")
+      .stop()
+      .animate({ width: stateUnderline1 }, stateTransitionMs);
+    // CURRENT TARGET'S UNDERLINE WIDTH
     $(e.currentTarget)
       .children(".underline")
       .stop()
-      .animate({ width: state.underlineWidth2 }, state.transitionMs);
-
-    // CHANGE BACKGROUND COLOR
-    const domTarget = `.categories-article:contains('${selectedCategory}')`;
-    const oddColor = "var(--dark-orange-color-1)";
-    const evenColor = "var(--soft-white-color-1)";
-    backgroundColorChangeByIndex({
-      domTarget: $(domTarget),
-      oddColor,
-      evenColor,
-    });
+      .animate({ width: stateUnderline2 }, stateTransitionMs);
   };
   // SUB CATEGORY DIV MOUSE ENTER FUNCTION
   const mouseLeaveHandle = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>
   ) => {
-    // CURRENT TARGET BACKGROUND COLOR CHANGE
+    //* CURRENT TARGET BACKGROUND COLOR CHANGE
+    // CHECK CLASS
     const backgroundColor =
       $(e.currentTarget).attr("class") === "sub-categories-gender"
         ? "var(--orange-color-2)"
         : "white";
+    // USE CSS
     $(e.currentTarget).css("background-color", backgroundColor);
-
-    // CURRENT TARGET'S UNDERLINE ANIMATION
-    $(e.currentTarget)
-      .children(".underline")
-      .stop()
-      .animate({ width: state.underlineWidth1 }, state.transitionMs);
   };
 
   return (

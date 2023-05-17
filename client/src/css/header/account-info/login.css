@@ -5,6 +5,7 @@
 #login-button-div {
   height: auto;
   flex-direction: column;
+  cursor: pointer;
 }
 
 #login-div {
