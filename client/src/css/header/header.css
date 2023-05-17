@@ -1,0 +1,9 @@
+#header-section > section {
+  min-height: 4rem;
+}
+
+#header-section > section > article,
+#header-section > section > article > div {
+  font-size: 1rem;
+  font-weight: 800;
+}

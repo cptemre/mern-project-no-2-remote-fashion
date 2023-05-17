@@ -1,0 +1,29 @@
+#search-input-article {
+  position: relative;
+}
+
+.search-input-divs {
+  height: 3rem;
+}
+#search-input-icon-div {
+  position: absolute;
+  width: auto;
+  left: 0.4rem;
+  bottom: 1.5rem;
+}
+
+#search-icon {
+  color: orange;
+  opacity: 0.5;
+}
+
+#search-input-div {
+  justify-content: flex-start;
+}
+
+#search-input {
+  border-bottom: 0.2rem solid orange;
+  width: 100%;
+  padding: 0.4rem;
+  font-size: 2rem;
+}

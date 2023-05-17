@@ -1,0 +1,10 @@
+.option-div {
+  font-size: 2rem !important;
+}
+
+.option-div {
+  background-color: var(--dark-orange-color-1);
+  color: white;
+  height: auto;
+  padding: 0.5rem;
+}

@@ -1,0 +1,14 @@
+#login-section {
+  column-gap: 1rem;
+}
+
+#login-button-div {
+  height: auto;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+#login-div {
+  color: rgb(183, 122, 8);
+  padding: 0.2rem 0%;
+}

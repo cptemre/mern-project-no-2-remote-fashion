@@ -1,0 +1,56 @@
+#sub-categories-section {
+  position: absolute;
+  top: 5.5rem;
+  left: 15rem;
+  min-width: 40rem;
+  height: auto;
+  max-height: 40rem;
+  border: 2px solid var(--seperator-color-1);
+  border-radius: 1rem;
+  overflow: hidden;
+  transform: scale(0);
+  transform-origin: top left;
+  transition: 0.2s;
+}
+
+.sub-categories-article {
+  align-content: flex-start;
+  flex-direction: column;
+  border-right: 0.2rem solid var(--seperator-color-1);
+}
+
+.sub-categories-article:last-child {
+  border: none;
+}
+
+.sub-categories-gender {
+  background-color: var(--orange-color-2);
+  cursor: pointer;
+  flex-direction: column;
+  padding: 0.5rem 0;
+  border-bottom: 0.2rem solid var(--seperator-color-1);
+  font-weight: 550;
+}
+
+.category {
+  min-height: 3rem;
+}
+
+.sub-categories-div {
+  flex-direction: column;
+  height: auto;
+  cursor: pointer;
+  background-color: var(--white-color-1);
+  color: var(--red-color-1);
+  font-weight: 550;
+}
+
+.sub-category-div {
+  flex-direction: column;
+  row-gap: 0.3rem;
+  padding: 0.5rem 0;
+}
+
+.sub-category {
+  min-height: 3rem;
+}
