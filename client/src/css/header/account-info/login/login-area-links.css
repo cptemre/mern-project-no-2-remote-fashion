@@ -1,0 +1,14 @@
+#login-area-links-section {
+  flex-direction: column;
+  row-gap: 1rem;
+}
+
+#login-area-links-section > article {
+  font-size: 1rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+#register-link-article {
+  flex-direction: column;
+}

@@ -1,6 +1,6 @@
 import React from "react";
 //* COMPONENTS
-import LoginRegister from "./Login";
+import LoginRegister from "./Login/Login";
 //* CSS
 import "../../../css/header/account-info/account-info.css";
 const AccountInfo = () => {

@@ -1,0 +1,35 @@
+#login-area-section {
+  position: absolute;
+  background-color: var(--orange-color-1);
+  min-width: 25rem;
+  top: var(--absolute-position-top);
+  right: 0;
+  transform-origin: top right;
+  transition: 0.2s;
+  flex-direction: column;
+  height: auto;
+  padding: 2rem;
+  row-gap: 2rem;
+  border-radius: 0.5rem;
+  border: 0.2rem solid black;
+}
+
+#login-form {
+  flex-direction: column;
+  row-gap: 1rem;
+}
+
+#login-form > input {
+  height: 3rem;
+  border-radius: 1rem;
+  border: 0.1rem solid black;
+  background-color: var(--orange-color-3);
+  letter-spacing: 2px;
+  padding-left: 1rem;
+}
+
+#login-form > input[type="submit"] {
+  padding-left: 0;
+  width: 50%;
+  font-weight: 500;
+}

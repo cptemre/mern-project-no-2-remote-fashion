@@ -1,7 +1,7 @@
 #sub-categories-section {
   position: absolute;
-  top: 5.5rem;
-  left: 15rem;
+  top: var(--absolute-position-top);
+  left: var(--category-width);
   min-width: 40rem;
   height: auto;
   max-height: 40rem;

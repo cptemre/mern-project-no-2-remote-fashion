@@ -1,7 +1,7 @@
 #contact-section {
-  flex: 0.6;
+  flex: 0.4;
   row-gap: 0.5rem;
-  max-width: 20rem;
+  max-width: 12rem;
   border: 0.2rem solid orange;
   border-width: 0 0.2rem;
 }

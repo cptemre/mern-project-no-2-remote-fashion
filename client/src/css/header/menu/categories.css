@@ -2,9 +2,9 @@
   position: absolute;
   border: 0.2rem solid var(--orange-color-1);
   border-radius: 1rem;
-  top: 5.5rem;
+  top: var(--absolute-position-top);
   left: 0;
-  width: 15rem;
+  width: var(--category-width);
   height: auto;
   max-height: 20rem;
   overflow: hidden;

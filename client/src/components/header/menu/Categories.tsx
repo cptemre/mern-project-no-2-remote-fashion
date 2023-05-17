@@ -75,32 +75,6 @@ const Categories = () => {
       .animate({ width: stateUnderline1 }, stateTransitionMs);
   };
 
-  const mouseLeaveHandle = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
-    // // CATEGORIES BACKGROUND COLOR CHANGE
-    // const domTarget = $(`.categories-div:contains(${selectedCategory})`);
-    // const oddColor = "var(--orange-color-1)";
-    // const evenColor = "white";
-    // // INDEX OF THE ELEMENT
-    // const index = $(domTarget).index();
-    // // CHECK IF ODD OR EVEN
-    // const oddOrEven = index % 2;
-    // // CSS VARS ACCORDING TO ODD OR EVEN
-    // const backgroundColor = oddOrEven === 1 ? oddColor : evenColor;
-    // // CHANGE CURRENT CATEGORIES ARTICLE CSS
-    // $(domTarget).css({
-    //   backgroundColor,
-    // });
-    // $(domTarget)
-    //   .children(".underline")
-    //   .stop()
-    //   .animate({ width: stateUnderline2 }, 300);
-    // console.log(selectedCategory);
-    // $(`.categories-div`)
-    //   .siblings(".underline")
-    //   .stop()
-    //   .animate({ width: "2rem" }, 200);
-  };
-
   return (
     <section id="categories-section">
       {categories.map((category, i) => (
@@ -109,7 +83,6 @@ const Categories = () => {
           key={`categories-article-${i}`}
           className="categories-article"
           onMouseEnter={(e) => mouseEnterHandle(e)}
-          onMouseLeave={(e) => mouseLeaveHandle(e)}
         >
           <div className="categories-div">{category}</div>
           <div className="underline"></div>

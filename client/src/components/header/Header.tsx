@@ -12,8 +12,6 @@ import Options from "./options/Options";
 import Contact from "./contact/Contact";
 // LOGIN-REGISTER
 import AccountInfo from "./account-info/AccountInfo";
-//* CSS
-import "../../css/header/header.css";
 
 const Header = () => {
   return (

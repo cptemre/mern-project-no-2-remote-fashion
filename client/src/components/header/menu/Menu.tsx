@@ -1,3 +1,4 @@
+import { useContext } from "react";
 //* COMPONENTS
 // MENU BUTTON
 import MenuButton from "./MenuButton";
@@ -5,11 +6,17 @@ import MenuButton from "./MenuButton";
 import Categories from "./Categories";
 // SUB-CATEGORIES
 import SubCategories from "./SubCategories";
+// CONTEXT
+import { Context } from "../../../utilities/local-variables/Context";
 //* NPMS
 import $ from "jquery";
 //* CSS
 import "../../../css/header//menu/menu.css";
 const Menu = () => {
+  // STATE VARIABLES
+  const { state } = useContext(Context);
+  const stateUnderline1 = state.css.underlineWidth1;
+  const stateTransitionMs = state.css.transitionMs;
   const mouseEnterHandle = () => {
     // TURN ON CATEGORIES
     $("#categories-section").css("transform", "scale(1)");
@@ -55,7 +62,7 @@ const Menu = () => {
     $(e.currentTarget)
       .find("#categories-section .categories-article .underline")
       .stop()
-      .animate({ width: "2rem" }, 300);
+      .animate({ width: stateUnderline1 }, stateTransitionMs);
   };
   return (
     <section
