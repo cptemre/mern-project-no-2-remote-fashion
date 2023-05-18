@@ -1,12 +1,13 @@
 #login-area-section {
   position: absolute;
-  background-color: var(--orange-color-1);
+  background: linear-gradient(var(--orange-color-2) 75%, var(--orange-color-1));
   min-width: 25rem;
   top: var(--absolute-position-top);
   right: 0;
   transform-origin: top right;
   transition: 0.2s;
   flex-direction: column;
+  min-height: 30rem;
   height: auto;
   padding: 2rem;
   row-gap: 2rem;
@@ -16,20 +17,28 @@
 
 #login-form {
   flex-direction: column;
-  row-gap: 1rem;
+  row-gap: 4rem;
 }
 
 #login-form > input {
   height: 3rem;
-  border-radius: 1rem;
+  border-radius: 0.7rem;
+  border-top-left-radius: 0;
   border: 0.1rem solid black;
   background-color: var(--orange-color-3);
   letter-spacing: 2px;
   padding-left: 1rem;
 }
 
+#login-form > input::placeholder {
+  color: black;
+}
+
 #login-form > input[type="submit"] {
   padding-left: 0;
+  border-radius: 0.5rem;
   width: 50%;
   font-weight: 500;
+  margin-top: 0.5rem;
+  background-color: var(--orange-color-3);
 }
