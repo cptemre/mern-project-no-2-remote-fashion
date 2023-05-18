@@ -6,7 +6,9 @@ import {
   defaultFetchUrl,
   categories,
   subCategories,
-  underlineWidth,
+  underlineWidth1,
+  underlineWidth2,
+  transitionMs,
 } from "./initialStateVariables";
 
 const initialState: InitialStateInterface = {
@@ -14,10 +16,15 @@ const initialState: InitialStateInterface = {
     categories,
     subCategories,
   },
+  booleans: {
+    isRegisterButton: false,
+    isForgotPassword: false,
+    isError: false,
+  },
   css: {
-    underlineWidth1: underlineWidth + "rem",
-    underlineWidth2: underlineWidth * 2 + "rem",
-    transitionMs: 200,
+    underlineWidth1,
+    underlineWidth2,
+    transitionMs,
   },
   urls: {
     defaultFetchUrl,

@@ -11,6 +11,13 @@ const reducer = (
   if (action.type === "SELECTED_CATEGORY") {
     return { ...state, selectedCategory: action.payload };
   }
+  if (action.type === "IS_FORGOT_PASSWORD") {
+    return {
+      ...state,
+      booleans: { ...state.booleans, isForgotPassword: action.payload },
+    };
+  }
+
   return state;
 };
 

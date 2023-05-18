@@ -15,6 +15,7 @@
   font-size: 1.5rem;
   padding-bottom: 0.5rem;
   aspect-ratio: 1/1;
+  transition: 0.2s;
 }
 
 .fa-facebook-f {
@@ -37,6 +38,6 @@
   color: rgb(33, 31, 31);
 }
 
-.fa-envelope {
-  color: rgb(82, 82, 82);
+.fa-linkedin {
+  color: rgb(10, 102, 194);
 }

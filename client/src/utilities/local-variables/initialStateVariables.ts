@@ -1,8 +1,5 @@
 import { InitialStateInterface } from "../interfaces/local-data/initialStateInterface";
 
-// CSS
-const underlineWidth = 2;
-
 // CATEGORY
 const categories: InitialStateInterface["category"]["categories"] = [
   "CLOTHES",
@@ -13,7 +10,19 @@ const subCategories: InitialStateInterface["category"]["subCategories"] = {
   FEMALE: ["CAT3", "CAT4"],
 };
 
+// CSS
+const underlineWidth = 2;
+const underlineWidth1 = underlineWidth + "rem";
+const underlineWidth2 = underlineWidth * 2 + "rem";
+const transitionMs = 200;
 // URL
 const defaultFetchUrl = "/api/v1/";
 
-export { defaultFetchUrl, underlineWidth, categories, subCategories };
+export {
+  defaultFetchUrl,
+  underlineWidth1,
+  underlineWidth2,
+  categories,
+  subCategories,
+  transitionMs,
+};

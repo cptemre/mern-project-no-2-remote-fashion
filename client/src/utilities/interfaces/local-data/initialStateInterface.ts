@@ -5,6 +5,11 @@ interface InitialStateInterface {
     categories: CategoriesType[];
     subCategories: { [key in subCategoriesType]: string[] };
   };
+  booleans: {
+    isRegisterButton: boolean;
+    isForgotPassword: boolean;
+    isError: boolean;
+  };
   css: {
     underlineWidth1: string;
     underlineWidth2: string;

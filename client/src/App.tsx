@@ -1,4 +1,4 @@
-import React, { useReducer } from "react";
+import React, { useEffect, useReducer } from "react";
 //* COMPONENTS
 // HEADER
 import Header from "./components/header/Header";
@@ -13,6 +13,9 @@ import initialState from "./utilities/local-variables/initialState";
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  useEffect(() => {
+    console.log(state.booleans.isForgotPassword);
+  }, [state.booleans.isForgotPassword]);
   return (
     <Router>
       <Context.Provider value={{ state, dispatch }}>

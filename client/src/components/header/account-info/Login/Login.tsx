@@ -19,19 +19,29 @@ const Login = () => {
   const mouseEnterHandle = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>
   ) => {
+    // LOGIN TITLE UNDERLINE WIDTH GETS LONGER
     $(e.currentTarget).children(".underline").stop().animate(
       {
         width: stateUnderline2,
       },
       stateTransitionMs
     );
+    // SCALE UP THE LOGIN AREA SECTION
+    $("#login-area-section").css({
+      transform: "scale(1)",
+    });
   };
 
   const mouseLeaveHandle = () => {
+    // LOGIN TITLE UNDERLINE WIDTH GETS SHORTER
     $("#login-button-div")
       .children(".underline")
       .stop()
       .animate({ width: stateUnderline1 }, stateTransitionMs);
+    // SCALE UP THE LOGIN AREA SECTION
+    $("#login-area-section").css({
+      transform: "scale(0)",
+    });
   };
   return (
     <section id="login-section" onMouseLeave={() => mouseLeaveHandle()}>
