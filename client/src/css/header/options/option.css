@@ -1,10 +1,33 @@
-.option-div {
-  font-size: 2rem !important;
+#option-section {
+  position: absolute;
+  top: 5rem;
+  max-width: 20rem;
+  flex-direction: row;
+  row-gap: 0.5rem;
+}
+
+.option-article {
+  flex-basis: 100%;
+  height: auto;
+  cursor: pointer;
+  height: auto;
+  border-radius: 0.4rem;
+  border: 0.15rem solid rgb(31, 22, 22);
+  background-color: var(--orange-color-1);
 }
 
 .option-div {
-  background-color: var(--dark-orange-color-1);
-  color: white;
   height: auto;
+  flex-direction: column;
+}
+
+.option {
+  color: white;
+  font-size: 1.5rem;
   padding: 0.5rem;
+}
+
+.option-button-arrow {
+  flex: 0.2;
+  background-color: var(--orange-color-1);
 }

@@ -10,6 +10,9 @@ const subCategories: InitialStateInterface["category"]["subCategories"] = {
   FEMALE: ["CAT3", "CAT4"],
 };
 
+// OPTIONS
+const selectedOption = "PRODUCTS";
+
 // CSS
 const underlineWidth = 2;
 const underlineWidth1 = underlineWidth + "rem";
@@ -25,4 +28,5 @@ export {
   categories,
   subCategories,
   transitionMs,
+  selectedOption,
 };

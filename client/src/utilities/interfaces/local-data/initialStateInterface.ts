@@ -1,9 +1,13 @@
 type CategoriesType = "CLOTHES" | "SHOES";
 type subCategoriesType = "MALE" | "FEMALE";
+type selectedOption = "PRODUCTS" | "ORDERS" | "USERS";
 interface InitialStateInterface {
   category: {
     categories: CategoriesType[];
     subCategories: { [key in subCategoriesType]: string[] };
+  };
+  options: {
+    selectedOption: selectedOption;
   };
   booleans: {
     isRegisterButton: boolean;

@@ -9,12 +9,16 @@ import {
   underlineWidth1,
   underlineWidth2,
   transitionMs,
+  selectedOption,
 } from "./initialStateVariables";
 
 const initialState: InitialStateInterface = {
   category: {
     categories,
     subCategories,
+  },
+  options: {
+    selectedOption,
   },
   booleans: {
     isRegisterButton: false,
