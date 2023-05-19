@@ -1,0 +1,24 @@
+#sub-options-section {
+  flex-direction: column;
+}
+
+.sub-option-article {
+  background-color: var(--orange-color-2);
+}
+
+.sub-option-div {
+  height: auto;
+  flex-direction: column;
+}
+
+.sub-option-div > .option {
+  color: rgb(68, 48, 37);
+}
+
+.circle-icon {
+  font-size: 1.2rem;
+  border-radius: 1.2rem;
+  color: var(--soft-white-color-2);
+  border: 0.2rem solid black;
+  width: auto;
+}

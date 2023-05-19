@@ -8,13 +8,31 @@ const reducer = (
     payload: any;
   }
 ) => {
+  //* CATEGORIES
   if (action.type === "SELECTED_CATEGORY") {
-    return { ...state, selectedCategory: action.payload };
+    return {
+      ...state,
+      category: { ...state.category, allCategories: action.payload },
+    };
   }
+  //* OPTIONS
+  if (action.type === "SELECTED_SUB_OPTION") {
+    return {
+      ...state,
+      options: { ...state.options, selectedSubOption: action.payload },
+    };
+  }
+  //* BOOLEANS
   if (action.type === "IS_FORGOT_PASSWORD") {
     return {
       ...state,
       booleans: { ...state.booleans, isForgotPassword: action.payload },
+    };
+  }
+  if (action.type === "IS_OPTION_BUTTON") {
+    return {
+      ...state,
+      booleans: { ...state.booleans, isOptionButton: action.payload },
     };
   }
 

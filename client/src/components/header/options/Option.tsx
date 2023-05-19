@@ -1,27 +1,38 @@
-import React, { useState } from "react";
+import { useContext } from "react";
+//* COMPONENTS
+import SubOptions from "./SubOptions";
+//* UTILITIES
+// CONTEXT
+import { Context } from "../../../utilities/local-variables/Context";
+// INTERFACES
+import { OptionsInterface } from "../../../utilities/interfaces/local-data/optionsInterfaces";
 //* CSS
 import "../../../css/header/options/options.css";
 //* FONT AWESOME
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleDown } from "@fortawesome/free-solid-svg-icons";
+import { faSquareCaretDown } from "@fortawesome/free-solid-svg-icons";
 
 const Options = () => {
-  // WILL CHANGE BY USER TYPE
-  const [options, setOptions] = useState(["PRODUCTS", "ORDERS", "ADMIN"]);
-
+  // STATE
+  const { state } = useContext(Context);
   return (
     <section id="option-section">
-      {options.map((option, i) => (
-        <article key={`option-article-${i}`} className="option-article">
-          <div className="option-div">
-            <div className="option">{option}</div>
-            <div className="underline"></div>
-          </div>
-          <div className="option-button-arrow">
-            <FontAwesomeIcon icon={faCircleDown} />
-          </div>
-        </article>
-      ))}
+      {Object.keys(state.options.allOptions.user).map((option, i) => {
+        return (
+          <article key={`option-article-${i}`} className="option-article">
+            <div className="main-option-div">
+              <div className="option">{option}</div>
+              <div className="option-icon-div">
+                <FontAwesomeIcon
+                  icon={faSquareCaretDown}
+                  className="icon arrow-icon"
+                />
+              </div>
+            </div>
+            <SubOptions option={option as keyof OptionsInterface["user"]} />
+          </article>
+        );
+      })}
     </section>
   );
 };

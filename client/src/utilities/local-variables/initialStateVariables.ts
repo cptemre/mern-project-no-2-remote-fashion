@@ -11,7 +11,16 @@ const subCategories: InitialStateInterface["category"]["subCategories"] = {
 };
 
 // OPTIONS
-const selectedOption = "PRODUCTS";
+const allOptions: InitialStateInterface["options"]["allOptions"] = {
+  user: {
+    PRODUCTS: ["NEW", "BEST", "ALL"],
+    ORDERS: ["SINGLE ORDERS", "ALL ORDERS"],
+  },
+};
+const selectedOption: InitialStateInterface["options"]["selectedOption"] =
+  "PRODUCTS";
+const selectedSubOption: InitialStateInterface["options"]["selectedSubOption"] =
+  "ALL";
 
 // CSS
 const underlineWidth = 2;
@@ -29,4 +38,6 @@ export {
   subCategories,
   transitionMs,
   selectedOption,
+  selectedSubOption,
+  allOptions,
 };

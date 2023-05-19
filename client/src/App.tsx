@@ -12,10 +12,6 @@ import initialState from "./utilities/local-variables/initialState";
 // CONTEXT
 function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
-
-  useEffect(() => {
-    console.log(state.booleans.isForgotPassword);
-  }, [state.booleans.isForgotPassword]);
   return (
     <Router>
       <Context.Provider value={{ state, dispatch }}>

@@ -1,11 +1,7 @@
-import React, { useContext, useState, useEffect } from "react";
-//* HOOKS
-import useFetch from "../../../hooks/useFetch";
+import React, { useContext } from "react";
 //* UTILITIES
 // CONTEXT
 import { Context } from "../../../utilities/local-variables/Context";
-// INTERFACES
-import { InitialStateInterface } from "../../../utilities/interfaces/local-data";
 //
 //* NPMS
 import $ from "jquery";
@@ -13,23 +9,13 @@ import $ from "jquery";
 import "../../../css/header/menu/categories.css";
 
 const Categories = () => {
-  // CATEGORIES ARRAY
-  const [categories, setCategories] = useState<string[]>([]);
-
   // USE REDUCER VALUES FROM CONTEXT
   const { state, dispatch } = useContext(Context);
-  // STATE VARIABLES
-  const stateUnderline1 = state.css.underlineWidth1;
   const stateUnderline2 = state.css.underlineWidth2;
   const stateTransitionMs = state.css.transitionMs;
-  // GET CATEGORIES AND ASSIGN IT TO CATEGORIES ARRAY
-  useEffect(() => {
-    // SET CATEGORIES IN THE COMPONENT
-    setCategories(state.category.categories);
-  }, [state.category.categories]);
 
   const mouseEnterHandle = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
-    //* SET THE SELECTED CATEGORY TO LOCAL AND TO STATE
+    //* SET THE SELECTED CATEGORY TO STATE
     // CURRENT TARGET HTML
     const payload = $(e.currentTarget).children(".categories-div").html();
     // SET CURRENT TARGET HTML AS SELECTED CATEGORY IN THE STATE
@@ -60,7 +46,7 @@ const Categories = () => {
     $(".categories-article")
       .children(".underline")
       .stop()
-      .animate({ width: stateUnderline1 }, stateTransitionMs);
+      .animate({ width: state.css.underlineWidth1 }, stateTransitionMs);
     // SET CURRENT UNDERLINE WIDTH LONGER
     $(e.currentTarget)
       .children(".underline")
@@ -72,12 +58,12 @@ const Categories = () => {
     $(".sub-categories-article")
       .find("div .underline")
       .stop()
-      .animate({ width: stateUnderline1 }, stateTransitionMs);
+      .animate({ width: state.css.underlineWidth1 }, stateTransitionMs);
   };
 
   return (
     <section id="categories-section">
-      {categories.map((category, i) => (
+      {state.category.categories.map((category, i) => (
         // LOOP ALL CATEGORIES TO SHOW ON SCREEN
         <article
           key={`categories-article-${i}`}

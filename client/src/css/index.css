@@ -90,4 +90,6 @@ input[type="submit"] {
 
 .icon {
   font-size: 2rem;
+  transition: 0.2s;
+  width: 100%;
 }

@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext } from "react";
 //* COMPONENTS
 import LoginAreaLinks from "./LoginAreaLinks";
 //* UTILITIES

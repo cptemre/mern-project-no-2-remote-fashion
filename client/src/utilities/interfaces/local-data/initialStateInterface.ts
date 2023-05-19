@@ -1,18 +1,25 @@
+// OPTIONS
+import { AllOptions, AllSubOptions, selectedOption } from "./optionsInterfaces";
+
+// CATEGORIES
 type CategoriesType = "CLOTHES" | "SHOES";
 type subCategoriesType = "MALE" | "FEMALE";
-type selectedOption = "PRODUCTS" | "ORDERS" | "USERS";
+
 interface InitialStateInterface {
   category: {
     categories: CategoriesType[];
     subCategories: { [key in subCategoriesType]: string[] };
   };
   options: {
+    allOptions: AllOptions;
     selectedOption: selectedOption;
+    selectedSubOption: AllSubOptions;
   };
   booleans: {
     isRegisterButton: boolean;
     isForgotPassword: boolean;
     isError: boolean;
+    isOptionButton: boolean;
   };
   css: {
     underlineWidth1: string;
