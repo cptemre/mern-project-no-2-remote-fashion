@@ -1,5 +1,6 @@
 #option-section {
-  position: relative;
+  position: absolute;
+  height: auto;
   top: 5rem;
   max-width: 20rem;
   flex-direction: row;

@@ -19,6 +19,15 @@ const Options = () => {
   const { state } = useContext(Context);
   //
   useEffect(() => {
+    // SET ALL OPTIONS EXCEPT CURRENT CSS
+    $(".option")
+      .filter(function () {
+        return $(this).html().trim() !== state.options.selectedOption;
+      })
+      .parent(".main-option-div")
+      .css({
+        backgroundColor: "var(--orange-color-1)",
+      });
     // SET CURRENT TARGET CSS
     $(".option")
       .filter(function () {
