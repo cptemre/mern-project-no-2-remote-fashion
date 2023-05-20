@@ -16,10 +16,18 @@ const reducer = (
     };
   }
   //* OPTIONS
+  // SUB OPTION
   if (action.type === "SELECTED_SUB_OPTION") {
     return {
       ...state,
       options: { ...state.options, selectedSubOption: action.payload },
+    };
+  }
+  // OPTION
+  if (action.type === "SELECTED_OPTION") {
+    return {
+      ...state,
+      options: { ...state.options, selectedOption: action.payload },
     };
   }
   //* BOOLEANS

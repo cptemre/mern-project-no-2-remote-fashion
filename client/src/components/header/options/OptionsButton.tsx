@@ -2,8 +2,6 @@ import { useContext } from "react";
 //* UTILITIES
 // CONTEXT
 import { Context } from "../../../utilities/local-variables/Context";
-//* NPMS
-import $ from "jquery";
 //* CSS
 import "../../../css/header/options/optionsButton.css";
 //* FONT AWESOME
@@ -12,26 +10,10 @@ import { faSquareCaretDown } from "@fortawesome/free-solid-svg-icons";
 
 const OptionsButton = () => {
   // STATE
-  const { state, dispatch } = useContext(Context);
-  // MOUSE ENTER HANDLE
-  const mouseEnterHandle = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
-    // SET IS OPTION BUTTON BOOLEAN TO TRUE
-    dispatch({
-      type: "IS_OPTION_BUTTON",
-      payload: true,
-    });
-    // CHANGE CSS
-    $(e.currentTarget).css({
-      backgroundColor: "var(--dark-orange-color-1)",
-    });
-  };
+  const { state } = useContext(Context);
 
   return (
-    <article
-      id="option-button"
-      className="option-article"
-      onMouseEnter={(e) => mouseEnterHandle(e)}
-    >
+    <article id="option-button" className="option-article">
       {state.booleans.isOptionButton ? (
         <div id="option-button-text" className="option">
           OPTIONS

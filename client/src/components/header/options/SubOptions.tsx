@@ -98,6 +98,8 @@ const SubOptions = ({ option }: { option: keyof OptionsInterface["user"] }) => {
       .html();
     // SET SELECTED SUB OPTION IN THE STATE
     dispatch({ type: "SELECTED_SUB_OPTION", payload: subOptionHTML });
+    // SET SELECTED OPTION IN THE STATE
+    dispatch({ type: "SELECTED_OPTION", payload: option });
   };
   return (
     <section id="sub-options-section">
