@@ -102,7 +102,7 @@ const SubOptions = ({ option }: { option: keyof OptionsInterface["user"] }) => {
     dispatch({ type: "SELECTED_OPTION", payload: option });
   };
   return (
-    <section id="sub-options-section">
+    <section className="sub-options-section">
       {subOptions.map((subOption, i) => (
         <article
           key={`sub-option-article-${i}`}

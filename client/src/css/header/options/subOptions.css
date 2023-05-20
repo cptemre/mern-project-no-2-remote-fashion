@@ -1,5 +1,6 @@
-#sub-options-section {
+.sub-options-section {
   flex-direction: column;
+  display: none;
 }
 
 .sub-option-article {

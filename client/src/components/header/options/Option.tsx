@@ -59,6 +59,29 @@ const Options = () => {
         backgroundColor: "var(--orange-color-1)",
       });
   };
+
+  const mouseUpHandle = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    // HIDE SUB OPTION BY SLIDING UP
+    $(e.currentTarget)
+      .children(".option")
+      .parent()
+      .siblings(".sub-options-section")
+      .filter(function () {
+        return $(this).css("display") !== "none";
+      })
+      .slideUp(200, function () {
+        $(this).fadeOut();
+      });
+    // DISPLAY CURRENT SUB OPTIONS SECTION BY SLIDING DOWN IF IT
+    $(e.currentTarget)
+      .children(".option")
+      .parent()
+      .siblings(".sub-options-section")
+      .filter(function () {
+        return $(this).css("display") === "none";
+      })
+      .slideDown(200);
+  };
   return (
     <section id="option-section">
       {Object.keys(state.options.allOptions.user).map((option, i) => {
@@ -71,6 +94,7 @@ const Options = () => {
             <div
               className="main-option-div"
               onMouseEnter={(e) => mouseEnterHandle(e)}
+              onMouseUp={(e) => mouseUpHandle(e)}
             >
               <div className="option">{option}</div>
               <div className="option-icon-div">

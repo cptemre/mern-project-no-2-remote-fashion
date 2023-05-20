@@ -25,6 +25,14 @@ const Options = () => {
     $("#option-button").css({
       backgroundColor: "var(--orange-color-1)",
     });
+    // SCALE DOWN THE OPTION SECTION
+    $("#option-section").css({
+      transform: "scaleY(0)",
+    });
+    // HIDE ALL SUB OPTION BY SLIDING UP
+    $(".sub-options-section").slideUp(200, function () {
+      $(this).fadeOut();
+    });
   }; // MOUSE ENTER HANDLE TO CHANGE OPTION BUTTON CSS
   const mouseEnterHandle = (e: React.MouseEvent<HTMLElement, MouseEvent>) => {
     // SET IS OPTION BUTTON BOOLEAN TO TRUE
@@ -32,9 +40,13 @@ const Options = () => {
       type: "IS_OPTION_BUTTON",
       payload: true,
     });
-    // CHANGE CSS
+    // CHANGE CSS OF OPTION BUTTON
     $(e.currentTarget).children("#option-button").css({
       backgroundColor: "var(--dark-orange-color-1)",
+    });
+    // SCALE UP THE OPTION SECTION
+    $("#option-section").css({
+      transform: "scaleY(1)",
     });
   };
   return (

@@ -5,11 +5,13 @@
   max-width: 20rem;
   flex-direction: row;
   row-gap: 0.5rem;
+  transform: scaleY(0);
+  transform-origin: top center;
+  transition: 0.2s;
 }
 
 .option-article {
   flex-basis: 100%;
-  height: auto;
   cursor: pointer;
   height: auto;
   border-radius: 0.4rem;
