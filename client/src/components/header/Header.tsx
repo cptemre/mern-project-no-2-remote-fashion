@@ -10,6 +10,8 @@ import SearchBar from "./search-bar/SearchBar";
 import Options from "./options/Options";
 // CONTACT
 import Contact from "./contact/Contact";
+// CURRENCY
+import Currency from "./currency/Currency";
 // LOGIN-REGISTER
 import AccountInfo from "./account-info/AccountInfo";
 
@@ -21,6 +23,7 @@ const Header = () => {
       <SearchBar />
       <Options />
       <Contact />
+      <Currency />
       <AccountInfo />
     </header>
   );

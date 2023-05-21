@@ -1,4 +1,10 @@
+// INITIAL STATE INTERFACE
 import { InitialStateInterface } from "../interfaces/local-data/initialStateInterface";
+// CURRENCY TYPE
+import {
+  AcceptableCurrinciesInterface,
+  SelectedCurrencyType,
+} from "../interfaces/payment/paymentInterfaces";
 
 // CATEGORY
 const categories: InitialStateInterface["category"]["categories"] = [
@@ -30,6 +36,20 @@ const transitionMs = 200;
 // URL
 const defaultFetchUrl = "/api/v1/";
 
+// PAYMENT
+const acceptableCurrencies: AcceptableCurrinciesInterface = {
+  GBP: "&#163;",
+  USD: "&#36;",
+  PLN: "&#122;&#322;",
+  EURO: "&#36;",
+};
+
+const currencyKeys = Object.keys(
+  acceptableCurrencies
+) as Array<SelectedCurrencyType>;
+
+const selectedCurrency = currencyKeys[0];
+
 export {
   defaultFetchUrl,
   underlineWidth1,
@@ -40,4 +60,6 @@ export {
   selectedOption,
   selectedSubOption,
   allOptions,
+  acceptableCurrencies,
+  selectedCurrency,
 };

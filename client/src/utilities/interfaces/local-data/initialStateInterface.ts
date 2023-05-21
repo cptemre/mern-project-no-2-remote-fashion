@@ -1,5 +1,10 @@
 // OPTIONS
 import { AllOptions, AllSubOptions, selectedOption } from "./optionsInterfaces";
+// CURRENCY TYPE
+import {
+  AcceptableCurrinciesInterface,
+  SelectedCurrencyType,
+} from "../payment/paymentInterfaces";
 
 // CATEGORIES
 type CategoriesType = "CLOTHES" | "SHOES";
@@ -31,6 +36,10 @@ interface InitialStateInterface {
     product: {
       get: string;
     };
+  };
+  payments: {
+    acceptableCurrencies: AcceptableCurrinciesInterface;
+    selectedCurrency: SelectedCurrencyType;
   };
 }
 

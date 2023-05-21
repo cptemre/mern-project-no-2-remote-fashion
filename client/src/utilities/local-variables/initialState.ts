@@ -12,6 +12,8 @@ import {
   selectedOption,
   selectedSubOption,
   allOptions,
+  acceptableCurrencies,
+  selectedCurrency,
 } from "./initialStateVariables";
 
 const initialState: InitialStateInterface = {
@@ -40,6 +42,10 @@ const initialState: InitialStateInterface = {
     product: {
       get: defaultFetchUrl + "product/",
     },
+  },
+  payments: {
+    acceptableCurrencies,
+    selectedCurrency,
   },
 };
 
