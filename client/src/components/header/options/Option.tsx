@@ -69,7 +69,7 @@ const Options = () => {
       .filter(function () {
         return $(this).css("display") !== "none";
       })
-      .slideUp(200, function () {
+      .slideUp(state.css.transitionMs, function () {
         $(this).fadeOut();
       });
     // DISPLAY CURRENT SUB OPTIONS SECTION BY SLIDING DOWN IF IT
@@ -80,7 +80,7 @@ const Options = () => {
       .filter(function () {
         return $(this).css("display") === "none";
       })
-      .slideDown(200);
+      .slideDown(state.css.transitionMs);
   };
   return (
     <section id="option-section">

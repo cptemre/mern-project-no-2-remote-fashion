@@ -8,39 +8,47 @@
   position: relative;
   height: auto;
   flex: 0.1;
-  min-width: 4rem;
-  max-width: 6rem;
+  min-width: 2rem;
+  max-width: 3rem;
 }
 
-#currency-position-section {
-  position: absolute;
-  top: 0.5rem;
-  height: auto;
+#selected-currency-section {
+  position: relative;
+  max-height: 3rem;
   flex-direction: column;
 }
 
 .currency-article > div,
 #selected-currency-article {
   font-size: 1.5rem;
-  height: auto;
   cursor: pointer;
   padding: 0.5rem 0;
 }
 
 #selected-currency-article,
 .currency-div {
-  background-color: var(--orange-color-1);
   border-radius: 0.5rem;
   border: 0.1rem solid black;
   overflow: hidden;
   color: white;
+  transition: 0.2s;
+}
+
+#selected-currency-article {
+  background-color: var(--orange-color-1);
 }
 
 #acceptable-currencies-section {
+  position: absolute;
+  top: 3rem;
   height: auto;
-  display: none;
+  transform: scaleY(0);
+  transition: 0.2s;
+  transform-origin: top center;
 }
 
 .currency-div {
   margin-top: 1rem;
+  height: 3rem !important;
+  background-color: var(--orange-color-1);
 }

@@ -2,7 +2,6 @@
   position: absolute;
   height: auto;
   top: 5rem;
-  max-width: 20rem;
   flex-direction: row;
   row-gap: 0.5rem;
   transform: scaleY(0);
