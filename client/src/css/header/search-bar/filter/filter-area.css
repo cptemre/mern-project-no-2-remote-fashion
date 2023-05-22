@@ -1,0 +1,9 @@
+#filter-area-section {
+  position: absolute;
+  top: 5.9rem;
+  left: -8.4rem;
+  min-width: 25rem;
+  width: 40vw;
+  height: 80vh;
+  background-color: blue;
+}
