@@ -10,7 +10,8 @@ import { AcceptableCurrinciesInterface } from "../../../utilities/interfaces/pay
 import $ from "jquery";
 const AcceptableCurrencies = () => {
   // STATE
-  const { state } = useContext(Context);
+  const { state, dispatch } = useContext(Context);
+
   // CURRENCY MOUSE ENTER HANDLE
   const mouseEnterHandle = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>
@@ -29,38 +30,34 @@ const AcceptableCurrencies = () => {
       backgroundColor: "var(--orange-color-1)",
     });
   };
+  // MOUSE UP HANDLE
+  const mouseUpHandle = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const clickedCurrency = $(e.currentTarget).attr("data-currency");
+    dispatch({ type: "SELECTED_CURRENCY", payload: clickedCurrency });
+  };
   return (
     <article id="acceptable-currencies-section" className="currency-article">
       {Object.keys(state.payments.acceptableCurrencies).map(
         (acceptableCurrency, i) => {
           if (state.payments.selectedCurrency !== acceptableCurrency) {
-            let counter = i;
-            // KEYS AS AN ARRAY
-            const acceptableCurrenciesKeys = Object.keys(
-              state.payments.acceptableCurrencies
-            );
-            // FILTER THE SELECTED CURRENCY AND DECREASE THE COUNTER BY ONE
-            const filteredAcceptableCurrenciesKey =
-              acceptableCurrenciesKeys.filter((key) => {
-                if (key === state.payments.selectedCurrency) counter--;
-                return key !== state.payments.selectedCurrency;
-              });
-            // GET THE CURRECY KEY
-            const selectedCurrency = filteredAcceptableCurrenciesKey[
-              counter
-            ] as keyof AcceptableCurrinciesInterface;
+            const selectedEntity =
+              state.payments.acceptableCurrencies[
+                acceptableCurrency as keyof AcceptableCurrinciesInterface
+              ];
             return (
               <div
-                key={`currency-div-${counter}`}
+                key={`currency-div-${i}`}
                 className="currency-div"
+                data-currency={acceptableCurrency}
+                data-entity={selectedEntity}
                 dangerouslySetInnerHTML={{
                   __html: sanitizeHTML({
-                    state,
-                    selectedCurrency,
+                    selectedEntity,
                   }),
                 }}
                 onMouseEnter={(e) => mouseEnterHandle(e)}
                 onMouseLeave={(e) => mouseLeaveHandle(e)}
+                onMouseUp={(e) => mouseUpHandle(e)}
               ></div>
             );
           }

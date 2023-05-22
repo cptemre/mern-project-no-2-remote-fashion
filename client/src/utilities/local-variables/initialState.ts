@@ -29,6 +29,7 @@ const initialState: InitialStateInterface = {
   booleans: {
     isRegisterButton: false,
     isForgotPassword: false,
+    isLogged: false,
     isError: false,
     isOptionButton: false,
   },

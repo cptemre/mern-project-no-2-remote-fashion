@@ -41,7 +41,7 @@ const acceptableCurrencies: AcceptableCurrinciesInterface = {
   GBP: "&#163;",
   USD: "&#36;",
   PLN: "&#122;&#322;",
-  EURO: "&#36;",
+  EURO: "&#8364;",
 };
 
 const currencyKeys = Object.keys(

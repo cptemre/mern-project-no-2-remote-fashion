@@ -34,7 +34,8 @@ const SelectedCurrency = () => {
       transform: "scaleY(0)",
     });
   };
-
+  const selectedCurrency = state.payments.selectedCurrency;
+  const selectedEntity = state.payments.acceptableCurrencies[selectedCurrency];
   return (
     <section
       id="selected-currency-section"
@@ -45,8 +46,7 @@ const SelectedCurrency = () => {
         id="selected-currency-article"
         dangerouslySetInnerHTML={{
           __html: sanitizeHTML({
-            state,
-            selectedCurrency: state.payments.selectedCurrency,
+            selectedEntity,
           }),
         }}
       ></article>

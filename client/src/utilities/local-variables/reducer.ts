@@ -43,6 +43,13 @@ const reducer = (
       booleans: { ...state.booleans, isOptionButton: action.payload },
     };
   }
+  //* PAYMENTS
+  if (action.type === "SELECTED_CURRENCY") {
+    return {
+      ...state,
+      payments: { ...state.payments, selectedCurrency: action.payload },
+    };
+  }
 
   return state;
 };

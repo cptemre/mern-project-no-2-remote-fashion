@@ -6,14 +6,10 @@ import { AcceptableCurrinciesInterface } from "../interfaces/payment/paymentInte
 import DOMpurify from "dompurify";
 
 const sanitizeHTML = ({
-  state,
-  selectedCurrency,
+  selectedEntity,
 }: {
-  state: InitialStateInterface;
-  selectedCurrency: keyof AcceptableCurrinciesInterface;
+  selectedEntity: AcceptableCurrinciesInterface[keyof AcceptableCurrinciesInterface];
 }) => {
-  // GET SELECTED ENTITY
-  const selectedEntity = state.payments.acceptableCurrencies[selectedCurrency];
   // SANITIZE IT TO AVOID DANGEROUS ATTACKS
   const sanitizedSelectedEntity = DOMpurify.sanitize(selectedEntity);
   // RETURN THE ENTITY

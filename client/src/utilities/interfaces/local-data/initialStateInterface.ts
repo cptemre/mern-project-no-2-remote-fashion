@@ -23,6 +23,7 @@ interface InitialStateInterface {
   booleans: {
     isRegisterButton: boolean;
     isForgotPassword: boolean;
+    isLogged: boolean;
     isError: boolean;
     isOptionButton: boolean;
   };
