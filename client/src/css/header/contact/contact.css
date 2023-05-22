@@ -1,7 +1,7 @@
 #contact-section {
-  flex: 0.6;
+  flex: 0.4;
   row-gap: 0.5rem;
-  max-width: 20rem;
+  max-width: 12rem;
   border: 0.2rem solid orange;
   border-width: 0 0.2rem;
 }
@@ -15,6 +15,7 @@
   font-size: 1.5rem;
   padding-bottom: 0.5rem;
   aspect-ratio: 1/1;
+  transition: 0.2s;
 }
 
 .fa-facebook-f {
@@ -37,6 +38,6 @@
   color: rgb(33, 31, 31);
 }
 
-.fa-envelope {
-  color: rgb(82, 82, 82);
+.fa-linkedin {
+  color: rgb(10, 102, 194);
 }

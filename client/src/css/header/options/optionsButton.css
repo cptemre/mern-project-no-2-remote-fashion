@@ -1,0 +1,8 @@
+#option-button {
+  position: absolute;
+  cursor: pointer;
+}
+
+#option-button > .option {
+  font-weight: 600;
+}

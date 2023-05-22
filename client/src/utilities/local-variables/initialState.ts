@@ -6,7 +6,14 @@ import {
   defaultFetchUrl,
   categories,
   subCategories,
-  underlineWidth,
+  underlineWidth1,
+  underlineWidth2,
+  transitionMs,
+  selectedOption,
+  selectedSubOption,
+  allOptions,
+  acceptableCurrencies,
+  selectedCurrency,
 } from "./initialStateVariables";
 
 const initialState: InitialStateInterface = {
@@ -14,16 +21,32 @@ const initialState: InitialStateInterface = {
     categories,
     subCategories,
   },
+  options: {
+    allOptions,
+    selectedOption,
+    selectedSubOption,
+  },
+  booleans: {
+    isRegisterButton: false,
+    isForgotPassword: false,
+    isLogged: false,
+    isError: false,
+    isOptionButton: false,
+  },
   css: {
-    underlineWidth1: underlineWidth + "rem",
-    underlineWidth2: underlineWidth * 2 + "rem",
-    transitionMs: 200,
+    underlineWidth1,
+    underlineWidth2,
+    transitionMs,
   },
   urls: {
     defaultFetchUrl,
     product: {
       get: defaultFetchUrl + "product/",
     },
+  },
+  payments: {
+    acceptableCurrencies,
+    selectedCurrency,
   },
 };
 

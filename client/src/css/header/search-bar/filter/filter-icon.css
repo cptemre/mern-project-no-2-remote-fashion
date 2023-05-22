@@ -1,0 +1,16 @@
+#filter-icon-article {
+  flex-direction: column;
+  position: relative;
+}
+
+#filter-icon-div {
+  position: absolute;
+  cursor: pointer;
+  background-color: orange;
+  color: white;
+  font-size: 1.5rem;
+  max-height: 3rem;
+  max-width: 3rem;
+  border-radius: 0.5rem;
+  border: 0.1rem solid black;
+}
